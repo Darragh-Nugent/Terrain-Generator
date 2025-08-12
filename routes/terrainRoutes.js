@@ -12,5 +12,4 @@ router.delete('/deleteTerrain', authMiddleware.authenticateJWT, terrainControlle
 
 
 
-
 module.exports = router;

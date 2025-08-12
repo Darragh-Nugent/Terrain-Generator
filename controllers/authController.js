@@ -1,4 +1,5 @@
 const User = require("../models/userModels");
+const authMiddleware = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
@@ -15,7 +16,7 @@ exports.login = async (req, res) => {
   if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
 //   const token = jwt.sign({ id: user.id, uName: user.uName }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  const token = jwt.sign({ id: user.id, uName: user.uName }, 'secretkey', { expiresIn: '1h' });
+  const token = authMiddleware.generateAccessToken(user);
 
 
   res.json({ token });
