@@ -11,6 +11,7 @@ class Terrain {
     heightScale;
     octaves;
     userId;
+    rules;
 
     constructor(id = 0, seed, size, heightScale = 10, octaves = 5, userId = 0)
     {   
