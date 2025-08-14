@@ -4,7 +4,7 @@ class Rule {
     value;
     terrainId;
 
-    constructor(id = 0, condition, value, terrainId = 0)
+    constructor(condition, value, id = 0, terrainId = 0)
     {   this.id = id;
         this.condition = condition;
         this.value = value;

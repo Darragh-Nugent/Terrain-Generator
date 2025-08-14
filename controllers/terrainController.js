@@ -7,7 +7,7 @@ const ruleModel = require("../models/ruleModel");
 const Terrain = require("../data/Terrain");
 const Rule = require("../data/Rule.js");
 
-const scale = 1;
+const scale = 4;
 
 async function addTerrain(req, res) {
   const userId = req.user.id;   // from JWT middleware
@@ -50,9 +50,12 @@ async function getAllFromUser(req, res) {
 
 function getTextureFromRule(rules, height)
 {
-  rules.forEach(rule => {
-    if (height < rule.condition) return rule.value;
-  });
+  // if (rules || rules.length > 0)
+  // {
+  //   rules.forEach(rule => {
+  //     if (height < rule.condition) return rule.value;
+  //   });
+  // }
 
   return "#00ff00"
 }
@@ -97,7 +100,9 @@ function renderWireframe(terrain, width, height, scale) {
     }
   }
 
-  return canvas.toBuffer("image/png");
+  // return canvas.toBuffer("image/png");
+  return canvas.createPNGStream();
+
 }
 
 // async function get3DTerrain(req, res, next) {
@@ -136,7 +141,7 @@ function renderWireframe(terrain, width, height, scale) {
 //     const {id} = req.params;
 
 //     const terrain = await terrainModel.getFromUser(id, userId);
-//     const heightMapBuffer = terrain.toImageBuffer();
+//     const heightMapBuffer = terrain.toStreamBuffer();
 //     console.log("ID", id);
 
 //     sharp(heightMapBuffer)
@@ -152,23 +157,32 @@ function renderWireframe(terrain, width, height, scale) {
 
 async function get3DTerrain(req, res, next) {
   try {
-    const seed = parseInt(req.query.seed) || 42;
-    const MAX_SIZE = 512;  // 2048x2048 canvas with scale = 4 is already ~16MB raw
-    const size = Math.min(parseInt(req.query.size) || 128, MAX_SIZE);
+    // const seed = parseInt(req.query.seed) || 42;
+    // const size = Math.min(parseInt(req.query.size) || 128, 512);
+    const userId = req.user.id;
+    const {id} = req.query;
 
-    const width = size * scale;
-    const height = size * scale;
+    const terrain = await terrainModel.getFromUser(id, userId);
 
-    const terrain = new Terrain(seed, size, 10);
-    const imageBuffer = renderWireframe(terrain.heightMap, width, height, scale);
+    const width = terrain.size * scale;
+    const height = terrain.size * scale;
+
+    terrain.rules = ruleModel.getTerrainRules(terrain.id);
 
     const scaleFactor = 4;
 
-  sharp(imageBuffer)
-  .resize(size * scale, size * scale, { kernel: "lanczos3" }) // upscale smoothly
-  .png({ compressionLevel: 9 })
-  .toBuffer()
-  .then(data => res.type('png').send(data));
+    // Stream PNG directly to response using Sharp
+    const imageStream = renderWireframe(terrain, width, height, scale);
+
+    res.type('image/png');
+
+    imageStream
+      .pipe(sharp()
+        .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" })
+        .png({ compressionLevel: 5 })
+      )
+      .on('error', err => next(err))
+      .pipe(res);
 
     // res.set("Content-Type", "image/png");
     // res.send(imageBuffer);
@@ -179,26 +193,23 @@ async function get3DTerrain(req, res, next) {
 
 async function getHeightMap(req, res, next) {
   try {
-    const seed = parseInt(req.query.seed) || 42;
-    const MAX_SIZE = 512;  // 2048x2048 canvas with scale = 4 is already ~16MB raw
-    const size = Math.min(parseInt(req.query.size) || 128, MAX_SIZE);
-    const terrain = new Terrain(seed, size);
-    const heightMapBuffer = terrain.toImageBuffer();
+    const userId = req.user.id;
+    const {id} = req.query;
 
-    // sharp(heightMapBuffer)
-    // .resize(size * scale, size * scale, { kernel: "lanczos3" }) // upscale smoothly
-    // .png({ compressionLevel: 5 })
-    // .toBuffer()
-    // .then(data => res.type('png').send(data));
+    const terrain = await terrainModel.getFromUser(id, userId);
 
     // Stream PNG directly to response using Sharp
-    res.type('image/png'); // set response header early
+    const heightMapStream = terrain.toStreamBuffer(); // this is a stream
 
-    sharp(heightMapBuffer)
-      .resize(size * scale, size * scale, { kernel: "lanczos3" })
-      .png({ compressionLevel: 5 })
-      .pipe(res)  // this streams directly
-      .on('error', err => next(err));  // handle pipe errors
+    res.type('image/png');
+
+    heightMapStream
+      .pipe(sharp()
+        .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" })
+        .png({ compressionLevel: 5 })
+      )
+      .on('error', err => next(err))
+      .pipe(res);
 
   } catch (err) {
     next(err);

@@ -13,7 +13,7 @@ class Terrain {
     userId;
     rules;
 
-    constructor(id = 0, seed, size, heightScale = 10, octaves = 5, userId = 0)
+    constructor(seed, size, heightScale = 10, octaves = 5, id = 0, userId = 0)
     {   
         this.id = id; 
         this.seed = seed;
@@ -60,7 +60,7 @@ class Terrain {
         return total / maxValue;  // normalize to [-1,1]
     }
 
-    toImageBuffer() {
+    toStreamBuffer() {
         const size = this.heightMap.length;
         const canvas = createCanvas(size, size);
         const ctx = canvas.getContext("2d");
@@ -92,7 +92,8 @@ class Terrain {
         }
     
         ctx.putImageData(imageData, 0, 0);
-        return canvas.toBuffer("image/png");
+        // return canvas.toBuffer("image/png");
+        return canvas.createPNGStream();
     }
 
     toJSON() {

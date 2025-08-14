@@ -21,7 +21,7 @@ exports.getTerrainRules = async (terrainId) => {
         row.id, row.rule_condition, row.value, row.terrainId
         ));
 
-        return terrains;  // return array of Terrain objects
+        return rules;  // return array of Terrain objects
     } finally {
         conn.release();
     }
