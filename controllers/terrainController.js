@@ -23,7 +23,7 @@ async function addTerrain(req, res) {
 
 async function deleteTerrain(req, res) {
   const userId = req.user.id;
-  const {id} = req.body;
+  const {id} = req.params;
 
   try {
     const terrain = await terrainModel.getFromUser(id, userId)
@@ -102,20 +102,23 @@ function renderWireframe(terrain, width, height, scale) {
 
 async function get3DTerrain(req, res, next) {
   try {
-    const seed = parseInt(req.query.seed) || 42;
-    const size = Math.min(parseInt(req.query.size) || 128, 512);
+    // const seed = parseInt(req.query.seed) || 42;
+    // const size = Math.min(parseInt(req.query.size) || 128, 512);
+    const userId = req.user.id;
+    const {id} = req.params;
 
-    const width = size * scale;
-    const height = size * scale;
+    const terrain = await terrainModel.getFromUser(id, userId);
 
-    const terrain = new Terrain(seed, size, 10);
+    const width = terrain.size * scale;
+    const height = terrain.size * scale;
+
     terrain.rules = ruleModel.getTerrainRules(terrain.id);
     const imageBuffer = renderWireframe(terrain, width, height, scale);
 
     const scaleFactor = 4;
 
   sharp(imageBuffer)
-  .resize(size * scale, size * scale, { kernel: "lanczos3" }) // upscale smoothly
+  .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
   .png({ compressionLevel: 9 })
   .toBuffer()
   .then(data => res.type('png').send(data));
@@ -128,20 +131,21 @@ async function get3DTerrain(req, res, next) {
 }
 
 async function getHeightMap(req, res, next) {
-    try {
-        const seed = parseInt(req.query.seed) || 42;
-        const size = Math.min(parseInt(req.query.size) || 128, 512);
+  try {
+    const userId = req.user.id;
+    const {id} = req.params;
 
-        const terrain = new Terrain(seed, size);
-        const heightMapBuffer = terrain.toImageBuffer();
+    const terrain = await terrainModel.getFromUser(id, userId);
+    const heightMapBuffer = terrain.toImageBuffer();
+    console.log("ID", id);
 
-        sharp(heightMapBuffer)
-        .resize(size * scale, size * scale, { kernel: "lanczos3" }) // upscale smoothly
-        .png({ compressionLevel: 5 })
-        .toBuffer()
-        .then(data => res.type('png').send(data));
+    sharp(heightMapBuffer)
+    .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
+    .png({ compressionLevel: 5 })
+    .toBuffer()
+    .then(data => res.type('png').send(data));
 
-    } catch (err) {
+  } catch (err) {
     next(err);
   }
 }
