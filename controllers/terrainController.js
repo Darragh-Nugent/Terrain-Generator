@@ -155,6 +155,8 @@ function renderWireframe(terrain, width, height, scale) {
 //   }
 // }
 
+//balony
+
 async function get3DTerrain(req, res, next) {
   try {
     // const seed = parseInt(req.query.seed) || 42;
