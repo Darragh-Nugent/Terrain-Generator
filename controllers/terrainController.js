@@ -61,99 +61,113 @@ function getTextureFromRule(rules, height)
 }
 
 // Render the wireframe mesh
-function renderWireframe(terrain, width, height, scale) {
-  const heightMap = terrain.heightMap;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
+// function renderWireframe(terrain, width, height, scale) {
+//   const heightMap = terrain.heightMap;
+//   const size = heightMap.length;
+//   const bounds = terrain.getBounds();
+//   const angleX = Math.PI / 6;
+//   const angleY = Math.PI / 4;
 
-  ctx.fillStyle = "#222222";
-  ctx.fillRect(0, 0, width, height);
+//   const newWidth = width * Math.cos(angleX) + height * Math.sin(angleY);
+//   const newHeight = width * Math.sin(angleX) + height * Math.cos(angleY);
 
-  //ctx.strokeStyle = "#00ff00";
-  ctx.lineWidth = 1;
+//   const canvas = createCanvas(width*, height);
+//   const ctx = canvas.getContext("2d");
 
-  const size = heightMap.length;
+//   ctx.fillStyle = "#222222";
+//   ctx.fillRect(0, 0, width, height);
 
-  for (let y = 0; y < size - 1; y++) {
-    for (let x = 0; x < size - 1; x++) {
-      const point = heightMap[y][x];
-      const pointRight = heightMap[y][x + 1];
-      const pointBelow = heightMap[y + 1][x];
+//   //ctx.strokeStyle = "#00ff00";
+//   ctx.lineWidth = 1;
 
-      const v0 = point.projectIsometric(scale, width, height);
-      const v1 = pointRight.projectIsometric(scale, width, height);
-      const v2 = pointBelow.projectIsometric(scale, width, height);
 
-      // Color lines based on elevation at v0 (you could also blend between two points for accuracy)
-      const color = getTextureFromRule(terrain.rules, point.z);
-      ctx.strokeStyle = color;
 
-      ctx.beginPath();
-      ctx.moveTo(v0.x, v0.y);
-      ctx.lineTo(v1.x, v1.y);
-      ctx.stroke();
+//   for (let y = 0; y < size - 1; y++) {
+//     for (let x = 0; x < size - 1; x++) {
+//       const point = heightMap[y][x];
+//       const pointRight = heightMap[y][x + 1];
+//       const pointBelow = heightMap[y + 1][x];
 
-      ctx.beginPath();
-      ctx.moveTo(v0.x, v0.y);
-      ctx.lineTo(v2.x, v2.y);
-      ctx.stroke();
+//       const v0 = point.projectIsometric(scale, bounds.minX, bounds.minY, width, height);
+//       const v1 = pointRight.projectIsometric(scale, bounds.minX, bounds.minY, width, height);
+//       const v2 = pointBelow.projectIsometric(scale, bounds.minX, bounds.minY, width, height);
+
+//       // Color lines based on elevation at v0 (you could also blend between two points for accuracy)
+//       const color = getTextureFromRule(terrain.rules, point.z);
+//       ctx.strokeStyle = color;
+
+//       ctx.beginPath();
+//       ctx.moveTo(v0.x, v0.y);
+//       ctx.lineTo(v1.x, v1.y);
+//       ctx.stroke();
+
+//       ctx.beginPath();
+//       ctx.moveTo(v0.x, v0.y);
+//       ctx.lineTo(v2.x, v2.y);
+//       ctx.stroke();
+//     }
+//   }
+
+//   // return canvas.toBuffer("image/png");
+//   return canvas.createPNGStream();
+
+// }
+
+function renderWireframe(terrain, scale = 1) {
+    const heightMap = terrain.heightMap;
+    const size = heightMap.length;
+
+    
+    console.log(`[DEBUG] renderWireframe scale:`, scale);    
+    const isoBounds = terrain.getIsometricBounds(scale);
+    const worldBounds = terrain.getBounds();
+    console.log("Isometric bounds:", isoBounds);
+      console.log("\n World bounds:", worldBounds);
+
+    const canvas = createCanvas(Math.ceil(isoBounds.width), Math.ceil(isoBounds.height));
+    const ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#222222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Translate so projected terrain fits nicely
+    ctx.translate(isoBounds.offsetX, isoBounds.offsetY);
+
+    ctx.lineWidth = 1;
+
+    for (let y = 0; y < size - 1; y++) {
+        for (let x = 0; x < size - 1; x++) {
+            const point = heightMap[y][x];
+            const pointRight = heightMap[y][x + 1];
+            const pointBelow = heightMap[y + 1][x];
+
+            const v0 = point.projectIsometric(scale, worldBounds.minX, worldBounds.minY);
+            const v1 = pointRight.projectIsometric(scale, worldBounds.minX, worldBounds.minY);
+            const v2 = pointBelow.projectIsometric(scale, worldBounds.minX, worldBounds.minY);
+
+            // const color = getTextureFromRule(terrain.rules, point.z);
+            // ctx.strokeStyle = color;
+            
+            const gray = Math.floor((point.z / terrain.heightScale) * 255);
+            ctx.strokeStyle = `rgb(${gray}, ${gray}, ${gray})`;
+
+
+            ctx.beginPath();
+            ctx.moveTo(v0.x, v0.y);
+            ctx.lineTo(v1.x, v1.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(v0.x, v0.y);
+            ctx.lineTo(v2.x, v2.y);
+            ctx.stroke();
+        }
     }
-  }
 
-  // return canvas.toBuffer("image/png");
-  return canvas.createPNGStream();
-
+    return canvas.createPNGStream(); // or return canvas if needed
 }
 
-// async function get3DTerrain(req, res, next) {
-//   try {
-//     // const seed = parseInt(req.query.seed) || 42;
-//     // const size = Math.min(parseInt(req.query.size) || 128, 512);
-//     const userId = req.user.id;
-//     const {id} = req.params;
-
-//     const terrain = await terrainModel.getFromUser(id, userId);
-
-//     const width = terrain.size * scale;
-//     const height = terrain.size * scale;
-
-//     terrain.rules = ruleModel.getTerrainRules(terrain.id);
-//     const imageBuffer = renderWireframe(terrain, width, height, scale);
-
-//     const scaleFactor = 4;
-
-//   sharp(imageBuffer)
-//   .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
-//   .png({ compressionLevel: 9 })
-//   .toBuffer()
-//   .then(data => res.type('png').send(data));
-
-//     // res.set("Content-Type", "image/png");
-//     // res.send(imageBuffer);
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-// async function getHeightMap(req, res, next) {
-//   try {
-//     const userId = req.user.id;
-//     const {id} = req.params;
-
-//     const terrain = await terrainModel.getFromUser(id, userId);
-//     const heightMapBuffer = terrain.toStreamBuffer();
-//     console.log("ID", id);
-
-//     sharp(heightMapBuffer)
-//     .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
-//     .png({ compressionLevel: 5 })
-//     .toBuffer()
-//     .then(data => res.type('png').send(data));
-
-//   } catch (err) {
-//     next(err);
-//   }
-// }
 
 async function get3DTerrain(req, res, next) {
   try {
@@ -172,7 +186,7 @@ async function get3DTerrain(req, res, next) {
     const scaleFactor = 4;
 
     // Stream PNG directly to response using Sharp
-    const imageStream = renderWireframe(terrain, width, height, scale);
+    const imageStream = renderWireframe(terrain, scale);
 
     res.type('image/png');
 
