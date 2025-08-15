@@ -34,8 +34,8 @@ class Terrain {
                 let nx = x / this.size;
                 let ny = y / this.size;
 
-                let h = this.#perlin(noise, nx, ny, this.octaves) * this.heightScale;
-                h = Math.pow(h, 2);
+                let h = this.#perlin(noise, nx, ny, this.octaves) ;
+                h = Math.pow(h, 2) * this.heightScale;
 
                 heightMap[y][x] = new Point(x, y, h);
             }
@@ -59,6 +59,28 @@ class Terrain {
     
         return total / maxValue;  // normalize to [-1,1]
     }
+    
+    getBounds(scale) {
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+
+        const size = this.heightMap.length;
+
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const point = this.heightMap[y][x];
+                const projected = point.projectIsometric(scale, 0, 0); // width/height not needed here
+
+                minX = Math.min(minX, projected.x);
+                maxX = Math.max(maxX, projected.x);
+                minY = Math.min(minY, projected.y);
+                maxY = Math.max(maxY, projected.y);
+            }
+        }
+
+        return { minX, maxX, minY, maxY };
+    }
+
 
     toStreamBuffer() {
         const size = this.heightMap.length;

@@ -63,16 +63,24 @@ function getTextureFromRule(rules, height)
 // Render the wireframe mesh
 function renderWireframe(terrain, width, height, scale) {
   const heightMap = terrain.heightMap;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
+  const { minX, maxX, minY, maxY } = terrain.getBounds(scale);
 
-  ctx.fillStyle = "#222222";
-  ctx.fillRect(0, 0, width, height);
+  // Add padding if you want
+  const padding = 20;
+  const canvasWidth = Math.ceil(maxX - minX + padding * 2);
+  const canvasHeight = Math.ceil(maxY - minY + padding * 2);
+
+  const canvas = createCanvas(canvasWidth, canvasHeight);
+  const ctx = canvas.getContext("2d");
 
   //ctx.strokeStyle = "#00ff00";
   ctx.lineWidth = 1;
 
   const size = heightMap.length;
+  // ctx.translate(0, height/2);
+  ctx.translate(-minX + padding, -minY + padding);
+
+
 
   for (let y = 0; y < size - 1; y++) {
     for (let x = 0; x < size - 1; x++) {
@@ -87,6 +95,7 @@ function renderWireframe(terrain, width, height, scale) {
       // Color lines based on elevation at v0 (you could also blend between two points for accuracy)
       const color = getTextureFromRule(terrain.rules, point.z);
       ctx.strokeStyle = color;
+      
 
       ctx.beginPath();
       ctx.moveTo(v0.x, v0.y);
