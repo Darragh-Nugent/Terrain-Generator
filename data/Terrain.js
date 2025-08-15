@@ -25,62 +25,63 @@ class Terrain {
         this.heightMap = this.#generateHeightMap();
     }
 
-    // #generateHeightMap () {
+    #generateHeightMap () {
+        const noise = new Noise(this.seed);
+        const heightMap = [];
+        const offset = this.size / 2;
+        const freq = 5;
+        for (let y = 0; y < this.size; y++) {
+            heightMap[y] = [];
+            for (let x = 0; x < this.size; x++) {
+                let nx = x / this.size * freq;
+                let ny = y / this.size * freq;
+
+                let h = this.#perlin(noise, nx, ny, this.octaves) * this.heightScale;
+                // h = Math.pow(h, 2);
+
+                heightMap[y][x] = new Point(x - offset, y - offset, h);
+            }
+        }
+        return heightMap;
+    }
+
+    // #generateHeightMap() {
     //     const noise = new Noise(this.seed);
     //     const heightMap = [];
     //     const offset = this.size / 2;
+
+    //     let min = Infinity;
+    //     let max = -Infinity;
+
+    //     // 1. Generate raw heights & track min/max
     //     for (let y = 0; y < this.size; y++) {
     //         heightMap[y] = [];
     //         for (let x = 0; x < this.size; x++) {
     //             let nx = x / this.size;
     //             let ny = y / this.size;
 
-    //             let h = this.#perlin(noise, nx, ny, this.octaves) * this.heightScale;
-    //             // h = Math.pow(h, 2);
+    //             let h = this.#perlin(noise, nx, ny, this.octaves);
+    //             min = Math.min(min, h);
+    //             max = Math.max(max, h);
 
-    //             heightMap[y][x] = new Point(x - offset, y - offset, h);
+    //             heightMap[y][x] = new Point(x - offset, y - offset, h); // store unscaled for now
     //         }
     //     }
+
+    //     // 2. Normalize and apply heightScale
+    //     const range = max - min || 1; // avoid div by 0
+
+    //     for (let y = 0; y < this.size; y++) {
+    //         for (let x = 0; x < this.size; x++) {
+    //             let normalized = (heightMap[y][x].z - min) / range; // [0, 1]
+    //             normalized = normalized * this.heightScale;  // [0, heightScale]
+    //             heightMap[y][x].z = Math.pow(normalized, 1.5);
+
+    //         }
+    //     }
+
     //     return heightMap;
     // }
-
-    #generateHeightMap() {
-        const noise = new Noise(this.seed);
-        const heightMap = [];
-        const offset = this.size / 2;
-
-        let min = Infinity;
-        let max = -Infinity;
-
-        // 1. Generate raw heights & track min/max
-        for (let y = 0; y < this.size; y++) {
-            heightMap[y] = [];
-            for (let x = 0; x < this.size; x++) {
-                let nx = x / this.size;
-                let ny = y / this.size;
-
-                let h = this.#perlin(noise, nx, ny, this.octaves);
-                min = Math.min(min, h);
-                max = Math.max(max, h);
-
-                heightMap[y][x] = new Point(x - offset, y - offset, h); // store unscaled for now
-            }
-        }
-
-        // 2. Normalize and apply heightScale
-        const range = max - min || 1; // avoid div by 0
-
-        for (let y = 0; y < this.size; y++) {
-            for (let x = 0; x < this.size; x++) {
-                let normalized = (heightMap[y][x].z - min) / range; // [0, 1]
-                heightMap[y][x].z = normalized * this.heightScale;  // [0, heightScale]
-                heightMap[y][x].z = Math.pow(normalized, 1.2) * this.heightScale;
-
-            }
-        }
-
-        return heightMap;
-    }
 
     #perlin(noise, x, y, octaves = 5, persistence = 0.5, lacunarity = 2) {
         let total = 0;

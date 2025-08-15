@@ -5,7 +5,7 @@ const tokenSecret =
 
 // Create a token with username embedded, setting the validity period.
 exports.generateAccessToken = (user) => {
-   return jwt.sign({ id: user.id, uName: user.uName }, tokenSecret, { expiresIn: "30m" });
+   return jwt.sign({ id: user.id, uName: user.uName }, tokenSecret, { expiresIn: "60m" });
 };
 
 exports.authenticateJWT = (req, res, next) => {

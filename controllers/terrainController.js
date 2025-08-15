@@ -7,7 +7,7 @@ const ruleModel = require("../models/ruleModel");
 const Terrain = require("../data/Terrain");
 const Rule = require("../data/Rule.js");
 
-const scale = 4;
+const scale = 2;
 
 async function addTerrain(req, res) {
   const userId = req.user.id;   // from JWT middleware
@@ -146,12 +146,9 @@ function renderWireframe(terrain, scale = 1) {
             const v1 = pointRight.projectIsometric(scale, worldBounds.minX, worldBounds.minY);
             const v2 = pointBelow.projectIsometric(scale, worldBounds.minX, worldBounds.minY);
 
-            // const color = getTextureFromRule(terrain.rules, point.z);
-            // ctx.strokeStyle = color;
+            const color = getTextureFromRule(terrain.rules, point.z);
+            ctx.strokeStyle = color;
             
-            const gray = Math.floor((point.z / terrain.heightScale) * 255);
-            ctx.strokeStyle = `rgb(${gray}, ${gray}, ${gray})`;
-
 
             ctx.beginPath();
             ctx.moveTo(v0.x, v0.y);
