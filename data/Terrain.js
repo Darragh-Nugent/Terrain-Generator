@@ -35,9 +35,13 @@ class Terrain {
                 let ny = y / this.size;
 
                 let h = this.#perlin(noise, nx, ny, this.octaves) ;
-                h = Math.pow(h, 2) * this.heightScale;
+                // h = Math.pow(h, 2) * this.heightScale;
+                h = (h + 1) / 2; // Normalize from [-1, 1] to [0, 1]
+                h = Math.pow(h, 2); // Optional: emphasize lower terrain
+                h *= this.heightScale;
 
                 heightMap[y][x] = new Point(x, y, h);
+
             }
         }
         return heightMap;
@@ -63,6 +67,7 @@ class Terrain {
     getBounds(scale) {
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
+        let minZ = Infinity, maxZ = -Infinity;
 
         const size = this.heightMap.length;
 
@@ -75,10 +80,12 @@ class Terrain {
                 maxX = Math.max(maxX, projected.x);
                 minY = Math.min(minY, projected.y);
                 maxY = Math.max(maxY, projected.y);
+                minZ = Math.min(minZ, projected.z);
+                maxZ = Math.max(maxZ, projected.z);
             }
         }
 
-        return { minX, maxX, minY, maxY };
+        return { minX, maxX, minY, maxY, minZ, maxZ };
     }
 
 

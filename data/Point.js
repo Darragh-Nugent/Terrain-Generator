@@ -51,7 +51,7 @@ class Point {
     const screenX = rx * scale;
     const screenY = -py * scale;
 
-    return { x: screenX, y: screenY };
+    return { x: screenX, y: screenY, z: this.z };
   }
 
 

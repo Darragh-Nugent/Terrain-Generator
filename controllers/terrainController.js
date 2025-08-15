@@ -48,7 +48,7 @@ async function getAllFromUser(req, res) {
   
 }
 
-function getTextureFromRule(rules, height)
+function getTextureFromRule(rules, height, minHeight, maxHeight)
 {
   // if (rules || rules.length > 0)
   // {
@@ -56,19 +56,55 @@ function getTextureFromRule(rules, height)
   //     if (height < rule.condition) return rule.value;
   //   });
   // }
+  const t = (maxHeight - height) / (maxHeight - minHeight);
+  // console.log("Normalised point  =", t);
 
-  return "#00ff00"
+  if (t < 0.2) {
+    // Deep water → Blue
+    return "#0033cc";
+  } else if (t < 0.4) {
+    // Shallow water → Light Blue
+    return "#66ccff";
+  } else if (t < 0.5) {
+    // Sand / Beach → Sandy
+    return "#eedd99";
+  } else if (t < 0.7) {
+    // Grass → Green
+    return "#44aa44";
+  } else if (t < 0.85) {
+    // Mountains → Brown
+    return "#885533";
+  } else {
+    // Snow → White
+    return "#ffffff";
+  }
+
+  // return "#00ff00"
 }
 
 // Render the wireframe mesh
 function renderWireframe(terrain, width, height, scale) {
   const heightMap = terrain.heightMap;
-  const { minX, maxX, minY, maxY } = terrain.getBounds(scale);
+  const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(scale);
+
+  console.log("=== Projected Bounds Debug ===");
+  console.log(`minX: ${minX.toFixed(2)}`);
+  console.log(`maxX: ${maxX.toFixed(2)}`);
+  console.log(`minY: ${minY.toFixed(2)}`);
+  console.log(`maxY: ${maxY.toFixed(2)}`);
+  console.log(`minZ: ${minZ.toFixed(2)}`);
+  console.log(`maxZ: ${maxZ.toFixed(2)}`);
+  console.log(`width: ${(maxX - minX).toFixed(2)}`);
+  console.log(`height: ${(maxY - minY).toFixed(2)}`);
+  console.log("================================");
 
   // Add padding if you want
-  const padding = 20;
+  const padding = 50;
   const canvasWidth = Math.ceil(maxX - minX + padding * 2);
   const canvasHeight = Math.ceil(maxY - minY + padding * 2);
+
+  console.log(`Canvas size (with padding): ${canvasWidth} x ${canvasHeight}`);
+  console.log(`Canvas translation: x = ${-minX + padding}, y = ${-minY + padding}`);
 
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext("2d");
@@ -79,8 +115,6 @@ function renderWireframe(terrain, width, height, scale) {
   const size = heightMap.length;
   // ctx.translate(0, height/2);
   ctx.translate(-minX + padding, -minY + padding);
-
-
 
   for (let y = 0; y < size - 1; y++) {
     for (let x = 0; x < size - 1; x++) {
@@ -93,7 +127,7 @@ function renderWireframe(terrain, width, height, scale) {
       const v2 = pointBelow.projectIsometric(scale, width, height);
 
       // Color lines based on elevation at v0 (you could also blend between two points for accuracy)
-      const color = getTextureFromRule(terrain.rules, point.z);
+      const color = getTextureFromRule(terrain.rules, point.z, minZ, maxZ);
       ctx.strokeStyle = color;
       
 
