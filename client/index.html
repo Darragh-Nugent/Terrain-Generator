@@ -1,12 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Map Generator Client</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Terrain Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #loginSection, #terrainSection { margin-bottom: 20px; }
+    .hidden { display: none; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; cursor: pointer; }
+    button { margin-left: 10px; }
+    img { max-width: 600px; display: block; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Terrain Generator</h1>
+
+  <!-- Login -->
+  <div id="loginSection">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <!-- Terrains -->
+  <div id="terrainSection" class="hidden">
+    <h2>Your Terrains</h2>
+    <ul id="terrainList"></ul>
+
+    <h3>Add Terrain</h3>
+    <input id="seed" placeholder="Seed"><br>
+    <input id="size" type="number" placeholder="Size"><br>
+    <input id="heightScale" type="number" placeholder="Height Scale"><br>
+    <input id="octaves" type="number" placeholder="Octaves"><br>
+    <button onclick="addTerrain()">Add Terrain</button>
+
+    <div id="terrainDisplay">
+      <h3>Selected Terrain</h3>
+      <img id="terrainImage" src="" alt="Terrain will appear here">
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:3000"; // change to your server address
+    let token = localStorage.getItem("token");
+
+    function show(section) {
+      document.getElementById("loginSection").classList.add("hidden");
+      document.getElementById("terrainSection").classList.add("hidden");
+      document.getElementById(section).classList.remove("hidden");
+    }
+
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        if (!res.ok) throw new Error("Invalid credentials");
+        const data = await res.json();
+        token = data.token;
+        localStorage.setItem("token", token);
+        await loadTerrains();
+        show("terrainSection");
+      } catch (err) {
+        document.getElementById("loginError").innerText = err.message;
+      }
+    }
+
+    async function loadTerrains() {
+      const res = await fetch(`${API_BASE}/terrain/getAllTerrainsFromUser`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const terrains = await res.json();
+      const list = document.getElementById("terrainList");
+      list.innerHTML = "";
+      terrains.forEach(t => {
+        const li = document.createElement("li");
+        li.innerText = `Terrain ${t.id} (seed: ${t.seed})`;
+        li.onclick = () => showTerrain(t.id);
+        const delBtn = document.createElement("button");
+        delBtn.innerText = "Delete";
+        delBtn.onclick = (e) => { e.stopPropagation(); deleteTerrain(t.id); };
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    async function showTerrain(id) {
+      const img = document.getElementById("terrainImage");
+      img.src = `${API_BASE}/get3DTerrain?id=${id}&token=${token}&t=${Date.now()}`;
+    }
+
+    async function addTerrain() {
+      const seed = document.getElementById("seed").value;
+      const size = document.getElementById("size").value;
+      const heightScale = document.getElementById("heightScale").value;
+      const octaves = document.getElementById("octaves").value;
+
+      await fetch(`${API_BASE}/terrain/addTerrain`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ seed, size, heightScale, octaves })
+      });
+      await loadTerrains();
+    }
+
+    async function deleteTerrain(id) {
+      await fetch(`${API_BASE}/terrain/deleteTerrain/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      await loadTerrains();
+    }
+
+    // Auto-login if token exists
+    if (token) {
+      loadTerrains().then(() => show("terrainSection")).catch(() => {
+        localStorage.removeItem("token");
+        show("loginSection");
+      });
+    } else {
+      show("loginSection");
+    }
+  </script>
+</body>
 </html>
