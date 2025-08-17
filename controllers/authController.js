@@ -15,7 +15,6 @@ exports.login = async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
-//   const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
   const token = authMiddleware.generateAccessToken(user);
 
 

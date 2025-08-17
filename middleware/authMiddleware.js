@@ -9,9 +9,12 @@ exports.generateAccessToken = (user) => {
 };
 
 exports.authenticateJWT = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  const authHeader = req.headers.authorization || req.query.token && `Bearer ${req.query.token}`;
+  if (!authHeader) {
+    return res.sendStatus(401);
+  }
 
+  const token = authHeader.split(' ')[1];
   jwt.verify(token, tokenSecret, (err, user) => {
     if (err) return res.status(403).json({ error: "Forbidden" });
     req.user = user;  // Attach user payload (e.g., user.id) to request

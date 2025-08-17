@@ -13,13 +13,13 @@ exports.getAllUsers = (req, res) => {
 };
 
 exports.AddUser = async (req, res) => {
-  const {uName, password} = req.body;
-  if (!uName) return res.status(400).json({error: 'Username is required'});
+  const {username, password} = req.body;
+  if (!username) return res.status(400).json({error: 'Username is required'});
   if (!password) return res.status(400).json({error: 'Password name is required'});
 
   const hash = await bcrypt.hash(password, 10);
 
-  User.AddUser(uName, hash)
+  User.AddUser(username, hash)
     .then(user => res.status(201).json(user))
     .catch(err => res.status(500).json({ error: err.message }));
 
