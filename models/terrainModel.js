@@ -39,6 +39,7 @@ exports.getAllFromUser = async (userId) => {
 }
 
 exports.getFromUser = async (id, userId) => {
+    console.log(`id=${id},userid=${userId}`);
     const conn = await pool.getConnection();
     try {
         const rows = await conn.query(

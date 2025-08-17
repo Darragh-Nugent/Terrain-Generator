@@ -24,11 +24,16 @@ async function addTerrain(req, res) {
 async function deleteTerrain(req, res) {
   const userId = req.user.id;
   const {id} = req.params;
+    console.log(`id=${id},userid=${userId}`);
 
   try {
+    console.log("Entered");
     const terrain = await terrainModel.getFromUser(id, userId)
+    console.log("Got terrain");
     if (!terrain) return res.status(401).json({ message: 'This user has no terrain with that id' });
+    console.log("terrain valid");
     await terrainModel.deleteTerrain(id);
+    console.log("deleted terrain");
     res.status(201).json(terrain);
   } catch (err) {
     res.status(500).json({ error: err.message });

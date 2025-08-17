@@ -9,6 +9,8 @@ exports.generateAccessToken = (user) => {
 };
 
 exports.authenticateJWT = (req, res, next) => {
+  console.log(req.headers.authorization);
+  console.log(req.query.token);
   const authHeader = req.headers.authorization || req.query.token && `Bearer ${req.query.token}`;
   if (!authHeader) {
     return res.sendStatus(401);
@@ -20,4 +22,5 @@ exports.authenticateJWT = (req, res, next) => {
     req.user = user;  // Attach user payload (e.g., user.id) to request
     next();
   });
+  console.log(token);
 };
