@@ -5,7 +5,6 @@ const Point = require("./Point");
 
 class Terrain {
     id;
-    heightMap;
     seed;
     size;
     heightScale;
@@ -21,11 +20,9 @@ class Terrain {
         this.heightScale = heightScale;
         this.octaves = octaves;
         this.userId = userId;
-
-        this.heightMap = this.#generateHeightMap();
     }
 
-    #generateHeightMap () {
+    generateHeightMap () {
         const noise = new Noise(this.seed);
         const heightMap = [];
         for (let y = 0; y < this.size; y++) {
@@ -64,16 +61,16 @@ class Terrain {
         return total / maxValue;  // normalize to [-1,1]
     }
     
-    getBounds(scale) {
+    getBounds(heightMap, scale) {
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
         let minZ = Infinity, maxZ = -Infinity;
 
-        const size = this.heightMap.length;
+        const size = heightMap.length;
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                const point = this.heightMap[y][x];
+                const point = heightMap[y][x];
                 const projected = point.projectIsometric(scale, 0, 0); // width/height not needed here
 
                 minX = Math.min(minX, projected.x);
@@ -90,7 +87,8 @@ class Terrain {
 
 
     toStreamBuffer() {
-        const size = this.heightMap.length;
+        const heightMap = this.generateHeightMap();
+        const size = heightMap.length;
         const canvas = createCanvas(size, size);
         const ctx = canvas.getContext("2d");
         const imageData = ctx.createImageData(size, size);
@@ -100,14 +98,14 @@ class Terrain {
         let min = Infinity, max = -Infinity;
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                if (this.heightMap[y][x].z < min) min = this.heightMap[y][x].z;
-                if (this.heightMap[y][x].z > max) max = this.heightMap[y][x].z;
+                if (heightMap[y][x].z < min) min = heightMap[y][x].z;
+                if (heightMap[y][x].z > max) max = heightMap[y][x].z;
             }
         }
     
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                let normalized = (this.heightMap[y][x].z - min) / (max - min); // map from [-1,1] to [0,1]
+                let normalized = (heightMap[y][x].z - min) / (max - min); // map from [-1,1] to [0,1]
                 let grayscale = Math.floor(normalized * 255);
     
                 // Set pixel color (RGBA)

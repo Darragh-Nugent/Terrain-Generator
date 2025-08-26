@@ -1,0 +1,20 @@
+[
+{
+  "name": "classic",
+  "mapping": [
+    { "max": 0.3, "color": "#0000ff" },  
+    { "max": 0.5, "color": "#00ff00" },  
+    { "max": 0.7, "color": "#aaaa00" },  
+    { "max": 1.0, "color": "#888888" }
+  ]
+},
+
+{
+  "name": "desert",
+  "mapping": [
+    { "max": 0.4, "color": "#f4e19c" },  
+    { "max": 0.7, "color": "#c2b280" },  
+    { "max": 1.0, "color": "#8b7355" }
+  ]
+}
+]

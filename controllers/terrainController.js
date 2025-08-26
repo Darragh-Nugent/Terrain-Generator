@@ -55,13 +55,15 @@ async function getAllFromUser(req, res) {
 
 function getTextureFromRule(rules, height, minHeight, maxHeight)
 {
-  // if (rules || rules.length > 0)
-  // {
-  //   rules.forEach(rule => {
-  //     if (height < rule.condition) return rule.value;
-  //   });
-  // }
+
   const t = (maxHeight - height) / (maxHeight - minHeight);
+
+  if (rules && rules.length > 0)
+  {
+    rules.forEach(rule => {
+      if (height < rule.condition) return rule.value;
+    });
+  }
   // console.log("Normalised point  =", t);
 
   if (t < 0.2) {
@@ -89,8 +91,8 @@ function getTextureFromRule(rules, height, minHeight, maxHeight)
 
 // Render the wireframe mesh
 function renderWireframe(terrain, width, height, scale) {
-  const heightMap = terrain.heightMap;
-  const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(scale);
+  const heightMap = terrain.generateHeightMap();
+  const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(heightMap, scale);
 
   console.log("=== Projected Bounds Debug ===");
   console.log(`minX: ${minX.toFixed(2)}`);
@@ -153,57 +155,6 @@ function renderWireframe(terrain, width, height, scale) {
 
 }
 
-// async function get3DTerrain(req, res, next) {
-//   try {
-//     // const seed = parseInt(req.query.seed) || 42;
-//     // const size = Math.min(parseInt(req.query.size) || 128, 512);
-//     const userId = req.user.id;
-//     const {id} = req.params;
-
-//     const terrain = await terrainModel.getFromUser(id, userId);
-
-//     const width = terrain.size * scale;
-//     const height = terrain.size * scale;
-
-//     terrain.rules = ruleModel.getTerrainRules(terrain.id);
-//     const imageBuffer = renderWireframe(terrain, width, height, scale);
-
-//     const scaleFactor = 4;
-
-//   sharp(imageBuffer)
-//   .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
-//   .png({ compressionLevel: 9 })
-//   .toBuffer()
-//   .then(data => res.type('png').send(data));
-
-//     // res.set("Content-Type", "image/png");
-//     // res.send(imageBuffer);
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-// async function getHeightMap(req, res, next) {
-//   try {
-//     const userId = req.user.id;
-//     const {id} = req.params;
-
-//     const terrain = await terrainModel.getFromUser(id, userId);
-//     const heightMapBuffer = terrain.toStreamBuffer();
-//     console.log("ID", id);
-
-//     sharp(heightMapBuffer)
-//     .resize(terrain.size * scale, terrain.size * scale, { kernel: "lanczos3" }) // upscale smoothly
-//     .png({ compressionLevel: 5 })
-//     .toBuffer()
-//     .then(data => res.type('png').send(data));
-
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-//balony
 
 async function get3DTerrain(req, res, next) {
   try {
@@ -217,7 +168,7 @@ async function get3DTerrain(req, res, next) {
     const width = terrain.size * scale;
     const height = terrain.size * scale;
 
-    terrain.rules = ruleModel.getTerrainRules(terrain.id);
+    // terrain.rules = ruleModel.getTerrainRules(terrain.id);
 
     const scaleFactor = 4;
 

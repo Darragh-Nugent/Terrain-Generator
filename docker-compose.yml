@@ -3,7 +3,7 @@ version: "3.9"
 services:
   backend:
     build: .
-    container_name: terrain-generator
+    container_name: terrain-generator-backend
     ports:
       - "3000:3000" # host:container
     volumes:
