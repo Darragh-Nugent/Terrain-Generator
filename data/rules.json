@@ -2,23 +2,82 @@
 {
   "name": "classic",
   "mapping": [
-    { "max": 0.3, "color": "#0000ff" },  
-    { "max": 0.5, "color": "#00ff00" },  
-    { "max": 0.7, "color": "#aaaa00" },  
-    { "max": 1.0, "color": "#888888" }
-  ]
-},
-
-{
-  "name": "desert",
-  "mapping": [
     { "max": 0.2, "color": "#0033cc" },  
     { "max": 0.4, "color": "#66ccff" },  
     { "max": 0.5, "color": "#eedd99" },
     { "max": 0.7, "color": "#44aa44" },
     { "max": 0.85, "color": "#885533" },
     { "max": 1.0, "color": "#ffffff" }
+  ]
+},
 
+{
+  "name": "desert",
+  "mapping": [
+    { "max": 0.4, "color": "#f4e19c" },  
+    { "max": 0.7, "color": "#c2b280" },  
+    { "max": 1.0, "color": "#8b7355" }
+  ]
+},
+
+{
+  "name": "tundra",
+  "mapping": [
+    { "max": 0.3, "color": "#a0c8d0" }, 
+    { "max": 0.6, "color": "#dce6e6" },  
+    { "max": 0.9, "color": "#ffffff" }, 
+    { "max": 1.0, "color": "#b0b0b0" }   
+  ]
+},
+
+{
+  "name": "swamp",
+  "mapping": [
+    { "max": 0.2, "color": "#2e4d2f" },  
+    { "max": 0.4, "color": "#3b5e3a" },  
+    { "max": 0.7, "color": "#4c703d" },  
+    { "max": 1.0, "color": "#7f9b6f" }   
+  ]
+},
+
+{
+  "name": "mountain",
+  "mapping": [
+    { "max": 0.3, "color": "#3b3b3b" },  
+    { "max": 0.6, "color": "#6b6b6b" },  
+    { "max": 0.8, "color": "#c0c0c0" },  
+    { "max": 1.0, "color": "#ffffff" }   
+  ]
+},
+
+{
+  "name": "rainforest",
+  "mapping": [
+    { "max": 0.2, "color": "#3e7327" },  
+    { "max": 0.5, "color": "#4e9a30" },  
+    { "max": 0.7, "color": "#6ab04c" },  
+    { "max": 1.0, "color": "#a8d08d" }   
+  ]
+},
+
+{
+  "name": "volcanic",
+  "mapping": [
+    { "max": 0.2, "color": "#2b2b2b" },  
+    { "max": 0.4, "color": "#3c3c3c" },  
+    { "max": 0.7, "color": "#703c28" },  
+    { "max": 1.0, "color": "#ff4500" }   
+  ]
+},
+
+{
+  "name": "tropical",
+  "mapping": [
+    { "max": 0.2, "color": "#006994" },  
+    { "max": 0.4, "color": "#00c8c8" },  
+    { "max": 0.6, "color": "#ffeb9c" },  
+    { "max": 0.8, "color": "#45a049" },  
+    { "max": 1.0, "color": "#006400" }   
   ]
 }
 ]

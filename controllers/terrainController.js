@@ -59,28 +59,6 @@ function getColourFromHeight(style, height, minHeight, maxHeight)
       return rule.color;
     }
   }
-
-  // if (t < 0.2) {
-  //   // Deep water → Blue
-  //   return "#0033cc";
-  // } else if (t < 0.4) {
-  //   // Shallow water → Light Blue
-  //   return "#66ccff";
-  // } else if (t < 0.5) {
-  //   // Sand / Beach → Sandy
-  //   return "#eedd99";
-  // } else if (t < 0.7) {
-  //   // Grass → Green
-  //   return "#44aa44";
-  // } else if (t < 0.85) {
-  //   // Mountains → Brown
-  //   return "#885533";
-  // } else {
-  //   // Snow → White
-  //   return "#ffffff";
-  // }
-
-  // return "#00ff00"
 }
 
 async function getColours(styleQuery) {
