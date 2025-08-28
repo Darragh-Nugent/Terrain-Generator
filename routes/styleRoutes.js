@@ -1,13 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const ruleController = require("../controllers/ruleController");
+const { loadStyles } = require("../models/styleModel");
 
 // router.post("/addRule", ruleController.addRule);
 // router.get("/getTerrainRules", ruleController.getTerrainRules);
 
-router.get("/", (req, res) => {
-  res.json(loadRules());
+router.get("/", async (req, res) => {
+  const styles = await loadStyles();
+  res.json(styles);
 });
+
 
 router.post("/", (req, res) => {
   const newRule = req.body;

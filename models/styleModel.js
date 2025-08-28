@@ -33,13 +33,13 @@ const path = require("path");
 
 const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
 
-exports.loadRules = async() => {
+exports.loadStyles = () => {
   const data = fs.readFileSync(RULES_PATH);
   return JSON.parse(data);
 }
 
 exports.addRule = async (newRule) => {
-  const rules = loadRules();
+  const rules = loadStyles();
   rules.push(newRule);
   fs.writeFileSync(RULES_PATH, JSON.stringify(rules, null, 2));
   return newRule;

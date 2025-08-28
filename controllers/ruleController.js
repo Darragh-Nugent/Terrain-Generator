@@ -1,4 +1,4 @@
-const ruleModel = require("../models/ruleModel");
+const ruleModel = require("../models/styleModel");
 
 const Rule = require("../data/Rule");
 

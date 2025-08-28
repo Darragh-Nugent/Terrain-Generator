@@ -10,6 +10,7 @@
     ul { list-style: none; padding: 0; }
     li { margin: 5px 0; cursor: pointer; }
     button { margin-left: 10px; }
+    select { margin-left: 10px; }
     img { max-width: 600px; display: block; margin-top: 20px; }
   </style>
 </head>
@@ -112,21 +113,29 @@
         headers: { "Authorization": "Bearer " + token }
       });
       const terrains = await res.json();
-      console.log("ran"); // 👀 check property names
-      console.log("Terrains response:", terrains); // 👀 check property names
+      console.log("Terrains response:", terrains); 
       const list = document.getElementById("terrainList");
       list.innerHTML = "";
-      terrains.forEach(terrain => {
+      for (const terrain of terrains) {
         const li = document.createElement("li");
         li.innerText = `Terrain ${terrain.id} (seed: ${terrain.seed}, size: ${terrain.size}, height scale: ${terrain.heightScale}, octaves ${terrain.octaves})`;
 
         const load3DBtn = document.createElement("button");
         load3DBtn.innerText = "Load 3D Map";
-        load3DBtn.onclick = () => showTerrain(terrain.id);
+        load3DBtn.onclick = () => showTerrain(terrain.id, changeStyleDrop.value);
 
         const loadMapBtn = document.createElement("button");
         loadMapBtn.innerText = "Load Height Map";
         loadMapBtn.onclick = () => showMap(terrain.id);
+
+        const changeStyleDrop = document.createElement("select");
+        const options = await getStyleOptions();
+        options.forEach(style => {
+          const option = document.createElement("option");
+          option.value = style;
+          option.textContent = style;
+          changeStyleDrop.appendChild(option);
+        })
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
@@ -134,14 +143,15 @@
 
         li.appendChild(load3DBtn);
         li.appendChild(loadMapBtn);
+        li.appendChild(changeStyleDrop);
         li.appendChild(delBtn);
         list.appendChild(li);
-      });
+      };
     }
 
-    async function showTerrain(id) {
+    async function showTerrain(id, style) {
       try {
-        const res = await fetch(`${API_BASE}/terrain/get3DTerrain?id=${id}`, {
+        const res = await fetch(`${API_BASE}/terrain/get3DTerrain?id=${id}&styleQuery=${style}`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -185,6 +195,33 @@
       }
     }
 
+    async function getStyleOptions()
+    {
+      try {
+        const res = await fetch(`${API_BASE}/style/`);
+
+        if (!res.ok) {
+          throw new Error(`Failed to load styles: ${res.statusText}`);
+        }
+        console.log("begun");
+        const styles = await res.json();
+        console.log("styles");
+        console.log(styles);
+
+        const styleNames = []
+        styles.forEach(style => 
+        {
+          styleNames.push(style.name);
+        });
+
+        return styleNames;
+
+
+      } catch (err) {
+        console.error("Error loading styles:", err);
+      }
+    }
+
 
     async function addTerrain() {
       const seed = document.getElementById("seed").value;
@@ -192,24 +229,33 @@
       const heightScale = document.getElementById("heightScale").value;
       const octaves = document.getElementById("octaves").value;
 
-      await fetch(`${API_BASE}/terrain/addTerrain`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({ seed, size, heightScale, octaves })
-      });
-      await loadTerrains();
+      try {
+        const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ seed, size, heightScale, octaves })
+        });
+
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(`Add Terrain failed: ${msg}`);
+        }
+
+        await loadTerrains();
+      } catch (err) {
+        alert(err.message);
+        console.error("Error adding terrain:", err);
+      }
     }
 
     async function deleteTerrain(id) {
-      console.log("Buttonpressed")
       await fetch(`${API_BASE}/terrain/deleteTerrain/${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
       });
-      console.log("finished")
       await loadTerrains();
     }
 

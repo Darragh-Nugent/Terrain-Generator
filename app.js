@@ -5,7 +5,7 @@ const cors = require("cors");
 const terrainRoutes = require("./routes/terrainRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
-const ruleRoutes = require("./routes/userRoutes");
+const styleRoutes = require("./routes/styleRoutes");
 
 
 //const errorHandler = require("./middleware/errorHandler");
@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, "client")));
 app.use("/terrain", terrainRoutes);
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
-app.use("/rule", ruleRoutes);
+app.use("/style", styleRoutes);
 
 // // Serve React build in production
 // if (process.env.NODE_ENV === 'production') {

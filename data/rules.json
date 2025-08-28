@@ -12,9 +12,13 @@
 {
   "name": "desert",
   "mapping": [
-    { "max": 0.4, "color": "#f4e19c" },  
-    { "max": 0.7, "color": "#c2b280" },  
-    { "max": 1.0, "color": "#8b7355" }
+    { "max": 0.2, "color": "#0033cc" },  
+    { "max": 0.4, "color": "#66ccff" },  
+    { "max": 0.5, "color": "#eedd99" },
+    { "max": 0.7, "color": "#44aa44" },
+    { "max": 0.85, "color": "#885533" },
+    { "max": 1.0, "color": "#ffffff" }
+
   ]
 }
 ]

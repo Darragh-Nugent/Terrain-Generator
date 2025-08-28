@@ -1,7 +1,7 @@
 const { createCanvas, loadImage } = require("canvas");
 const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
-const ruleModel = require("../models/ruleModel");
+const styleModel = require("../models/styleModel.js");
 const fs = require("fs");
 
 
@@ -28,13 +28,9 @@ async function deleteTerrain(req, res) {
     console.log(`id=${id},userid=${userId}`);
 
   try {
-    console.log("Entered");
     const terrain = await terrainModel.getFromUser(id, userId)
-    console.log("Got terrain");
     if (!terrain) return res.status(401).json({ message: 'This user has no terrain with that id' });
-    console.log("terrain valid");
     await terrainModel.deleteTerrain(id);
-    console.log("deleted terrain");
     res.status(201).json(terrain);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -56,45 +52,46 @@ async function getAllFromUser(req, res) {
 
 function getColourFromHeight(style, height, minHeight, maxHeight)
 {
-
   const t = (maxHeight - height) / (maxHeight - minHeight);
 
-  style.mapping.forEach(rule => {
-    if (height < rule.max) return rule.color;
-  });
-
-  if (t < 0.2) {
-    // Deep water → Blue
-    return "#0033cc";
-  } else if (t < 0.4) {
-    // Shallow water → Light Blue
-    return "#66ccff";
-  } else if (t < 0.5) {
-    // Sand / Beach → Sandy
-    return "#eedd99";
-  } else if (t < 0.7) {
-    // Grass → Green
-    return "#44aa44";
-  } else if (t < 0.85) {
-    // Mountains → Brown
-    return "#885533";
-  } else {
-    // Snow → White
-    return "#ffffff";
+  for (const rule of style.mapping) {
+    if (t <= rule.max) {
+      return rule.color;
+    }
   }
+
+  // if (t < 0.2) {
+  //   // Deep water → Blue
+  //   return "#0033cc";
+  // } else if (t < 0.4) {
+  //   // Shallow water → Light Blue
+  //   return "#66ccff";
+  // } else if (t < 0.5) {
+  //   // Sand / Beach → Sandy
+  //   return "#eedd99";
+  // } else if (t < 0.7) {
+  //   // Grass → Green
+  //   return "#44aa44";
+  // } else if (t < 0.85) {
+  //   // Mountains → Brown
+  //   return "#885533";
+  // } else {
+  //   // Snow → White
+  //   return "#ffffff";
+  // }
 
   // return "#00ff00"
 }
 
 async function getColours(styleQuery) {
-  const styles = await ruleModel.loadRules();
+  const styles = await styleModel.loadStyles();
 
-  result = styles.find(style => style.name == styleQuery);
-  // if (!result) 
-  // {
-  //   return #00ff00;
-  // }
-  // else
+  const result = styles.find(style => style.name === styleQuery);
+  if (!result) 
+  {
+    return "#00ff00";
+  }
+  else
   {
     console.log(result);
     return result;
@@ -176,6 +173,7 @@ async function get3DTerrain(req, res, next) {
     const userId = req.user.id;
     const {id} = req.query;
     const {styleQuery} = req.query;
+
 
     const terrain = await terrainModel.getFromUser(id, userId);
     const style = await getColours(styleQuery);
