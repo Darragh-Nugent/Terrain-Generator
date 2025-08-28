@@ -2,6 +2,7 @@ const { createCanvas, loadImage } = require("canvas");
 const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
 const ruleModel = require("../models/ruleModel");
+const fs = require("fs");
 
 
 const Terrain = require("../data/Terrain");
@@ -53,18 +54,14 @@ async function getAllFromUser(req, res) {
   
 }
 
-function getTextureFromRule(rules, height, minHeight, maxHeight)
+function getColourFromHeight(style, height, minHeight, maxHeight)
 {
 
   const t = (maxHeight - height) / (maxHeight - minHeight);
 
-  if (rules && rules.length > 0)
-  {
-    rules.forEach(rule => {
-      if (height < rule.condition) return rule.value;
-    });
-  }
-  // console.log("Normalised point  =", t);
+  style.mapping.forEach(rule => {
+    if (height < rule.max) return rule.color;
+  });
 
   if (t < 0.2) {
     // Deep water → Blue
@@ -89,8 +86,24 @@ function getTextureFromRule(rules, height, minHeight, maxHeight)
   // return "#00ff00"
 }
 
+async function getColours(styleQuery) {
+  const styles = await ruleModel.loadRules();
+
+  result = styles.find(style => style.name == styleQuery);
+  // if (!result) 
+  // {
+  //   return #00ff00;
+  // }
+  // else
+  {
+    console.log(result);
+    return result;
+  }
+
+}
+
 // Render the wireframe mesh
-function renderWireframe(terrain, width, height, scale) {
+function renderWireframe(terrain, width, height, scale, style) {
   const heightMap = terrain.generateHeightMap();
   const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(heightMap, scale);
 
@@ -105,7 +118,7 @@ function renderWireframe(terrain, width, height, scale) {
   console.log(`height: ${(maxY - minY).toFixed(2)}`);
   console.log("================================");
 
-  // Add padding if you want
+  // Add padding
   const padding = 50;
   const canvasWidth = Math.ceil(maxX - minX + padding * 2);
   const canvasHeight = Math.ceil(maxY - minY + padding * 2);
@@ -134,7 +147,7 @@ function renderWireframe(terrain, width, height, scale) {
       const v2 = pointBelow.projectIsometric(scale, width, height);
 
       // Color lines based on elevation at v0 (you could also blend between two points for accuracy)
-      const color = getTextureFromRule(terrain.rules, point.z, minZ, maxZ);
+      const color = getColourFromHeight(style, point.z, minZ, maxZ);
       ctx.strokeStyle = color;
       
 
@@ -162,18 +175,19 @@ async function get3DTerrain(req, res, next) {
     // const size = Math.min(parseInt(req.query.size) || 128, 512);
     const userId = req.user.id;
     const {id} = req.query;
+    const {styleQuery} = req.query;
 
     const terrain = await terrainModel.getFromUser(id, userId);
+    const style = await getColours(styleQuery);
+
 
     const width = terrain.size * scale;
     const height = terrain.size * scale;
 
-    // terrain.rules = ruleModel.getTerrainRules(terrain.id);
-
     const scaleFactor = 4;
 
     // Stream PNG directly to response using Sharp
-    const imageStream = renderWireframe(terrain, width, height, scale);
+    const imageStream = renderWireframe(terrain, width, height, scale, style);
 
     res.type('image/png');
 
@@ -185,8 +199,6 @@ async function get3DTerrain(req, res, next) {
       .on('error', err => next(err))
       .pipe(res);
 
-    // res.set("Content-Type", "image/png");
-    // res.send(imageBuffer);
   } catch (err) {
     next(err);
   }

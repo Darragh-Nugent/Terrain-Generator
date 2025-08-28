@@ -33,16 +33,14 @@ const path = require("path");
 
 const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
 
-function loadRules() {
+exports.loadRules = async() => {
   const data = fs.readFileSync(RULES_PATH);
   return JSON.parse(data);
 }
 
-function addRule(newRule) {
+exports.addRule = async (newRule) => {
   const rules = loadRules();
   rules.push(newRule);
   fs.writeFileSync(RULES_PATH, JSON.stringify(rules, null, 2));
   return newRule;
 }
-
-module.exports = { loadRules, addRule };
