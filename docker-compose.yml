@@ -1,8 +1,7 @@
-version: "3.9"
-
 services:
   backend:
     build: .
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
     container_name: terrain-generator-backend
     ports:
       - "3000:3000" # host:container

@@ -43,6 +43,7 @@
     <input id="size" type="number" placeholder="Size"><br>
     <input id="heightScale" type="number" placeholder="Height Scale"><br>
     <input id="octaves" type="number" placeholder="Octaves"><br>
+    <input id="iterations" type="number" placeholder="Erosion Iterations"><br>
     <button onclick="addTerrain()">Add Terrain</button>
 
     <div id="terrainDisplay">
@@ -118,7 +119,7 @@
       list.innerHTML = "";
       for (const terrain of terrains) {
         const li = document.createElement("li");
-        li.innerText = `Terrain ${terrain.id} (seed: ${terrain.seed}, size: ${terrain.size}, height scale: ${terrain.heightScale}, octaves ${terrain.octaves})`;
+        li.innerText = `Terrain ${terrain.id} (seed: ${terrain.seed}, size: ${terrain.size}, height scale: ${terrain.heightScale}, octaves ${terrain.octaves}, iterations ${terrain.iterations})`;
 
         const load3DBtn = document.createElement("button");
         load3DBtn.innerText = "Load 3D Map";
@@ -139,7 +140,7 @@
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
-        delBtn.onclick = (e) => { e.stopPropagation(); console.log("Sending delete with token:", token); deleteTerrain(terrain.id); };
+        delBtn.onclick = (e) => { e.stopPropagation(); deleteTerrain(terrain.id); };
 
         li.appendChild(load3DBtn);
         li.appendChild(loadMapBtn);
@@ -228,6 +229,7 @@
       const size = document.getElementById("size").value;
       const heightScale = document.getElementById("heightScale").value;
       const octaves = document.getElementById("octaves").value;
+      const iterations = document.getElementById("iterations").value;
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
@@ -236,7 +238,7 @@
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
           },
-          body: JSON.stringify({ seed, size, heightScale, octaves })
+          body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
         });
 
         if (!res.ok) {
@@ -252,7 +254,7 @@
     }
 
     async function deleteTerrain(id) {
-      await fetch(`${API_BASE}/terrain/deleteTerrain/${id}`, {
+      await fetch(`${API_BASE}/terrain/deleteTerrain?id=${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
       });

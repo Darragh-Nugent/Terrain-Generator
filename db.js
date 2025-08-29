@@ -34,19 +34,9 @@ const pool = mariadb.createPool({
             size INT UNSIGNED NOT NULL,
             heightScale INT NOT NULL,
             octaves INT NOT NULL,
+            iterations INT NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
-    `);
-
-    // Create Rule table
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS rules (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        terrain_id INT NOT NULL,
-        rule_condition INT NOT NULL,
-        value VARCHAR(100) NOT NULL,
-        FOREIGN KEY (terrain_id) REFERENCES terrains(id) ON DELETE CASCADE
-      )
     `);
   } catch (err) {
     console.error('DB init failed:', err.message);

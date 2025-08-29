@@ -2,13 +2,13 @@ const pool = require('../db');
 const Terrain = require("../data/Terrain");
 const { use } = require('bcrypt/promises');
 
-exports.addTerrain = async (seed, size, heightScale, octaves, userId) => {
+exports.addTerrain = async (seed, size, heightScale, octaves, iterations, userId) => {
     const conn = await pool.getConnection();
     try { 
-        const result = await conn.query('INSERT INTO terrains (seed, size, heightScale, octaves, user_id) VALUES (?, ?, ?, ?, ?)', 
-        [seed, size, heightScale, octaves, userId]);
+        const result = await conn.query('INSERT INTO terrains (seed, size, heightScale, octaves, iterations, user_id) VALUES (?, ?, ?, ?, ?, ?)', 
+        [seed, size, heightScale, octaves, iterations, userId]);
 
-        return new Terrain(Number(seed), size, heightScale, octaves, Number(result.insertId), userId)
+        return new Terrain(Number(seed), size, heightScale, octaves, iterations, Number(result.insertId), userId)
     } finally {
         conn.release();
     }
@@ -29,7 +29,7 @@ exports.getAllFromUser = async (userId) => {
     try { 
         const rows = await conn.query('SELECT * FROM terrains WHERE user_id = ?', [userId]);
         const terrains = rows.map(row => new Terrain(
-          Number(row.seed), row.size, row.heightScale, row.octaves, Number(row.id), Number(row.user_id)
+          Number(row.seed), row.size, row.heightScale, row.octaves, row.iterations, Number(row.id), Number(row.user_id)
         ));
 
         return terrains;  // return array of Terrain objects
@@ -59,6 +59,7 @@ exports.getFromUser = async (id, userId) => {
           row.size,
           row.heightScale,
           row.octaves,
+          row.iterations,
           row.id,
           row.user_id
         );

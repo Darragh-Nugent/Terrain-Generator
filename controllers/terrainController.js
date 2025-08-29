@@ -12,10 +12,10 @@ const scale = 4;
 
 async function addTerrain(req, res) {
   const userId = req.user.id;   // from JWT middleware
-  const { seed, size, heightScale, octaves } = req.body;
+  const { seed, size, heightScale, octaves, iterations } = req.body;
 
   try {
-    const newTerrain = await terrainModel.addTerrain(seed, size, heightScale, octaves, userId);
+    const newTerrain = await terrainModel.addTerrain(seed, size, heightScale, octaves, iterations, userId);
     res.status(201).json(newTerrain);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -24,7 +24,7 @@ async function addTerrain(req, res) {
 
 async function deleteTerrain(req, res) {
   const userId = req.user.id;
-  const {id} = req.params;
+  const {id} = req.query;
     console.log(`id=${id},userid=${userId}`);
 
   try {
@@ -79,7 +79,8 @@ async function getColours(styleQuery) {
 
 // Render the wireframe mesh
 function renderWireframe(terrain, width, height, scale, style) {
-  const heightMap = terrain.generateHeightMap();
+  const heightMap = terrain.applyHydraulicErosion();
+  // const heightMap = terrain.generateHeightMap();
   const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(heightMap, scale);
 
   console.log("=== Projected Bounds Debug ===");
