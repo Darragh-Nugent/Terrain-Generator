@@ -78,8 +78,8 @@ async function getColours(styleQuery) {
 }
 
 // Render the wireframe mesh
-function renderWireframe(terrain, width, height, scale, style) {
-  const heightMap = terrain.applyHydraulicErosion();
+async function renderWireframe(terrain, width, height, scale, style) {
+  const heightMap = await terrain.applyHydraulicErosion();
   // const heightMap = terrain.generateHeightMap();
   const { minX, maxX, minY, maxY, minZ, maxZ } = terrain.getBounds(heightMap, scale);
 
@@ -164,7 +164,7 @@ async function get3DTerrain(req, res, next) {
     const scaleFactor = 4;
 
     // Stream PNG directly to response using Sharp
-    const imageStream = renderWireframe(terrain, width, height, scale, style);
+    const imageStream = await renderWireframe(terrain, width, height, scale, style);
 
     res.type('image/png');
 
