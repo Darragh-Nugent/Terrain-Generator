@@ -1,0 +1,38 @@
+Description: Launchs EC2 instance and pulls and runs a container for the Terrain Generator app
+
+Resources:
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.small
+      SubnetId: subnet-075811427d5564cf9
+      SecurityGroupIds:
+        - sg-032bd1ff8cf77dbb9
+      IamInstanceProfile: CAB432-Instance-Role
+      ImageId: ami-04f3e2888afb5ea64
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -xe
+
+          # Update and install Docker & dependencies
+          apt-get update -y
+          apt-get install -y docker.io docker-compose-plugin awscli
+
+          # Add ubuntu user to docker group so it can run docker without sudo
+          usermod -aG docker ubuntu
+
+          # Ensure docker starts on boot
+          systemctl enable docker
+          systemctl start docker
+
+          # Login to ECR
+          aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
+
+          # Change to ubuntu home dir
+          cd /home/ubuntu/Terrain-Generator
+
+          # Pull images and start with docker-compose
+          sudo docker pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
+          docker compose up -d
