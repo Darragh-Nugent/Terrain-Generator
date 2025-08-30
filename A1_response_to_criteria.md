@@ -16,27 +16,28 @@ Core criteria
 ### Containerise the app
 
 - **ECR Repository name:** n11547227-a1
-- **Video timestamp:**
+- **Video timestamp:** 00:00
 - **Relevant files:**
     - Dockerfile
     - docker-compose.yml
 
 ### Deploy the container
 
-- **EC2 instance ID:**
-- **Video timestamp:**
+- **EC2 instance ID:** i-013479625b7a1ba69
+- **Video timestamp:** 00:30
 
 ### User login
 
 - **One line description:** Users able to register their details which are stored in MariaDB. THey can then login using these stored details. JWS tokens are used for sessions and passwords are encrypted using Bcrypt.
-- **Video timestamp:**
+- **Video timestamp:** 00:55
 - **Relevant files:**
-    - 
+    - controllers/authController.js
+    - middleware/authMiddleWare.js
 
 ### REST API
 
 - **One line description:** REST API with endpoints (as nouns) and HTTP methods (GET, POST, PUT, DELETE), and appropriate status codes
-- **Video timestamp:**
+- **Video timestamp:** 2:10
 - **Relevant files:**
     - app.js
     - client/index.html
@@ -58,7 +59,7 @@ Core criteria
 - **One line description:** Terrain metadata
 - **Type:** Structured with Acid
 - **Rationale:** Metadata stored in MariaDB database instead of storing entire image
-- **Video timestamp:**
+- **Video timestamp:** 1:40
 - **Relevant files:**
     - db.js
     - models/terrainModel.js
@@ -68,14 +69,14 @@ Core criteria
 - **One line description:** Terrain images
 - **Type:** Unstructured
 - **Rationale:** Too large for database, are streamed directly to the user instead
-- **Video timestamp:**
+- **Video timestamp:** 1:50, 2:50
 - **Relevant files:**
   - controllers/terrainController.js
 
 ### CPU intensive task
 
  **One line description:** Generate terrain using a large terrain size and a large number of erosion iterations
-- **Video timestamp:** 
+- **Video timestamp:**  3:15
 - **Relevant files:**
     - data/Terrain.js
     - controllers/terrainController.js
@@ -83,9 +84,9 @@ Core criteria
 ### CPU load testing
 
  **One line description:** Script to generate requests to get image for large terrain
-- **Video timestamp:** 
-- **Relevant files:** #####################################################
-    - 
+- **Video timestamp:** 3:20
+- **Relevant files:**
+    - stress-test.ps1
 
 Additional criteria
 ------------------------------------------------
@@ -107,7 +108,7 @@ Additional criteria
 ### Additional types of data
 
 - **One line description:** Style data stored in JSON file
-- **Video timestamp:**
+- **Video timestamp:** 
 - **Relevant files:**
     - rules.json
 
@@ -116,28 +117,29 @@ Additional criteria
 - **One line description:** Terrain styles
 - **Type:** Structured with without Acid
 - **Rationale:** Styles for 3D terrain examples stored in JSON files due to its hierarchical nature.
-- **Video timestamp:**
+- **Video timestamp:** 3:00
 - **Relevant files:**
     - rules.json
 
 ### Custom processing
 
 - **One line description:** Terrains are generated using custom height map generator (using Perlin noise library) as well as custom erosion simulation code.
-- **Video timestamp:**
+- **Video timestamp:** 2:25
 - **Relevant files:**
     - data/Terrain.js
 
 ### Infrastructure as code
 
-- **One line description:** #########################################
-- **Video timestamp:**
+- **One line description:** Cloud formation used to start up EC2 intance and docker compose used to build and run appllication
+- **Video timestamp:** 00:10
 - **Relevant files:**
     - docker-compose.yml
+    - CloudFormationTemplate.yml
 
 ### Web client
 
 - **One line description:** Fully functional GUI web client that utilises all endpoints.
-- **Video timestamp:**
+- **Video timestamp:** 00:45
 - **Relevant files:**
     -   client/index.html
 
