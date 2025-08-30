@@ -1,5 +1,5 @@
 const Noise = require("noisejs").Noise;
-const { createCanvas } = require("canvas");
+const { createCanvas, loadImage } = require("canvas");
 const Point = require("./Point");
 
 
@@ -61,7 +61,8 @@ class Terrain {
         return heightMap;
     }
 
-    async generateErodedHeightMap() {
+    // New erosion method
+    generateErodedHeightMap() {
         const heightMap = this.generateHeightMap();
         const water = Array(this.size).fill().map(() => Array(this.size).fill(0));
         const sediment = Array(this.size).fill().map(() => Array(this.size).fill(0));
@@ -186,15 +187,15 @@ class Terrain {
     
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                let normalized = (heightMap[y][x].z - min) / (max - min);
+                let normalized = (heightMap[y][x].z - min) / (max - min); // map from [-1,1] to [0,1]
                 let grayscale = Math.floor(normalized * 255);
     
                 // Set pixel color (RGBA)
                 let idx = (y * size + x) * 4;
-                data[idx] = grayscale;     
+                data[idx] = grayscale; 
                 data[idx + 1] = grayscale; 
                 data[idx + 2] = grayscale; 
-                data[idx + 3] = 255;       
+                data[idx + 3] = 255;   
             }
             
         }
