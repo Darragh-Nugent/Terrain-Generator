@@ -1,5 +1,5 @@
 const Noise = require("noisejs").Noise;
-const { createCanvas, loadImage } = require("canvas");
+const { createCanvas } = require("canvas");
 const Point = require("./Point");
 
 
@@ -33,8 +33,8 @@ class Terrain {
         total += noise.perlin2(x * frequency, y * frequency) * amplitude;
         maxValue += amplitude;
     
-        amplitude *= persistence;   // decrease amplitude each octave
-        frequency *= lacunarity;    // increase frequency each octave
+        amplitude *= persistence;
+        frequency *= lacunarity;
         }
     
         return total / maxValue;  // normalize to [-1,1]
@@ -50,9 +50,8 @@ class Terrain {
                 let ny = y / this.size;
 
                 let h = this.#perlin(noise, nx, ny, this.octaves) ;
-                // h = Math.pow(h, 2) * this.heightScale;
                 h = (h + 1) / 2; // Normalize from [-1, 1] to [0, 1]
-                h = Math.pow(h, 2); // Optional: emphasize lower terrain
+                h = Math.pow(h, 2);
                 h *= this.heightScale;
 
                 heightMap[y][x] = new Point(x, y, h);
@@ -62,16 +61,15 @@ class Terrain {
         return heightMap;
     }
 
-    // New erosion method
-    applyHydraulicErosion() {
-        const heightMap = this.generateHeightMap(); // Get base heightmap
-        const water = Array(this.size).fill().map(() => Array(this.size).fill(0)); // Water amount per cell
-        const sediment = Array(this.size).fill().map(() => Array(this.size).fill(0)); // Sediment per cell
-        const maxSediment = 0.05; // Tune: max sediment water can carry
-        const dissolveRate = 0.01; // Tune: how much height dissolves into sediment
-        const depositRate = 0.01; // Tune: how much sediment deposits back to height
-        const rainAmount = 0.01; // Tune: water added per iteration
-        const evaporationRate = 0.5; // Tune: water evaporation per iteration
+    async generateErodedHeightMap() {
+        const heightMap = this.generateHeightMap();
+        const water = Array(this.size).fill().map(() => Array(this.size).fill(0));
+        const sediment = Array(this.size).fill().map(() => Array(this.size).fill(0));
+        const maxSediment = 0.05;
+        const dissolveRate = 0.01;
+        const depositRate = 0.01;
+        const rainAmount = 0.01;
+        const evaporationRate = 0.5;
 
         for (let iter = 0; iter < this.iterations; iter++) {
             // Add rain
@@ -141,7 +139,7 @@ class Terrain {
             }
         }
 
-        return heightMap; // Return modified heightmap
+        return heightMap;
     }
     
     getBounds(heightMap, scale) {
@@ -154,7 +152,7 @@ class Terrain {
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
                 const point = heightMap[y][x];
-                const projected = point.projectIsometric(scale, 0, 0); // width/height not needed here
+                const projected = point.projectIsometric(scale, 0, 0);
 
                 minX = Math.min(minX, projected.x);
                 maxX = Math.max(maxX, projected.x);
@@ -170,7 +168,7 @@ class Terrain {
 
 
     toStreamBuffer() {
-        const heightMap = this.applyHydraulicErosion();
+        const heightMap = this.generateErodedHeightMap();
         const size = heightMap.length;
         const canvas = createCanvas(size, size);
         const ctx = canvas.getContext("2d");
@@ -188,21 +186,20 @@ class Terrain {
     
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                let normalized = (heightMap[y][x].z - min) / (max - min); // map from [-1,1] to [0,1]
+                let normalized = (heightMap[y][x].z - min) / (max - min);
                 let grayscale = Math.floor(normalized * 255);
     
                 // Set pixel color (RGBA)
                 let idx = (y * size + x) * 4;
-                data[idx] = grayscale;     // R
-                data[idx + 1] = grayscale; // G
-                data[idx + 2] = grayscale; // B
-                data[idx + 3] = 255;       // A (opaque)
+                data[idx] = grayscale;     
+                data[idx + 1] = grayscale; 
+                data[idx + 2] = grayscale; 
+                data[idx + 3] = 255;       
             }
             
         }
     
         ctx.putImageData(imageData, 0, 0);
-        // return canvas.toBuffer("image/png");
         return canvas.createPNGStream();
     }
 

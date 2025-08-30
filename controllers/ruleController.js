@@ -1,7 +1,5 @@
 const ruleModel = require("../models/styleModel");
 
-const Rule = require("../data/Rule");
-
 exports.getTerrainRules = async (req, res) => {
   const {terrainId} = req.body; 
   try {

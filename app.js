@@ -7,9 +7,6 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const styleRoutes = require("./routes/styleRoutes");
 
-
-//const errorHandler = require("./middleware/errorHandler");
-
 const app = express();
 const port = 3000;
 
@@ -22,18 +19,6 @@ app.use("/terrain", terrainRoutes);
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/style", styleRoutes);
-
-// // Serve React build in production
-// if (process.env.NODE_ENV === 'production') {
-//   const __dirname = path.resolve()
-//   app.use(express.static(path.join(__dirname, 'client', 'dist')))
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'))
-//   })
-// }
-
-
-//app.use(errorHandler);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server listening on port ${port}`);

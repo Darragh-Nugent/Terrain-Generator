@@ -1,8 +1,6 @@
 const User = require("../models/userModels");
 const bcrypt = require('bcrypt');
 
-const Person = require("../data/Person");
-
 exports.getAllUsers = (req, res) => {
     User.getAll()
     .then(row => {
@@ -15,7 +13,7 @@ exports.getAllUsers = (req, res) => {
 exports.AddUser = async (req, res) => {
   const {username, password} = req.body;
   if (!username) return res.status(400).json({error: 'Username is required'});
-  if (!password) return res.status(400).json({error: 'Password name is required'});
+  if (!password) return res.status(400).json({error: 'Password is required'});
 
   const hash = await bcrypt.hash(password, 10);
 
@@ -24,8 +22,3 @@ exports.AddUser = async (req, res) => {
     .catch(err => res.status(500).json({ error: err.message }));
 
 };
-
-// module.exports = {
-//   getAllUsers,
-//   AddUser
-// };

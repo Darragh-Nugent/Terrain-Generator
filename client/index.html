@@ -53,7 +53,7 @@
   </div>
 
   <script>
-    const API_BASE = ""; // adjust if hosted
+    const API_BASE = "";
     let token = localStorage.getItem("token");
 
     function show(section) {
@@ -114,7 +114,6 @@
         headers: { "Authorization": "Bearer " + token }
       });
       const terrains = await res.json();
-      console.log("Terrains response:", terrains); 
       const list = document.getElementById("terrainList");
       list.innerHTML = "";
       for (const terrain of terrains) {
@@ -162,8 +161,8 @@
           throw new Error(`Failed to load image: ${res.statusText}`);
         }
 
-        const blob = await res.blob(); // read response as a blob
-        const imageUrl = URL.createObjectURL(blob); // create a temporary URL
+        const blob = await res.blob();
+        const imageUrl = URL.createObjectURL(blob);
 
         const img = document.getElementById("terrainImage");
         img.src = imageUrl;
@@ -185,8 +184,8 @@
           throw new Error(`Failed to load image: ${res.statusText}`);
         }
 
-        const blob = await res.blob(); // read response as a blob
-        const imageUrl = URL.createObjectURL(blob); // create a temporary URL
+        const blob = await res.blob();
+        const imageUrl = URL.createObjectURL(blob);
 
         const img = document.getElementById("terrainImage");
         img.src = imageUrl;
@@ -204,10 +203,7 @@
         if (!res.ok) {
           throw new Error(`Failed to load styles: ${res.statusText}`);
         }
-        console.log("begun");
         const styles = await res.json();
-        console.log("styles");
-        console.log(styles);
 
         const styleNames = []
         styles.forEach(style => 
