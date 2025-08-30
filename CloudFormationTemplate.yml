@@ -10,7 +10,7 @@ Resources:
       SecurityGroupIds:
         - sg-032bd1ff8cf77dbb9
       IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-03acdbc3824c0c85e
+      ImageId: ami-0c79b3a447d99f87a
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
