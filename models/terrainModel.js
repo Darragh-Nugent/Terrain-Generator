@@ -27,7 +27,7 @@ exports.getAllFromUser = async (userId) => {
     try { 
         const rows = await conn.query('SELECT * FROM terrains WHERE user_id = ?', [userId]);
         const terrains = rows.map(row => new Terrain(
-            row.seed, row.size, row.heightScale, row.octaves, row.iterations, row.id, row.user_id
+            Number(row.seed), row.size, row.heightScale, row.octaves, row.iterations, Number(row.id), Number(row.user_id)
         ));
 
         return terrains;
