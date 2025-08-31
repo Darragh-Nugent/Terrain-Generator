@@ -37,7 +37,7 @@ Core criteria
 ### REST API
 
 - **One line description:** REST API with endpoints (as nouns) and HTTP methods (GET, POST, PUT, DELETE), and appropriate status codes
-- **Video timestamp:** 2:10
+- **Video timestamp:** 2:25
 - **Relevant files:**
     - app.js
     - client/index.html
@@ -59,7 +59,7 @@ Core criteria
 - **One line description:** Terrain metadata
 - **Type:** Structured with Acid
 - **Rationale:** Metadata stored in MariaDB database instead of storing entire image
-- **Video timestamp:** 1:40
+- **Video timestamp:** 2:40
 - **Relevant files:**
     - db.js
     - models/terrainModel.js
@@ -69,14 +69,14 @@ Core criteria
 - **One line description:** Terrain images
 - **Type:** Unstructured
 - **Rationale:** Too large for database, are streamed directly to the user instead
-- **Video timestamp:** 1:50, 2:50
+- **Video timestamp:** 1:50, 3:45
 - **Relevant files:**
   - controllers/terrainController.js
 
 ### CPU intensive task
 
  **One line description:** Generate terrain using a large terrain size and a large number of erosion iterations
-- **Video timestamp:**  3:15
+- **Video timestamp:**  4:05
 - **Relevant files:**
     - data/Terrain.js
     - controllers/terrainController.js
@@ -84,7 +84,7 @@ Core criteria
 ### CPU load testing
 
  **One line description:** Script to generate requests to get image for large terrain
-- **Video timestamp:** 3:20
+- **Video timestamp:** 4:12
 - **Relevant files:**
     - stress-test.ps1
 
@@ -117,14 +117,14 @@ Additional criteria
 - **One line description:** Terrain styles
 - **Type:** Structured with without Acid
 - **Rationale:** Styles for 3D terrain examples stored in JSON files due to its hierarchical nature.
-- **Video timestamp:** 3:00
+- **Video timestamp:** 4:00
 - **Relevant files:**
     - rules.json
 
 ### Custom processing
 
 - **One line description:** Terrains are generated using custom height map generator (using Perlin noise library) as well as custom erosion simulation code.
-- **Video timestamp:** 2:25
+- **Video timestamp:** 3:20
 - **Relevant files:**
     - data/Terrain.js
 
