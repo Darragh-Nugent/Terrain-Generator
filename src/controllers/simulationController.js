@@ -44,7 +44,7 @@ exports.saveFallingSnowVideo = async (req, res) => {
 
 exports.showRenderPage = async (req, res) => {
     try {
-        res.sendFile(path.join(__dirname, '..', '..', 'client', 'render_simulation.html'));
+        res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'render_simulation.html'));
     } catch (err) {
         console.error("Error loading delete page:", err);
         res.status(500).send('Server error');

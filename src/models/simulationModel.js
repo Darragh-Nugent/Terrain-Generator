@@ -4,6 +4,7 @@ const {allParticlesGrounded, isEmptyConfiguration,
     calculateNumberParticles, calculateAvgPos, 
     meetsSurvivalCondition,calculateParticleDrift,
     calculateWindspeedFactor} = require("../utils/simulation")
+const {findBoundaries} = require("../utils/arrayUtils");
 
 function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minNeighbour, maxNeighbour) {
     let cloudConfigs = calculateCloudConfig(initialState, minNeighbour, maxNeighbour, steps);
