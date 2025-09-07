@@ -8,6 +8,7 @@ services:
     volumes:
       - .:/app      # bind mount for live code changes
       - /app/node_modules # prevent overwriting node_modules
+      - ./videos:/videos
     environment:
       NODE_ENV: development
       DB_HOST: db
@@ -27,6 +28,15 @@ services:
       - "3306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
+      
+
+  redis:
+    image: redis:alpine 
+    container_name: redis
+    volumes:
+      - redis-data:/data 
+    restart: always   
 
 volumes:
   mariadb-data:
+  redis-data:

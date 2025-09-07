@@ -2,7 +2,7 @@
   "name": "map-generator-app",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
@@ -14,10 +14,14 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "canvas": "^3.1.2",
+    "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mariadb": "^3.4.5",
     "noisejs": "^2.1.0",
+    "plotly.js": "^3.1.0",
+    "redis": "^5.8.2",
+    "uuid": "^11.1.0",
     "sharp": "^0.34.3"
   }
 }

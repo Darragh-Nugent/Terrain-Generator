@@ -1,20 +1,25 @@
-# Use the official Node.js image
 FROM node:20
 
-# Set the working directory
 WORKDIR /app
 
-# Copy only package.json and package-lock.json first (for caching)
 COPY package*.json ./
 
-# Install dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    libcairo2-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
+    libgif-dev \
+    libpixman-1-dev \
+    ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
+
 RUN npm install
 
-# Copy the rest of the application
 COPY . .
 
-# Expose the port your app runs on
 EXPOSE 3000
 
-# Start the app
 CMD ["npm", "start"]
