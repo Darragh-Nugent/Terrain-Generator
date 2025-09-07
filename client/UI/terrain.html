@@ -1,19 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Terrain Generator</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #loginSection, #terrainSection { margin-bottom: 20px; }
-    .hidden { display: none; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 5px 0; cursor: pointer; }
-    button { margin-left: 10px; }
-    select { margin-left: 10px; }
-    img { max-width: 600px; display: block; margin-top: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    #loginSection,
+    #terrainSection {
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 5px 0;
+      cursor: pointer;
+    }
+
+    button {
+      margin-left: 10px;
+    }
+
+    select {
+      margin-left: 10px;
+    }
+
+    img {
+      max-width: 600px;
+      display: block;
+      margin-top: 20px;
+    }
   </style>
 </head>
+
 <body>
   <h1>Terrain Generator</h1>
 
@@ -70,6 +101,7 @@
         const res = await fetch(`${API_BASE}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ username, password })
         });
         if (!res.ok) throw new Error("Invalid credentials");
@@ -91,6 +123,7 @@
         const res = await fetch(`${API_BASE}/user/addUser`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ username, password })
         });
         if (!res.ok) {
@@ -111,7 +144,7 @@
 
     async function loadTerrains() {
       const res = await fetch(`${API_BASE}/terrain/getAllTerrainsFromUser`, {
-        headers: { "Authorization": "Bearer " + token }
+        credentials: "include",
       });
       const terrains = await res.json();
       const list = document.getElementById("terrainList");
@@ -152,9 +185,7 @@
     async function showTerrain(id, style) {
       try {
         const res = await fetch(`${API_BASE}/terrain/get3DTerrain?id=${id}&styleQuery=${style}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+          credentials: "include",
         });
 
         if (!res.ok) {
@@ -175,9 +206,7 @@
     async function showMap(id) {
       try {
         const res = await fetch(`${API_BASE}/terrain/getHeightMap?id=${id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+          credentials: "include",
         });
 
         if (!res.ok) {
@@ -195,8 +224,7 @@
       }
     }
 
-    async function getStyleOptions()
-    {
+    async function getStyleOptions() {
       try {
         const res = await fetch(`${API_BASE}/style/`);
 
@@ -206,8 +234,7 @@
         const styles = await res.json();
 
         const styleNames = []
-        styles.forEach(style => 
-        {
+        styles.forEach(style => {
           styleNames.push(style.name);
         });
 
@@ -232,8 +259,8 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
           },
+          credentials: "include",
           body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
         });
 
@@ -252,7 +279,7 @@
     async function deleteTerrain(id) {
       await fetch(`${API_BASE}/terrain/deleteTerrain?id=${id}`, {
         method: "DELETE",
-        headers: { "Authorization": "Bearer " + token }
+        credentials: "include",
       });
       await loadTerrains();
     }
@@ -268,4 +295,5 @@
     }
   </script>
 </body>
+
 </html>
