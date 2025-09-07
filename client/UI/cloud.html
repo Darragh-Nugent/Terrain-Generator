@@ -212,7 +212,7 @@
     }
 
     function addCol() {
-      if (tables.rows.length > 50) return;
+      if (table.rows.length > 50) return;
       for (let i = 0; i < table.rows.length; i++) {
         const newCell = table.rows[i].insertCell();
         const input = document.createElement('input');
