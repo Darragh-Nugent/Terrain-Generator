@@ -4,8 +4,8 @@ const path = require('path');
 
 
 router.get('/', (req, res) => {
-    // res.sendFile(path.join(__dirname, "..", "..", "client", 'UI', "index.html"));
-    res.sendFile(path.join(__dirname, "..", "..", "client", 'UI', "terrain.html"));
+    res.sendFile(path.join(__dirname, "..", "..", "client", 'UI', "index.html"));
+    // res.sendFile(path.join(__dirname, "..", "..", "client", 'UI', "terrain.html"));
 
 });
 

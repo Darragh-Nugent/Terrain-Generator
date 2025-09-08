@@ -10,6 +10,6 @@ router.get('/getAllTerrainsFromUser', authenticateToken, terrainController.getAl
 router.post('/addTerrain', authenticateToken, terrainController.addTerrain)
 router.delete('/deleteTerrain', authenticateToken, terrainController.deleteTerrain)
 
-
+router.get('/Terrain-Generator/:id/', authenticateToken, terrainController.showTerrainGenerator)
 
 module.exports = router;

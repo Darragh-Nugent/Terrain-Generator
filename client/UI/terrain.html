@@ -49,7 +49,7 @@
   <h1>Terrain Generator</h1>
 
   <!-- Login / Register -->
-  <div id="loginSection">
+  <!-- <div id="loginSection">
     <h2>Login</h2>
     <input id="username" placeholder="Username"><br>
     <input id="password" type="password" placeholder="Password"><br>
@@ -61,11 +61,11 @@
     <input id="regPassword" type="password" placeholder="New Password"><br>
     <button onclick="register()">Register</button>
     <p id="registerError" style="color:red;"></p>
-  </div>
+  </div> -->
 
   <!-- Terrains -->
   <div id="terrainSection" class="hidden">
-    <button onclick="logout()">Logout</button>
+    <!-- <button onclick="logout()">Logout</button> -->
     <h2>Your Terrains</h2>
     <ul id="terrainList"></ul>
 
@@ -85,62 +85,62 @@
 
   <script>
     const API_BASE = "";
-    let token = localStorage.getItem("token");
+    // let token = localStorage.getItem("token");
 
     function show(section) {
-      document.getElementById("loginSection").classList.add("hidden");
+      // document.getElementById("loginSection").classList.add("hidden");
       document.getElementById("terrainSection").classList.add("hidden");
       document.getElementById(section).classList.remove("hidden");
     }
 
-    async function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+    // async function login() {
+    //   const username = document.getElementById("username").value;
+    //   const password = document.getElementById("password").value;
 
-      try {
-        const res = await fetch(`${API_BASE}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ username, password })
-        });
-        if (!res.ok) throw new Error("Invalid credentials");
-        const data = await res.json();
-        token = data.token;
-        localStorage.setItem("token", token);
-        await loadTerrains();
-        show("terrainSection");
-      } catch (err) {
-        document.getElementById("loginError").innerText = err.message;
-      }
-    }
+    //   try {
+    //     const res = await fetch(`${API_BASE}/auth/login`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include",
+    //       body: JSON.stringify({ username, password })
+    //     });
+    //     if (!res.ok) throw new Error("Invalid credentials");
+    //     const data = await res.json();
+    //     token = data.token;
+    //     localStorage.setItem("token", token);
+    //     await loadTerrains();
+    //     show("terrainSection");
+    //   } catch (err) {
+    //     document.getElementById("loginError").innerText = err.message;
+    //   }
+    // }
 
-    async function register() {
-      const username = document.getElementById("regUsername").value;
-      const password = document.getElementById("regPassword").value;
+    // async function register() {
+    //   const username = document.getElementById("regUsername").value;
+    //   const password = document.getElementById("regPassword").value;
 
-      try {
-        const res = await fetch(`${API_BASE}/user/addUser`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ username, password })
-        });
-        if (!res.ok) {
-          const msg = await res.text();
-          throw new Error(msg);
-        }
-        alert("Registration successful! Please log in.");
-      } catch (err) {
-        document.getElementById("registerError").innerText = err.message;
-      }
-    }
+    //   try {
+    //     const res = await fetch(`${API_BASE}/user/addUser`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include",
+    //       body: JSON.stringify({ username, password })
+    //     });
+    //     if (!res.ok) {
+    //       const msg = await res.text();
+    //       throw new Error(msg);
+    //     }
+    //     alert("Registration successful! Please log in.");
+    //   } catch (err) {
+    //     document.getElementById("registerError").innerText = err.message;
+    //   }
+    // }
 
-    async function logout() {
-      token = null;
-      localStorage.removeItem("token");
-      show("loginSection");
-    }
+    // async function logout() {
+    //   token = null;
+    //   localStorage.removeItem("token");
+    //   show("loginSection");
+    // }
 
     async function loadTerrains() {
       const res = await fetch(`${API_BASE}/terrain/getAllTerrainsFromUser`, {
@@ -285,14 +285,16 @@
     }
 
     // Auto-login if token exists
-    if (token) {
-      loadTerrains().then(() => show("terrainSection")).catch(() => {
-        localStorage.removeItem("token");
-        show("loginSection");
-      });
-    } else {
-      show("loginSection");
-    }
+    // if (token) {
+      loadTerrains().then(() =>show("terrainSection"))
+      // loadTerrains().then(() => show("terrainSection")).catch(() => {
+      //   localStorage.removeItem("token");
+      //   show("loginSection");
+      // });
+    // } 
+    // else {
+    //   show("loginSection");
+    // }
   </script>
 </body>
 

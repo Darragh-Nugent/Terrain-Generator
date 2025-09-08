@@ -2,6 +2,7 @@ const { createCanvas, } = require("canvas");
 const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
 const styleModel = require("../models/styleModel.js");
+const path = require('path');
 
 const SCALE = 4;
 
@@ -19,7 +20,7 @@ async function addTerrain(req, res) {
 
 async function deleteTerrain(req, res) {
   const userId = req.user.id;
-  const {id} = req.query;
+  const { id } = req.query;
 
   try {
     const terrain = await terrainModel.getFromUser(id, userId)
@@ -32,20 +33,19 @@ async function deleteTerrain(req, res) {
 }
 
 async function getAllFromUser(req, res) {
-  const userId = req.user.id; 
+  const userId = req.user.id;
 
   try {
     const terrains = await terrainModel.getAllFromUser(userId);
-    if (!terrains) return res.status(404).json({error: 'There are no terrains for this user'});
+    if (!terrains) return res.status(404).json({ error: 'There are no terrains for this user' });
     res.status(201).json(terrains);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-  
+
 }
 
-function getColourFromHeight(style, height, minHeight, maxHeight)
-{
+function getColourFromHeight(style, height, minHeight, maxHeight) {
   const t = (maxHeight - height) / (maxHeight - minHeight);
 
   for (const rule of style.mapping) {
@@ -59,12 +59,10 @@ async function getColours(styleQuery) {
   const styles = await styleModel.loadStyles();
 
   const result = styles.find(style => style.name === styleQuery);
-  if (!result) 
-  {
+  if (!result) {
     return "#00ff00";
   }
-  else
-  {
+  else {
     console.log(result);
     return result;
   }
@@ -98,7 +96,7 @@ async function renderWireframe(terrain, width, height, scale, style) {
 
       const color = getColourFromHeight(style, point.z, minZ, maxZ);
       ctx.strokeStyle = color;
-      
+
 
       ctx.beginPath();
       ctx.moveTo(v0.x, v0.y);
@@ -120,8 +118,8 @@ async function renderWireframe(terrain, width, height, scale, style) {
 async function get3DTerrain(req, res, next) {
   try {
     const userId = req.user.id;
-    const {id} = req.query;
-    const {styleQuery} = req.query;
+    const { id } = req.query;
+    const { styleQuery } = req.query;
 
     const terrain = await terrainModel.getFromUser(id, userId);
     const style = await getColours(styleQuery);
@@ -149,7 +147,7 @@ async function get3DTerrain(req, res, next) {
 async function getHeightMap(req, res, next) {
   try {
     const userId = req.user.id;
-    const {id} = req.query;
+    const { id } = req.query;
 
     const terrain = await terrainModel.getFromUser(id, userId);
 
@@ -170,10 +168,20 @@ async function getHeightMap(req, res, next) {
   }
 }
 
+function showTerrainGenerator(req, res, next) {
+  try {
+    res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'terrain.html'));
+  } catch (err) {
+    console.error("Error loading terrain generator page:", err);
+    res.status(500).send('Server error');
+  }
+}
+
 module.exports = {
   get3DTerrain,
   getHeightMap,
   addTerrain,
   deleteTerrain,
-  getAllFromUser
+  getAllFromUser,
+  showTerrainGenerator
 };

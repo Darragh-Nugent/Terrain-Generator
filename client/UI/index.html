@@ -14,6 +14,7 @@
             <button type="button" id="settings" onClick="go_settings()" style="display:none">Settings</button>
             <button type="button" onClick="go_simulation()">Cloud Simulation</button>
             <button type="button" onClick="go_3d_simulation()">3D Render Cloud Simulation</button>
+            <button type="button" onClick="go_terrain_generator()">Terrain Generator</button>
             <button type="button" id="login" onclick="go_login()" style="display:none">Login</button>
             <button type="button" id="register" onclick="go_register()" style="display:none">Register</button>
         </div>
@@ -55,8 +56,8 @@
                 userInfoDiv.innerHTML = `
                     <h1><strong>Welcome ${user.username}, To Bon's Cloud Simulation:</strong></h1>`;
                 // if user exists but no id in params yet
-                if ( user.id &&(!id || !Number(id))){
-                   window.location.href = `/?id=${user.id}`; 
+                if (user.id && (!id || !Number(id))) {
+                    window.location.href = `/?id=${user.id}`;
                 }
             } else {
                 if (!user && id) window.location.href = `/`;
@@ -91,6 +92,27 @@
 
                 if (res.ok) {
                     window.location.href = `/user/${id}/update`;
+                } else {
+                    const err = await res.json();
+                    alert('Access denied: ' + err.error);
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+            }
+
+        }
+
+
+        async function go_terrain_generator() {
+            try {
+                const res = await fetch(`/terrain/Terrain-Generator/${id}/`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: "include",
+                });
+
+                if (res.ok) {
+                    window.location.href = `/terrain/Terrain-Generator/${id}/`;
                 } else {
                     const err = await res.json();
                     alert('Access denied: ' + err.error);
