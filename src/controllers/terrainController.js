@@ -32,6 +32,20 @@ async function deleteTerrain(req, res) {
   }
 }
 
+async function editTerrain(req, res) {
+  const userId = req.user.id;
+  const newTerrain = req.body;
+
+  try {
+    const terrain = await terrainModel.getFromUser(newTerrain.id, userId)
+    if (!terrain) return res.status(401).json({ message: 'This user has no terrain with that id' });
+    await terrainModel.editTerrain(newTerrain, userId);
+    res.status(201).json(terrain);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 async function getAllFromUser(req, res) {
   const userId = req.user.id;
 
@@ -182,6 +196,7 @@ module.exports = {
   getHeightMap,
   addTerrain,
   deleteTerrain,
+  editTerrain,
   getAllFromUser,
   showTerrainGenerator
 };

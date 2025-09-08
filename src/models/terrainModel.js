@@ -12,6 +12,18 @@ exports.addTerrain = async (seed, size, heightScale, octaves, iterations, userId
     }
 }
 
+exports.editTerrain = async (newTerrain, userId) => {
+    const conn = await pool.getConnection();
+    try { 
+        const result = await conn.query('UPDATE terrains SET seed=?, size=?, heightScale=?, octaves=?, iterations=?, user_id=? WHERE id=?', 
+        [newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, userId, newTerrain.id]);
+        return new Terrain(Number(newTerrain.seed), newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, 
+            Number(newTerrain.id), userId)
+    } finally {
+        conn.release();
+    }
+}
+
 exports.deleteTerrain = async (id) => {
     const conn = await pool.getConnection();
     try { 

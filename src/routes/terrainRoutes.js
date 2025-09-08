@@ -8,6 +8,7 @@ router.get('/getHeightMap', authenticateToken, terrainController.getHeightMap)
 
 router.get('/getAllTerrainsFromUser', authenticateToken, terrainController.getAllFromUser)
 router.post('/addTerrain', authenticateToken, terrainController.addTerrain)
+router.post('/editTerrain', authenticateToken, terrainController.editTerrain)
 router.delete('/deleteTerrain', authenticateToken, terrainController.deleteTerrain)
 
 router.get('/Terrain-Generator/:id/', authenticateToken, terrainController.showTerrainGenerator)

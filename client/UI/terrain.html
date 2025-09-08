@@ -43,6 +43,18 @@
       display: block;
       margin-top: 20px;
     }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+    }
   </style>
 </head>
 
@@ -74,13 +86,23 @@
     <!-- <button onclick="logout()">Logout</button> -->
     <h2>Your Terrains</h2>
     <ul id="terrainList"></ul>
-
-    <h3>Add Terrain</h3>
-    <input id="seed" placeholder="Seed"><br>
-    <input id="size" type="number" placeholder="Size"><br>
-    <input id="heightScale" type="number" placeholder="Height Scale"><br>
-    <input id="octaves" type="number" placeholder="Octaves"><br>
-    <input id="iterations" type="number" placeholder="Erosion Iterations"><br>
+    <table id="terrainList">
+      <thead>
+        <tr>
+          <th>Seed</th>
+          <th>Size</th>
+          <th>Height Scale</th>
+          <th>Octaves</th>
+          <th>Iterations</th>
+          <th>3D Map</th>
+          <th>Height Map</th>
+          <th>Style</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    
     <button onclick="addTerrain()">Add Terrain</button>
 
     <div id="terrainDisplay">
@@ -159,16 +181,51 @@
       const terrains = await res.json();
       const list = document.getElementById("terrainList");
       list.innerHTML = "";
+
+      const tableBody = document.querySelector("#terrainList tbody");
+      tableBody.innerHTML = ""; // Clear existing
+
       for (const terrain of terrains) {
-        const li = document.createElement("li");
-        li.innerText = `Terrain ${terrain.id} (seed: ${terrain.seed}, size: ${terrain.size}, height scale: ${terrain.heightScale}, octaves ${terrain.octaves}, iterations ${terrain.iterations})`;
+        const row = document.createElement("tr");
+
+        const seedValue = document.createElement("input");
+        seedValue.type = 'number';
+        seedValue.value = terrain.seed;
+
+        const sizeValue = document.createElement("input");
+        sizeValue.type = 'number';
+        sizeValue.value = terrain.size;
+
+        const heightScaleValue = document.createElement("input");
+        heightScaleValue.type = 'number';
+        heightScaleValue.value = terrain.heightScale;
+
+        const octavesValue = document.createElement("input");
+        octavesValue.type = 'number';
+        octavesValue.value = terrain.octaves;
+
+        const iterationsValue = document.createElement("input");
+        iterationsValue.type = 'number';
+        iterationsValue.value = terrain.iterations;
+
+        const changeHandler = () =>
+          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue);
+
+        [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue]
+          .forEach(input => input.addEventListener("change", changeHandler));
+
+        const makeCell = (el) => {
+          const td = document.createElement("td");
+          td.appendChild(el);
+          return td;
+        };
 
         const load3DBtn = document.createElement("button");
-        load3DBtn.innerText = "Load 3D Map";
+        load3DBtn.innerText = "3D Map";
         load3DBtn.onclick = () => showTerrain(terrain.id, changeStyleDrop.value);
 
         const loadMapBtn = document.createElement("button");
-        loadMapBtn.innerText = "Load Height Map";
+        loadMapBtn.innerText = "Map";
         loadMapBtn.onclick = () => showMap(terrain.id);
 
         const changeStyleDrop = document.createElement("select");
@@ -178,18 +235,26 @@
           option.value = style;
           option.textContent = style;
           changeStyleDrop.appendChild(option);
-        })
+        });
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
         delBtn.onclick = (e) => { e.stopPropagation(); deleteTerrain(terrain.id); };
 
-        li.appendChild(load3DBtn);
-        li.appendChild(loadMapBtn);
-        li.appendChild(changeStyleDrop);
-        li.appendChild(delBtn);
-        list.appendChild(li);
-      };
+        // Append all to the row
+        row.appendChild(makeCell(seedValue));
+        row.appendChild(makeCell(sizeValue));
+        row.appendChild(makeCell(heightScaleValue));
+        row.appendChild(makeCell(octavesValue));
+        row.appendChild(makeCell(iterationsValue));
+        row.appendChild(makeCell(load3DBtn));
+        row.appendChild(makeCell(loadMapBtn));
+        row.appendChild(makeCell(changeStyleDrop));
+        row.appendChild(makeCell(delBtn));
+
+        tableBody.appendChild(row);
+      }
+
     }
 
     async function showTerrain(id, style) {
@@ -256,13 +321,12 @@
       }
     }
 
-
     async function addTerrain() {
-      const seed = document.getElementById("seed").value;
-      const size = document.getElementById("size").value;
-      const heightScale = document.getElementById("heightScale").value;
-      const octaves = document.getElementById("octaves").value;
-      const iterations = document.getElementById("iterations").value;
+      const seed = 12345;
+      const size = 124;
+      const heightScale = 1000;
+      const octaves = 8;
+      const iterations = 50;
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
@@ -277,6 +341,36 @@
         if (!res.ok) {
           const msg = await res.text();
           throw new Error(`Add Terrain failed: ${msg}`);
+        }
+
+        await loadTerrains();
+      } catch (err) {
+        alert(err.message);
+        console.error("Error adding terrain:", err);
+      }
+    }
+
+    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl) {
+      const seed = seedEl.value;
+      const size = sizeEl.value;
+      const heightScale = heightScaleEl.value;
+      const octaves = octavesEl.value;
+      const iterations = iterationsEl.value;
+
+
+      try {
+        const res = await fetch(`${API_BASE}/terrain/editTerrain`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations })
+        });
+
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(`Edit Terrain failed: ${msg}`);
         }
 
         await loadTerrains();
