@@ -16,6 +16,7 @@ body {
   gap: 16px;
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .center_container {
@@ -101,4 +102,57 @@ form {
   max-width: 220px;
   user-select: none;
   z-index: 9999;
+}
+
+.tooltip {
+  position: absolute;
+  top: 100%; /* Move it below the input/label */
+  left: 0;
+  margin-top: 5px; /* Adjust vertical margin */
+  background-color: rgba(0, 0, 0, 0.97);
+  color: white;
+  font-size: 15px;
+  padding: 8px;
+  border-radius: 4px;
+  width: 200px;
+  visibility: hidden; /* Start hidden */
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.row input:hover + .tooltip,
+.row label:hover + .tooltip,
+.row select:hover + .tooltip {
+  visibility: visible;
+  opacity: 1; /* Show the tooltip */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 8px;
+  text-align: center;
+}
+
+
+/* Show the tooltip when hovering over input, select, label, or button */
+.row input:hover + .tooltip,
+.row select:hover + .tooltip,
+.row label:hover + .tooltip,
+.row button:hover + .tooltip,
+.row table:hover + .tooltip {
+  visibility: visible;
+  opacity: 1; /* Show the tooltip */
+}
+
+input, select, label, button {
+  cursor: pointer; /* Make the input, select, and button elements clickable */
 }

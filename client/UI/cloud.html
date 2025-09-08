@@ -20,16 +20,22 @@
       <div class="row">
         <label for="steps">Steps:</label>
         <input type="number" name="steps" id="steps" value="50" required>
+        <div class="tooltip">How many steps the simulation should run. Higher values may result in longer computation
+          times.</div>
       </div>
 
       <div class="row">
         <label for="height">Height:</label>
         <input type="number" name="height" id="height" value="10" required>
+        <div class="tooltip">The height at which the clouds are placed in the simulation. Higher values simulate clouds
+          in the sky.</div>
       </div>
 
       <div class="row">
         <label for="wind_speed">Wind Speed (50m/s Max):</label>
         <input type="number" name="windSpeed" id="windSpeed" value="5" min="0" max="50">
+        <div class="tooltip">How fast the wind is blowing. The wind affects the direction and speed of cloud movement.
+        </div>
       </div>
 
       <div class="row">
@@ -40,19 +46,26 @@
           <option value="east">East</option>
           <option value="west">West</option>
         </select>
+        <div class="tooltip">The direction from which the wind is blowing. It can be North, South, East, or West.</div>
       </div>
       <div class="row">
         <label for="minNeighbour">Minimum Neighbour/s (To Survive):</label>
         <input type="number" name="minNeighbour" id="minNeighbour" value="3" min="0" max="8" required>
+        <div class="tooltip">The minimum number of neighbours required for a cloud to survive and not dissipate.</div>
+
       </div>
 
       <div class="row">
         <label for="maxNeighbour">Maximum Neighbour/s (To Survive):</label>
         <input type="number" name="maxNeighbour" id="maxNeighbour" value="8" min="0" max="8" required>
+        <div class="tooltip">The maximum number of neighbours that can exist around a cloud for it to remain alive.
+        </div>
       </div>
       <div class="row">
         Initial State (Binary Only):
         <table id="table"></table>
+        <div class="tooltip">Define the initial state of the grid with binary values (1 for cloud, 0 for no cloud).
+        </div>
         <button type="button" onclick="addRow()">Add Row</button>
         <button type="button" onclick="addCol()">Add Column</button>
       </div>
