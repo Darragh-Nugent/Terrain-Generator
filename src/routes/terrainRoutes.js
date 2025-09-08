@@ -4,7 +4,8 @@ const terrainController = require("../controllers/terrainController");
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.get('/get3DTerrain', authenticateToken, terrainController.get3DTerrain)
-router.get('/getHeightMap', authenticateToken, terrainController.getHeightMap)
+router.get('/getHeightMap', terrainController.getHeightMap)
+router.get('/getHeightMapImage', authenticateToken, terrainController.getHeightMapImage)
 
 router.get('/getAllTerrainsFromUser', authenticateToken, terrainController.getAllFromUser)
 router.post('/addTerrain', authenticateToken, terrainController.addTerrain)

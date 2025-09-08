@@ -66,24 +66,8 @@
   </header>
   <h1>Terrain Generator</h1>
 
-  <!-- Login / Register -->
-  <!-- <div id="loginSection">
-    <h2>Login</h2>
-    <input id="username" placeholder="Username"><br>
-    <input id="password" type="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-    <p id="loginError" style="color:red;"></p>
-
-    <h2>Register</h2>
-    <input id="regUsername" placeholder="New Username"><br>
-    <input id="regPassword" type="password" placeholder="New Password"><br>
-    <button onclick="register()">Register</button>
-    <p id="registerError" style="color:red;"></p>
-  </div> -->
-
   <!-- Terrains -->
   <div id="terrainSection" class="hidden">
-    <!-- <button onclick="logout()">Logout</button> -->
     <h2>Your Terrains</h2>
     <ul id="terrainList"></ul>
     <table id="terrainList">
@@ -102,7 +86,7 @@
       </thead>
       <tbody></tbody>
     </table>
-    
+
     <button onclick="addTerrain()">Add Terrain</button>
 
     <div id="terrainDisplay">
@@ -117,62 +101,11 @@
       window.location.href = id ? `/?id=${id}` : `/`;
     }
     const API_BASE = "";
-    // let token = localStorage.getItem("token");
 
     function show(section) {
-      // document.getElementById("loginSection").classList.add("hidden");
       document.getElementById("terrainSection").classList.add("hidden");
       document.getElementById(section).classList.remove("hidden");
     }
-
-    // async function login() {
-    //   const username = document.getElementById("username").value;
-    //   const password = document.getElementById("password").value;
-
-    //   try {
-    //     const res = await fetch(`${API_BASE}/auth/login`, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       credentials: "include",
-    //       body: JSON.stringify({ username, password })
-    //     });
-    //     if (!res.ok) throw new Error("Invalid credentials");
-    //     const data = await res.json();
-    //     token = data.token;
-    //     localStorage.setItem("token", token);
-    //     await loadTerrains();
-    //     show("terrainSection");
-    //   } catch (err) {
-    //     document.getElementById("loginError").innerText = err.message;
-    //   }
-    // }
-
-    // async function register() {
-    //   const username = document.getElementById("regUsername").value;
-    //   const password = document.getElementById("regPassword").value;
-
-    //   try {
-    //     const res = await fetch(`${API_BASE}/user/addUser`, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       credentials: "include",
-    //       body: JSON.stringify({ username, password })
-    //     });
-    //     if (!res.ok) {
-    //       const msg = await res.text();
-    //       throw new Error(msg);
-    //     }
-    //     alert("Registration successful! Please log in.");
-    //   } catch (err) {
-    //     document.getElementById("registerError").innerText = err.message;
-    //   }
-    // }
-
-    // async function logout() {
-    //   token = null;
-    //   localStorage.removeItem("token");
-    //   show("loginSection");
-    // }
 
     async function loadTerrains() {
       const res = await fetch(`${API_BASE}/terrain/getAllTerrainsFromUser`, {
@@ -280,7 +213,7 @@
 
     async function showMap(id) {
       try {
-        const res = await fetch(`${API_BASE}/terrain/getHeightMap?id=${id}`, {
+        const res = await fetch(`${API_BASE}/terrain/getHeightMapImage?id=${id}`, {
           credentials: "include",
         });
 
@@ -388,17 +321,7 @@
       await loadTerrains();
     }
 
-    // Auto-login if token exists
-    // if (token) {
     loadTerrains().then(() => show("terrainSection"))
-    // loadTerrains().then(() => show("terrainSection")).catch(() => {
-    //   localStorage.removeItem("token");
-    //   show("loginSection");
-    // });
-    // }
-    // else {
-    //   show("loginSection");
-    // }
   </script>
 </body>
 

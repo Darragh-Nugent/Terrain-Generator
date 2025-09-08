@@ -158,7 +158,7 @@ async function get3DTerrain(req, res, next) {
   }
 }
 
-async function getHeightMap(req, res, next) {
+async function getHeightMapImage(req, res, next) {
   try {
     const userId = req.user.id;
     const { id } = req.query;
@@ -182,6 +182,22 @@ async function getHeightMap(req, res, next) {
   }
 }
 
+async function getHeightMap(req, res) {
+  try {
+    const userId = req.user.id;
+    const { id } = req.query;
+
+    const terrain = await terrainModel.getFromUser(1, 1);
+
+    const heightMap = terrain.generateErodedHeightMap();
+
+    res.status(201).json({heightMap});
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 function showTerrainGenerator(req, res, next) {
   try {
     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'terrain.html'));
@@ -194,6 +210,7 @@ function showTerrainGenerator(req, res, next) {
 module.exports = {
   get3DTerrain,
   getHeightMap,
+  getHeightMapImage,
   addTerrain,
   deleteTerrain,
   editTerrain,
