@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Terrain Generator</title>
+  <link rel="stylesheet" href="/styles/styles.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -46,6 +47,11 @@
 </head>
 
 <body>
+  <header>
+    <div class="header-buttons">
+      <button type="button" id="register" onclick="home()">Home Page</button>
+    </div>
+  </header>
   <h1>Terrain Generator</h1>
 
   <!-- Login / Register -->
@@ -84,6 +90,10 @@
   </div>
 
   <script>
+    const id = new URLSearchParams(window.location.search).get('id');
+    function home() {
+      window.location.href = id ? `/?id=${id}` : `/`;
+    }
     const API_BASE = "";
     // let token = localStorage.getItem("token");
 
@@ -286,12 +296,12 @@
 
     // Auto-login if token exists
     // if (token) {
-      loadTerrains().then(() =>show("terrainSection"))
-      // loadTerrains().then(() => show("terrainSection")).catch(() => {
-      //   localStorage.removeItem("token");
-      //   show("loginSection");
-      // });
-    // } 
+    loadTerrains().then(() => show("terrainSection"))
+    // loadTerrains().then(() => show("terrainSection")).catch(() => {
+    //   localStorage.removeItem("token");
+    //   show("loginSection");
+    // });
+    // }
     // else {
     //   show("loginSection");
     // }

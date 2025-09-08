@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Welcome To Bon's Cloud Simulation</title>
+    <title>Welcome To WinterScape</title>
     <link rel="stylesheet" href="/styles/styles.css" />
 
 </head>
@@ -12,8 +12,8 @@
     <header>
         <div class="header-buttons">
             <button type="button" id="settings" onClick="go_settings()" style="display:none">Settings</button>
-            <button type="button" onClick="go_simulation()">Cloud Simulation</button>
-            <button type="button" onClick="go_3d_simulation()">3D Render Cloud Simulation</button>
+            <button type="button" onClick="go_simulation()">2D Render - Chione Engine</button>
+            <button type="button" onClick="go_3d_simulation()">3D Render - Chione Engine</button>
             <button type="button" onClick="go_terrain_generator()">Terrain Generator</button>
             <button type="button" id="login" onclick="go_login()" style="display:none">Login</button>
             <button type="button" id="register" onclick="go_register()" style="display:none">Register</button>
@@ -21,7 +21,7 @@
     </header>
     <div class="center_container">
         <div id="welcome">
-            <h1><strong>Welcome To Bon's Cloud Simulation</strong></h1>
+            <h1><strong>Welcome To WinterScape</strong></h1>
             <div id="error" style="color: red; margin-top: 10px;"></div>
         </div>
     </div>
@@ -54,7 +54,7 @@
             if (user) {
                 // OR: Display specific fields
                 userInfoDiv.innerHTML = `
-                    <h1><strong>Welcome ${user.username}, To Bon's Cloud Simulation:</strong></h1>`;
+                    <h1><strong>Welcome ${user.username}, To WinterScape</strong></h1>`;
                 // if user exists but no id in params yet
                 if (user.id && (!id || !Number(id))) {
                     window.location.href = `/?id=${user.id}`;
@@ -62,7 +62,7 @@
             } else {
                 if (!user && id) window.location.href = `/`;
                 userInfoDiv.innerHTML = `
-                    <h1><strong>Welcome To Bon's Cloud Simulation:</strong></h1>
+                    <h1><strong>Welcome To WinterScape:</strong></h1>
                     <h4>Please log in to access all features</h4>`;
             }
         })();

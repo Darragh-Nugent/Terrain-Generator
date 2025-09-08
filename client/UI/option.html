@@ -10,6 +10,12 @@
 </head>
 
 <body>
+    <header>
+        <div class="header-buttons">
+            <button type="button" onclick="logout()">Logout</button>
+            <button type="button" onclick="go_home()">Go Back Home</button>
+        </div>
+    </header>
     <div class="center_container">
         <h2>User Settings</h2>
         <form id="change_password">
@@ -20,8 +26,6 @@
             <button type="submit">Change Password</button>
             <div id="update_password" style="color: red; margin-top: 10px;"></div>
         </form>
-        <button type="button" onclick="logout()">Logout</button>
-        <button type="button" onclick="go_home()">Go Back Home</button>
         <div style="margin-top: 40px;">
             <button type="button" onclick="delete_user()">Delete Account</button>
             <div id="delete_user" style="color: red; margin-top: 10px;"></div>
