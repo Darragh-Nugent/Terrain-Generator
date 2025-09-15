@@ -35,6 +35,8 @@ const pool = mariadb.createPool({
             heightScale INT NOT NULL,
             octaves INT NOT NULL,
             iterations INT NOT NULL,
+            s3_2d_key VARCHAR(255),
+            s3_3d_key VARCHAR(255),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     `);

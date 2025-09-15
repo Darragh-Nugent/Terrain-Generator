@@ -69,7 +69,6 @@
   <!-- Terrains -->
   <div id="terrainSection" class="hidden">
     <h2>Your Terrains</h2>
-    <ul id="terrainList"></ul>
     <table id="terrainList">
       <thead>
         <tr>
@@ -112,11 +111,10 @@
         credentials: "include",
       });
       const terrains = await res.json();
-      const list = document.getElementById("terrainList");
-      list.innerHTML = "";
+      const options = await getStyleOptions();
 
       const tableBody = document.querySelector("#terrainList tbody");
-      tableBody.innerHTML = ""; // Clear existing
+      tableBody.innerHTML = "";
 
       for (const terrain of terrains) {
         const row = document.createElement("tr");
@@ -162,7 +160,6 @@
         loadMapBtn.onclick = () => showMap(terrain.id);
 
         const changeStyleDrop = document.createElement("select");
-        const options = await getStyleOptions();
         options.forEach(style => {
           const option = document.createElement("option");
           option.value = style;
@@ -221,8 +218,8 @@
           throw new Error(`Failed to load image: ${res.statusText}`);
         }
 
-        const blob = await res.blob();
-        const imageUrl = URL.createObjectURL(blob);
+        const image = await res.json();
+        const imageUrl = image.url;
 
         const img = document.getElementById("terrainImage");
         img.src = imageUrl;

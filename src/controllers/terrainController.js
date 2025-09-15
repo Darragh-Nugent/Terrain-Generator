@@ -2,6 +2,7 @@ const { createCanvas, } = require("canvas");
 const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
 const styleModel = require("../models/styleModel.js");
+const S3 = require("@aws-sdk/client-s3");
 const path = require('path');
 
 const SCALE = 4;
@@ -163,22 +164,21 @@ async function getHeightMapImage(req, res, next) {
     const userId = req.user.id;
     const { id } = req.query;
 
-    const terrain = await terrainModel.getFromUser(id, userId);
+    if (!await terrainModel.hasTerrain(id, userId)) {
+      return res.status(401).json({ message: 'This user has no terrain with that id' });
+    }
 
-    const heightMapStream = terrain.toStreamBuffer();
+    if (!await terrainModel.hasHeightMapBucket(id)) {
+      const terrain = await terrainModel.getFromUser(id, userId);
+      const heightMapStream = terrain.toStreamBuffer();
+      await terrainModel.createHeightMapBucket(id, heightMapStream);
+    }
 
-    res.type('image/png');
+    const presignedUrl = await terrainModel.getPresignedHeightMapUrl(id);
 
-    heightMapStream
-      .pipe(sharp()
-        .resize(terrain.size * SCALE, terrain.size * SCALE, { kernel: "lanczos3" })
-        .png({ compressionLevel: 5 })
-      )
-      .on('error', err => next(err))
-      .pipe(res);
-
+    res.json({ url: presignedUrl });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 }
 

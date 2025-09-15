@@ -21,6 +21,16 @@ Resources:
           systemctl enable docker
           usermod -aG docker ubuntu
 
+          # Fetch bucket name from Parameter Store
+          BUCKET_NAME=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/s3-bucket" \
+            --region ap-southeast-2 \
+            --query "Parameter.Value" \
+            --output text)
+
+          # Write to .env file for Compose
+          echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/.env
+
           # Pull private ECR image and start containers
           su - ubuntu -c "bash -c '
             aws ecr get-login-password --region ap-southeast-2 \

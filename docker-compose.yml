@@ -15,6 +15,7 @@ services:
       DB_USER: root
       DB_PASSWORD: rootpass
       DB_NAME: terrainsdb
+      S3_BUCKET: ${S3_BUCKET}
     depends_on:
       - db
 
