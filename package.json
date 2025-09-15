@@ -12,16 +12,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.888.0",
     "bcrypt": "^6.0.0",
     "canvas": "^3.1.2",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mariadb": "^3.4.5",
     "noisejs": "^2.1.0",
     "plotly.js": "^3.1.0",
     "redis": "^5.8.2",
-    "uuid": "^11.1.0",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "uuid": "^11.1.0"
   }
 }
