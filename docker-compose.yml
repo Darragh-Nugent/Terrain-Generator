@@ -11,25 +11,12 @@ services:
       - ./videos:/videos
     environment:
       NODE_ENV: development
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: rootpass
-      DB_NAME: terrainsdb
+      DB_HOST: database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: cohort_2025
       S3_BUCKET: ${S3_BUCKET}
-    depends_on:
-      - db
-
-  db:
-    image: mariadb:latest
-    restart: always
-    environment:
-      MARIADB_ROOT_PASSWORD: rootpass
-      MARIADB_DATABASE: terrainsdb
-    ports:
-      - "3306:3306"
-    volumes:
-      - mariadb-data:/var/lib/mysql
-      
+     
 
   redis:
     image: redis:alpine 
