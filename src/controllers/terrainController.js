@@ -41,6 +41,7 @@ async function editTerrain(req, res) {
     const terrain = await terrainModel.getFromUser(newTerrain.id, userId)
     if (!terrain) return res.status(401).json({ message: 'This user has no terrain with that id' });
     await terrainModel.editTerrain(newTerrain, userId);
+    
     res.status(201).json(terrain);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -125,7 +126,7 @@ async function renderWireframe(terrain, width, height, scale, style) {
     }
   }
 
-  return canvas.createPNGStream();
+  return canvas.toBuffer();
 
 }
 
@@ -136,26 +137,26 @@ async function get3DTerrain(req, res, next) {
     const { id } = req.query;
     const { styleQuery } = req.query;
 
-    const terrain = await terrainModel.getFromUser(id, userId);
-    const style = await getColours(styleQuery);
+    if (!await terrainModel.hasTerrain(id, userId)) {
+      return res.status(401).json({ message: 'This user has no terrain with that id' });
+    }
 
-    const width = terrain.size;
-    const height = terrain.size;
+    if (!await terrainModel.has3DMapBucket(id)) {
+      const terrain = await terrainModel.getFromUser(id, userId);
+      const style = await getColours(styleQuery);
 
-    const imageStream = await renderWireframe(terrain, width, height, SCALE, style);
+      const width = terrain.size;
+      const height = terrain.size;
 
-    res.type('image/png');
+      const imageBuffer = await renderWireframe(terrain, width, height, SCALE, style);
+      await terrainModel.create3DMapBucket(id, imageBuffer);
+    }
 
-    imageStream
-      .pipe(sharp()
-        .resize(terrain.size * SCALE, terrain.size * SCALE, { kernel: "lanczos3" })
-        .png({ compressionLevel: 5 })
-      )
-      .on('error', err => next(err))
-      .pipe(res);
+    const presignedUrl = await terrainModel.getPresigned3DMapUrl(id);
 
+    res.json({ url: presignedUrl });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 }
 
@@ -170,8 +171,8 @@ async function getHeightMapImage(req, res, next) {
 
     if (!await terrainModel.hasHeightMapBucket(id)) {
       const terrain = await terrainModel.getFromUser(id, userId);
-      const heightMapStream = terrain.toStreamBuffer();
-      await terrainModel.createHeightMapBucket(id, heightMapStream);
+      const heightMapBuffer = terrain.toBuffer();
+      await terrainModel.createHeightMapBucket(id, heightMapBuffer);
     }
 
     const presignedUrl = await terrainModel.getPresignedHeightMapUrl(id);
@@ -191,7 +192,7 @@ async function getHeightMap(req, res) {
 
     const heightMap = terrain.generateErodedHeightMap();
 
-    res.status(201).json({heightMap});
+    res.status(201).json({ heightMap });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

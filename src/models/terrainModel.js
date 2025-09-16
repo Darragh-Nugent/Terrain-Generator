@@ -8,21 +8,47 @@ const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
 exports.addTerrain = async (seed, size, heightScale, octaves, iterations, userId) => {
     const conn = await pool.getConnection();
-    try { 
-        const result = await conn.query('INSERT INTO terrains (seed, size, heightScale, octaves, iterations, user_id) VALUES (?, ?, ?, ?, ?, ?)', 
-        [seed, size, heightScale, octaves, iterations, userId]);
+    try {
+        const result = await conn.query('INSERT INTO terrains (seed, size, heightScale, octaves, iterations, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [seed, size, heightScale, octaves, iterations, userId]);
         return new Terrain(Number(seed), size, heightScale, octaves, iterations, Number(result.insertId), userId)
     } finally {
         conn.release();
     }
 }
 
+async function deleteBucketObjects(conn, id) {
+        const [row] = await conn.query('SELECT s3_2d_key, s3_3d_key FROM terrains WHERE id = ?', [id]);
+
+        if (row.s3_2d_key) {
+            console.log("Deleting from S3: " + row.s3_2d_key);
+            await s3Client.send(
+                new S3.DeleteObjectCommand({
+                    Bucket: bucketName,
+                    Key: row.s3_2d_key },
+                )
+            )
+            console.log("Deleted from S3: " + row.s3_2d_key);
+        }
+
+        if (row.s3_3d_key) {
+            console.log("Deleting from S3: " + row.s3_3d_key);
+            await s3Client.send(
+                new S3.DeleteObjectCommand({
+                    Bucket: bucketName,
+                    Key: row.s3_3d_key },
+                )
+            )
+            console.log("Deleted from S3: " + row.s3_3d_key);
+        }
+    }
 exports.editTerrain = async (newTerrain, userId) => {
     const conn = await pool.getConnection();
-    try { 
-        const result = await conn.query('UPDATE terrains SET seed=?, size=?, heightScale=?, octaves=?, iterations=?, user_id=? WHERE id=?', 
-        [newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, userId, newTerrain.id]);
-        return new Terrain(Number(newTerrain.seed), newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, 
+    try {
+        await deleteBucketObjects(conn, newTerrain.id);
+        const result = await conn.query('UPDATE terrains SET seed=?, size=?, heightScale=?, octaves=?, iterations=?, user_id=?, s3_3d_key=NULL, s3_2d_key=NULL WHERE id=?',
+            [newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, userId, newTerrain.id]);
+        return new Terrain(Number(newTerrain.seed), newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations,
             Number(newTerrain.id), userId)
     } finally {
         conn.release();
@@ -31,11 +57,13 @@ exports.editTerrain = async (newTerrain, userId) => {
 
 exports.deleteTerrain = async (id) => {
     const conn = await pool.getConnection();
-    try { 
-        const result = await conn.query('DELETE FROM terrains WHERE id = ?', [id]); 
+    try {
+        await deleteBucketObjects(conn, id);
+        const result = await conn.query('DELETE FROM terrains WHERE id = ?', [id]);
     } finally {
         conn.release();
     }
+
 }
 
 exports.hasTerrain = async (id, userId) => {
@@ -43,18 +71,18 @@ exports.hasTerrain = async (id, userId) => {
     try {
         const rows = await conn.query(
             'SELECT * FROM terrains WHERE id = ? AND user_id = ?', [id, userId]
-        );               
-        return rows.length > 0;  
+        );
+        return rows.length > 0;
     }
     finally {
         conn.release();
-    }   
+    }
 }
 
 
 exports.getAllFromUser = async (userId) => {
     const conn = await pool.getConnection();
-    try { 
+    try {
         const rows = await conn.query('SELECT * FROM terrains WHERE user_id = ?', [userId]);
         const terrains = rows.map(row => new Terrain(
             Number(row.seed), row.size, row.heightScale, row.octaves, row.iterations, Number(row.id), Number(row.user_id)
@@ -79,13 +107,13 @@ exports.getFromUser = async (id, userId) => {
         const row = rows[0];
 
         return new Terrain(
-          row.seed,
-          row.size,
-          row.heightScale,
-          row.octaves,
-          row.iterations,
-          row.id,
-          row.user_id
+            row.seed,
+            row.size,
+            row.heightScale,
+            row.octaves,
+            row.iterations,
+            row.id,
+            row.user_id
         );
     } finally {
         conn.release();
@@ -97,42 +125,63 @@ exports.hasHeightMapBucket = async (id) => {
     try {
         const rows = await conn.query(
             'SELECT s3_2d_key FROM terrains WHERE id = ?', [id]
-        );               
+        );
         if (rows.length === 0) return false;
         const row = rows[0];
-        return row['s3_2d_key'] != null;    
+        return row['s3_2d_key'] != null;
     }
     finally {
         conn.release();
-    }   
+    }
 }
 
 exports.has3DMapBucket = async (id) => {
     const conn = await pool.getConnection();
     try {
         const rows = await conn.query(
-            'SELECT 3d_s3_key FROM terrains WHERE id = ?', [id]
-        );               
+            'SELECT s3_3d_key FROM terrains WHERE id = ?', [id]
+        );
         if (rows.length === 0) return false;
         const row = rows[0];
-        return row['3d_s3_key'] != null;    
+        return row['s3_3d_key'] != null;
     }
     finally {
         conn.release();
-    }   
+    }
 }
 
-exports.createHeightMapBucket = async (id, imageStream) => {
+exports.createHeightMapBucket = async (id, imageBuffer) => {
     const conn = await pool.getConnection();
     try {
         const objectKey = "terrains/heightmaps/terrain-" + id + ".png";
-        const result = await conn.query('UPDATE terrains SET s3_2d_key=? WHERE id=?',  [objectKey, id]);
+        const result = await conn.query('UPDATE terrains SET s3_2d_key=? WHERE id=?', [objectKey, id]);
 
         const response = await s3Client.send(
             new S3.PutObjectCommand({
                 Bucket: bucketName,
                 Key: objectKey,
-                Body: imageStream
+                Body: imageBuffer,
+                ContentType: "image/png",
+            })
+        );
+        return objectKey;
+    } finally {
+        conn.release();
+    }
+}
+
+exports.create3DMapBucket = async (id, imageBuffer) => {
+    const conn = await pool.getConnection();
+    try {
+        const objectKey = "terrains/3Dmaps/terrain-" + id + ".png";
+        const result = await conn.query('UPDATE terrains SET s3_3d_key=? WHERE id=?', [objectKey, id]);
+
+        const response = await s3Client.send(
+            new S3.PutObjectCommand({
+                Bucket: bucketName,
+                Key: objectKey,
+                Body: imageBuffer,
+                ContentType: "image/png",
             })
         );
         return objectKey;
@@ -150,11 +199,11 @@ exports.getPresignedHeightMapUrl = async (id) => {
         const objectKey = rows[0]['s3_2d_key'];
 
         const command = new S3.GetObjectCommand({
-                Bucket: bucketName,
-                Key: objectKey,
-            });
-        const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, {expiresIn: 3600} );
-        
+            Bucket: bucketName,
+            Key: objectKey,
+        });
+        const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
         console.log('Pre-signed URL to get the object:')
         console.log(presignedURL);
 
@@ -163,6 +212,32 @@ exports.getPresignedHeightMapUrl = async (id) => {
     } catch (err) {
         console.log(err);
     } finally {
-    conn.release();
+        conn.release();
+    }
+}
+
+exports.getPresigned3DMapUrl = async (id) => {
+    const conn = await pool.getConnection();
+    try {
+        const rows = await conn.query(
+            'SELECT s3_3d_key FROM terrains WHERE id = ?', [id]
+        );
+        const objectKey = rows[0]['s3_3d_key'];
+
+        const command = new S3.GetObjectCommand({
+            Bucket: bucketName,
+            Key: objectKey,
+        });
+        const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+        console.log('Pre-signed URL to get the object:')
+        console.log(presignedURL);
+
+        return presignedURL;
+
+    } catch (err) {
+        console.log(err);
+    } finally {
+        conn.release();
     }
 }

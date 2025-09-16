@@ -197,8 +197,8 @@
           throw new Error(`Failed to load image: ${res.statusText}`);
         }
 
-        const blob = await res.blob();
-        const imageUrl = URL.createObjectURL(blob);
+        const image = await res.json();
+        const imageUrl = image.url;
 
         const img = document.getElementById("terrainImage");
         img.src = imageUrl;

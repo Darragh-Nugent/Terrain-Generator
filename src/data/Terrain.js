@@ -168,7 +168,7 @@ class Terrain {
     }
 
 
-    toStreamBuffer() {
+    toBuffer() {
         const heightMap = this.generateErodedHeightMap();
         const size = heightMap.length;
         const canvas = createCanvas(size, size);
@@ -201,7 +201,7 @@ class Terrain {
         }
     
         ctx.putImageData(imageData, 0, 0);
-        return canvas.createPNGStream();
+        return canvas.toBuffer("image/png");
     }
 
     toJSON() {
