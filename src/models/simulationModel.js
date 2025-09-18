@@ -4,7 +4,7 @@ const { allParticlesGrounded, isEmptyConfiguration,
     calculateNumberParticles, calculateAvgPos,
     meetsSurvivalCondition, calculateParticleDrift,
     calculateWindspeedFactor } = require("../utils/simulation")
-const { findBoundaries } = require("../utils/arrayUtils");
+const { findBoundaries, findAvg } = require("../utils/arrayUtils");
 
 function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minNeighbour, maxNeighbour) {
     let cloudConfigs = calculateCloudConfig(initialState, minNeighbour, maxNeighbour, steps);
@@ -63,7 +63,6 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
     for (let i = 0; i < batches.length; i++) {
         const { randomWalksX, randomWalksY, randomWalksZ, velocity } = batches[i];
         const localStepsForConfig = randomWalksX.length;
-
         // add random walks of each config into the global system coords history
         for (let step = 0; step < localStepsForConfig; step++) {
             // offset by config time --> e.g config 2 starts at global step 2
@@ -76,7 +75,8 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
                 const x = randomWalksX[step][particle];
                 const y = randomWalksY[step][particle];
                 const z = randomWalksZ[step][particle];
-                particle_velocity = velocity[step][particle];
+                let particle_velocity = velocity[step][particle];
+                // if (!particle_velocity)console.log("Here",particle_velocity)
                 sysCoordHistoryX[globalStep].push(x);
                 sysCoordHistoryY[globalStep].push(y);
                 // prevent reaching below ground
@@ -91,11 +91,17 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             }
             // last step indicate particles have hit the ground - add particle to all timesteps
             if (step === localStepsForConfig - 1) {
-                for (let future_steps = globalStep; future_steps < totalSteps; future_steps++) {
-                    sysCoordHistoryX[future_steps].push(...randomWalksX[localStepsForConfig - 1]);
-                    sysCoordHistoryY[future_steps].push(...randomWalksY[localStepsForConfig - 1]);
-                    sysCoordHistoryZ[future_steps].push(...randomWalksZ[localStepsForConfig - 1].map(_ => 0));
-                    sysVelocityHistory[future_steps].push(...velocity[localStepsForConfig - 1].map(_ => 0))
+                const last = localStepsForConfig - 1;
+
+                for (let future_steps = globalStep + 1; future_steps < totalSteps; future_steps++) {
+                    for (let p = 0; p < randomWalksZ[last].length; p++) {
+                        if (randomWalksZ[last][p] <= 0) { // landed
+                            sysCoordHistoryX[future_steps].push(randomWalksX[last][p]);
+                            sysCoordHistoryY[future_steps].push(randomWalksY[last][p]);
+                            sysCoordHistoryZ[future_steps].push(0);
+                            sysVelocityHistory[future_steps].push(0);
+                        }
+                    }
                 }
             }
         }
@@ -235,10 +241,10 @@ function calculateThresholds(windDir, windSpeed) {
     let threshold_3 = probLeft + probRight + probDown;
     return { threshold_1, threshold_2, threshold_3 };
 }
-function findVelocity(xArray, yArray, zArray, timeStep) {
-    let deltaX = xArray[timeStep] - xArray[timeStep - 1];
-    let deltaY = yArray[timeStep] - yArray[timeStep - 1];
-    let deltaZ = zArray[timeStep] - zArray[timeStep - 1];
+function findVelocity(xArray, yArray, zArray, timeStep, particleIndex) {
+    let deltaX = xArray[timeStep][particleIndex] - xArray[timeStep - 1][particleIndex];
+    let deltaY = yArray[timeStep][particleIndex] - yArray[timeStep - 1][particleIndex];
+    let deltaZ = zArray[timeStep][particleIndex] - zArray[timeStep - 1][particleIndex];
 
     let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
     return distance;
@@ -265,9 +271,9 @@ function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, 
         randomWalksX[timeStep] = [];
         randomWalksY[timeStep] = [];
         randomWalksZ[timeStep] = [];
+        timestep_vel = [];
         let vertical_displacement = Array.from({ length: numParticles }, () => Math.random())
         for (let j = 0; j < numParticles; j++) {
-            timestep_vel = [];
             let x_prev = randomWalksX[timeStep - 1][j];
             let y_prev = randomWalksY[timeStep - 1][j];
             let z_prev = randomWalksZ[timeStep - 1][j];
@@ -283,7 +289,7 @@ function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, 
             }
             randomWalksZ[timeStep][j] = z_prev - vertical_displacement[j];
             displace2D(randomWalksX, randomWalksY, timeStep, j, x_prev, y_prev, delta, thresholds)
-            timestep_vel.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep));
+            timestep_vel.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep, j));
         }
         if (allParticlesGrounded(randomWalksZ[timeStep])) {
             systemUnstable = false;
