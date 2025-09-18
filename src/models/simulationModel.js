@@ -460,18 +460,24 @@ async function renderVideo(params, writeStream) {
             const radius = 2 * scale;
             if (view === "depth") {
                 const zNorm = (z - minZ) / (maxZ - minZ); // normalize 0–1
-                const r = Math.floor(255 * (1 - zNorm));
-                const g = Math.floor(255 * zNorm);
-                const b = 255;
-                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                const brightness = Math.floor(100 + (255 - 100) * zNorm);
+                ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
             }
             else if (view === "velocity") {
+                let maxSpeed = -Infinity;
+                for (let t = 0; t < velocity.length; t++) {
+                    for (let p = 0; p < velocity[t].length; p++) {
+                        if (velocity[t][p] > maxSpeed) {
+                            maxSpeed = velocity[t][p];
+                        }
+                    }
+                }
                 const speed = velocity[t][p];
 
-                const normSpeed = Math.min(speed / 3, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
+                const normSpeed = Math.min(speed / maxSpeed, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
 
                 // Brightness scales with speed — dark red to bright red
-                const brightness = Math.floor(50 + 205 * normSpeed); // [50–255] range
+                const brightness = Math.floor(100 + 255 * normSpeed); // [50–255] range
                 ctx.fillStyle = `rgb(${brightness}, 0, 0)`; // Red only
 
             }

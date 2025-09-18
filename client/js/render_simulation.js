@@ -287,24 +287,46 @@ function updateFrame(k) {
             // Color by view mode
             const mode = getViewMode();
             if (mode === 'depth') {
-                // map ry to 0..1
-                // Find rough normalized height using scale of 60/maxDim => ry ~ [-30, 30]
-                const t = THREE.MathUtils.clamp((z + 30) / 60, 0, 1);
-                // blue (low) -> white (high)
-                const r = 0.2 + 0.8 * t;
-                const g = 0.2 + 0.8 * t;
-                const b = 1.0 - 0.6 * t;
+                let maxHeight = -Infinity;
+                let minHeight = 0;
+                for (let t = 0; t < framesY.length; t++) {
+                    for (let p = 0; p < framesY[t].length; p++) {
+                        if (framesY[t][p] > maxHeight) {
+                            maxHeight = framesY[t][p];
+                        }
+                    }
+                }
+                // Find rough normalized height
+                const t = THREE.MathUtils.clamp(
+                    (z - minHeight) / (maxHeight - minHeight),
+                    0, 1
+                );
+
+                // Define your top and bottom colours
+                const topR = 1.0, topG = 0.90, topB = 0.4; // golden/tan
+                const botR = 0.5, botG = 0.5, botB = 0.5; // light grey
+
+                // Lerp from top colour (t=1) to bottom colour (t=0)
+                const r = THREE.MathUtils.lerp(botR, topR, t);
+                const g = THREE.MathUtils.lerp(botG, topG, t);
+                const b = THREE.MathUtils.lerp(botB, topB, t);
                 colors[3 * i + 0] = r;
                 colors[3 * i + 1] = g;
                 colors[3 * i + 2] = b;
             } else if (mode === 'velocity') {
+                let maxSpeed = -Infinity;
+                for (let t = 0; t < velocity.length; t++) {
+                    for (let p = 0; p < velocity[t].length; p++) {
+                        if (velocity[t][p] > maxSpeed) {
+                            maxSpeed = velocity[t][p];
+                        }
+                    }
+                }
                 const v = velocity[k][i];
-
-                // Simple speed → color map (black -> red -> yellow -> white)
-                const t = THREE.MathUtils.clamp(v / 2.0, 0, 1); // adjust denominator for range
-                const r = THREE.MathUtils.lerp(0.1, 1.0, t);
-                const g = THREE.MathUtils.lerp(0.1, 0.9, t * 0.7);
-                const b = THREE.MathUtils.lerp(0.2, 0.2, t);
+                const t = Math.pow(THREE.MathUtils.clamp(v / maxSpeed, 0, 1), 0.5); // sqrt
+                let r = THREE.MathUtils.lerp(0.1, 1.0, t);
+                let g = THREE.MathUtils.lerp(0.1, 0.9, t * 0.7);
+                let b = THREE.MathUtils.lerp(0.2, 0.2, t);
                 colors[3 * i + 0] = r;
                 colors[3 * i + 1] = g;
                 colors[3 * i + 2] = b;
