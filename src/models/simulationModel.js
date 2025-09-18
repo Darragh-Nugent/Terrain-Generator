@@ -1,10 +1,10 @@
 const { spawn } = require('child_process');
 const { createCanvas } = require('canvas');
-const {allParticlesGrounded, isEmptyConfiguration, 
-    calculateNumberParticles, calculateAvgPos, 
-    meetsSurvivalCondition,calculateParticleDrift,
-    calculateWindspeedFactor} = require("../utils/simulation")
-const {findBoundaries} = require("../utils/arrayUtils");
+const { allParticlesGrounded, isEmptyConfiguration,
+    calculateNumberParticles, calculateAvgPos,
+    meetsSurvivalCondition, calculateParticleDrift,
+    calculateWindspeedFactor } = require("../utils/simulation")
+const { findBoundaries } = require("../utils/arrayUtils");
 
 function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minNeighbour, maxNeighbour) {
     let cloudConfigs = calculateCloudConfig(initialState, minNeighbour, maxNeighbour, steps);
@@ -57,10 +57,11 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
     let sysCoordHistoryX = Array.from({ length: totalSteps }, () => []);
     let sysCoordHistoryY = Array.from({ length: totalSteps }, () => []);
     let sysCoordHistoryZ = Array.from({ length: totalSteps }, () => []);
+    let sysVelocityHistory = Array.from({ length: totalSteps }, () => []);
 
     // store each walk for each batch into the system --> note the offset required for each config as explained above
     for (let i = 0; i < batches.length; i++) {
-        const { randomWalksX, randomWalksY, randomWalksZ } = batches[i];
+        const { randomWalksX, randomWalksY, randomWalksZ, velocity } = batches[i];
         const localStepsForConfig = randomWalksX.length;
 
         // add random walks of each config into the global system coords history
@@ -75,15 +76,17 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
                 const x = randomWalksX[step][particle];
                 const y = randomWalksY[step][particle];
                 const z = randomWalksZ[step][particle];
-
+                const velocity = velocity[step][particle];
                 sysCoordHistoryX[globalStep].push(x);
                 sysCoordHistoryY[globalStep].push(y);
                 // prevent reaching below ground
                 if (z <= 0) {
                     sysCoordHistoryZ[globalStep].push(0);
+                    sysVelocityHistory[globalStep].push(0)
                 }
                 else {
                     sysCoordHistoryZ[globalStep].push(z);
+                    sysVelocityHistory[globalStep].push(velocity)
                 }
             }
             // last step indicate particles have hit the ground
@@ -92,15 +95,16 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
                     sysCoordHistoryX[future_steps].push(...randomWalksX[localStepsForConfig - 1]);
                     sysCoordHistoryY[future_steps].push(...randomWalksY[localStepsForConfig - 1]);
                     sysCoordHistoryZ[future_steps].push(...randomWalksZ[localStepsForConfig - 1].map(_ => 0));
+                    sysVelocityHistory[future_steps].push(...randomWalksZ[localStepsForConfig - 1].map(_ => 0))
                 }
             }
         }
     }
-    return { sysCoordHistoryX, sysCoordHistoryY, sysCoordHistoryZ };
+    return { sysCoordHistoryX, sysCoordHistoryY, sysCoordHistoryZ, sysVelocityHistory };
 }
 
 function displace1D(initialX, initialY, index, xOffset, yOffset, delta, thresholds) {
-    const {threshold_1, threshold_2, threshold_3} = thresholds;
+    const { threshold_1, threshold_2, threshold_3 } = thresholds;
     const baseX = initialX[index] + xOffset;
     const baseY = initialY[index] + yOffset;
     let displacementProb = Math.random();
@@ -125,7 +129,7 @@ function displace1D(initialX, initialY, index, xOffset, yOffset, delta, threshol
 }
 function displace2D(xArray, yArray, timeStep, index, xPrev, yPrev, delta, thresholds) {
     const displacement_prob = Math.random();
-    const {threshold_1, threshold_2, threshold_3} = thresholds;
+    const { threshold_1, threshold_2, threshold_3 } = thresholds;
     let newX = xPrev;
     let newY = yPrev;
     // left
@@ -231,6 +235,14 @@ function calculateThresholds(windDir, windSpeed) {
     let threshold_3 = probLeft + probRight + probDown;
     return { threshold_1, threshold_2, threshold_3 };
 }
+function findVelocity(xArray, yArray, zArray, timeStep) {
+    let deltaX = xArray[timeStep] - xArray[timeStep - 1];
+    let deltaY = yArray[timeStep] - yArray[timeStep - 1];
+    let deltaZ = zArray[timeStep] - zArray[timeStep - 1];
+    
+    let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
+    return distance;
+}
 
 function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, windSpeed, windDir) {
     const delta = calculateParticleDrift(windSpeed);
@@ -239,12 +251,13 @@ function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, 
     let randomWalksX = [];
     let randomWalksY = [];
     let randomWalksZ = [];
-
+    let velocity = [];
     let systemUnstable = true;
     let timeStep = 0; // timestep = 0 is initial state
     randomWalksX.push([...initialWalksX]);
     randomWalksY.push([...initialWalksY]);
     randomWalksZ.push([...initialWalksZ]);
+    velocity.push(Array.from({ length: numParticles }.fill(0)))
 
     while (systemUnstable) {
         timeStep++;
@@ -253,6 +266,7 @@ function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, 
         randomWalksZ[timeStep] = [];
         let vertical_displacement = Array.from({ length: numParticles }, () => Math.random())
         for (let j = 0; j < numParticles; j++) {
+            let timestep_vel = [];
             let x_prev = randomWalksX[timeStep - 1][j];
             let y_prev = randomWalksY[timeStep - 1][j];
             let z_prev = randomWalksZ[timeStep - 1][j];
@@ -263,16 +277,19 @@ function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, 
                 randomWalksZ[timeStep][j] = 0;
                 randomWalksX[timeStep][j] = x_prev;
                 randomWalksY[timeStep][j] = y_prev;
+                timestep_vel.push(0)
                 continue;
             }
             randomWalksZ[timeStep][j] = z_prev - vertical_displacement[j];
             displace2D(randomWalksX, randomWalksY, timeStep, j, x_prev, y_prev, delta, thresholds)
+            timestep_vel.push(findVelocity(randomWalksX,randomWalksY,randomWalksZ,timeStep));
         }
         if (allParticlesGrounded(randomWalksZ[timeStep])) {
             systemUnstable = false;
         }
+        velocity.push(timestep_vel)
     }
-    return { randomWalksX, randomWalksY, randomWalksZ }
+    return { randomWalksX, randomWalksY, randomWalksZ, velocity }
 }
 
 function calculateNextConfig(state, neighbourDir, minNeighbour, maxNeighbour) {
@@ -371,7 +388,7 @@ async function saveRenderVideo(params, writeStream) {
 
 // CHATGPT
 async function renderVideo(params, writeStream) {
-    let {  initialState, steps, height, windSpeed = 0, windDir = null,  minNeighbour, maxNeighbour, view = "default" } = params;
+    let { initialState, steps, height, windSpeed = 0, windDir = null, minNeighbour, maxNeighbour, view = "default" } = params;
 
     if (!initialState || !steps || !height || !minNeighbour || !maxNeighbour) throw new Error("Invalid parameters");
 
@@ -380,6 +397,7 @@ async function renderVideo(params, writeStream) {
     const framesX = sim.sysCoordHistoryX;
     const framesY = sim.sysCoordHistoryY;
     const framesZ = sim.sysCoordHistoryZ;
+    const velocity = sim.sysVelocityHistory;
 
     const width = 800, heightPx = 600;
     const canvas = createCanvas(width, heightPx);
@@ -441,13 +459,9 @@ async function renderVideo(params, writeStream) {
                 ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
             }
             else if (view === "velocity") {
-                // retreive previous frames
-                const dx = framesX[t][p] - framesX[t - 1][p];
-                const dy = framesY[t][p] - framesY[t - 1][p];
-                const dz = framesZ[t][p] - framesZ[t - 1][p];
-                const speed = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                const speed = velocity[t][p];
 
-                const normSpeed = Math.min(speed / 5, 1); // normalize and clamp to 0-1
+                const normSpeed = Math.min(speed / 3, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
 
                 // Brightness scales with speed — dark red to bright red
                 const brightness = Math.floor(50 + 205 * normSpeed); // [50–255] range

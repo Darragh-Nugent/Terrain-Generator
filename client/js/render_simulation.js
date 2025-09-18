@@ -66,6 +66,7 @@ window.randomInitialization = async function () {
     framesX = data.sysCoordHistoryX;
     framesY = data.sysCoordHistoryY;
     framesZ = data.sysCoordHistoryZ;
+    velocity = data.sysVelocityHistory;
 
     if (!framesX || !framesY || !framesZ || !framesX.length) {
         console.error('Bad frames data', data);
@@ -272,7 +273,6 @@ function updateFrame(k) {
     tmp.scale = scale;
 
     // For velocity coloring, we need previous frame (use same frame if k==0)
-    const prev = Math.max(k - 1, 0);
     const frameN = framesX[k].length;
     for (let i = 0; i < N; i++) {
         if (i < frameN) {
@@ -298,10 +298,7 @@ function updateFrame(k) {
                 colors[3 * i + 1] = g;
                 colors[3 * i + 2] = b;
             } else if (mode === 'velocity') {
-                const vx = (framesX[k][i] - framesX[prev][i]);
-                const vy = (framesY[k][i] - framesY[prev][i]);
-                const vz = (framesZ[k][i] - framesZ[prev][i]);
-                const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
+                const v = velocity[k][i];
 
                 // Simple speed → color map (black -> red -> yellow -> white)
                 const t = THREE.MathUtils.clamp(v / 2.0, 0, 1); // adjust denominator for range
@@ -400,6 +397,7 @@ form.addEventListener('submit', async (e) => {
     framesX = data.sysCoordHistoryX;
     framesY = data.sysCoordHistoryY;
     framesZ = data.sysCoordHistoryZ;
+    velocity = data.sysVelocityHistory;
 
     if (!framesX || !framesY || !framesZ || !framesX.length) {
         console.error('Bad frames data', data);
