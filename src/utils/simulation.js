@@ -16,11 +16,15 @@ function calculateAvgPos(array) {
 }
 
 function calculateAvgParticlePos(particleArray) {
-    let xSum, ySum
+    let xSum = 0;
+    let ySum = 0;
     const numParticles = particleArray.length;
     for (let i = 0; i < numParticles; i++) {
         xSum += particleArray[i].x;
         ySum += particleArray[i].y;
+    }
+    if (Number.isNaN(xSum) | Number.isNaN(ySum)) {
+        console.log("inside calc particle pos", xSum, ySum)
     }
     return {
         xAvg: xSum / numParticles,

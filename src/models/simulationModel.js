@@ -29,17 +29,14 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             prevAvgPos = averagePos;
         } else {
             // Drift the points for this configuration
-            // initial_x, initial_y, k, offset_x, offset_y, delta, displacement_prob, thresholds
             const delta = calculateParticleDrift(windSpeed, numParticles);
             const thresholds = calculateThresholds(windDir, windSpeed);
             let offset_x = (prevAvgPos.x - averagePos.x)
             let offset_y = (prevAvgPos.y - averagePos.y)
-
             for (let k = 0; k < numParticles; k++) {
                 displace1D(particleArray, k, offset_x, offset_y, delta, thresholds);
             }
             const { xAvg, yAvg } = calculateAvgParticlePos(particleArray);
-            /////////////////////////// ^^^^^^^^^^^^/ might be this
             let newAvgPos = {
                 x: xAvg,
                 y: yAvg
@@ -59,10 +56,6 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
 
     // cloud config length is added as the next cloud configuration is offset by one
     const totalSteps = maxSteps + cloudConfigs.length - 1;
-    // let sysCoordHistoryX = Array.from({ length: totalSteps }, () => []);
-    // let sysCoordHistoryY = Array.from({ length: totalSteps }, () => []);
-    // let sysCoordHistoryZ = Array.from({ length: totalSteps }, () => []);
-    // let sysVelocityHistory = Array.from({ length: totalSteps }, () => []);
     let sysParticleHistory = Array.from({ length: totalSteps }, () => []);
 
     // store each walk for each batch into the system --> note the offset required for each config as explained above
@@ -79,23 +72,13 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             // find if particle is falling or has reached ground
             for (let particle = 0; particle < numParticles; particle++) {
                 const { x, y, z, xVel, yVel, zVel } = randomWalks[step][particle].getCoordsAndVel();
-
-                // let particle_velocity = velocity[step][particle];
-                // if (!particle_velocity)console.log("Here",particle_velocity)
-                // sysCoordHistoryX[globalStep].push(x);
-                // sysCoordHistoryY[globalStep].push(y);
-                // prevent reaching below ground
                 if (z <= 0) {
                     const newParticle = new Particle(x, y, 0, 0, 0, 0);
                     sysParticleHistory[globalStep].push(newParticle);
-                    // sysCoordHistoryZ[globalStep].push(0);
-                    // sysVelocityHistory[globalStep].push(0)
                 }
                 else {
                     const newParticle = new Particle(x, y, z, xVel, yVel, zVel)
-                    sysParticleHistory.push(newParticle);
-                    // sysCoordHistoryZ[globalStep].push(z);
-                    // sysVelocityHistory[globalStep].push(particle_velocity)
+                    sysParticleHistory[globalStep].push(newParticle);
                 }
             }
             // last step indicate particles have hit the ground - add particle to all timesteps
@@ -104,13 +87,9 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
                 const numParticles = randomWalks[last].length;
                 for (let future_steps = globalStep + 1; future_steps < totalSteps; future_steps++) {
                     for (let p = 0; p < numParticles; p++) {
-                        if (randomWalks[last][p] <= 0) { // landed
-                            // sysCoordHistoryX[future_steps].push(randomWalksX[last][p]);
-                            // sysCoordHistoryY[future_steps].push(randomWalksY[last][p]);
-                            // sysCoordHistoryZ[future_steps].push(0);
-                            // sysVelocityHistory[future_steps].push(0);
+                        if (randomWalks[last][p].z <= 0) { // landed
                             const newParticle = new Particle(randomWalks[last][p].x, randomWalks[last][p].y, 0, 0, 0, 0);
-                            sysParticleHistory[globalStep].push(newParticle);
+                            sysParticleHistory[future_steps].push(newParticle);
                         }
                     }
                 }
@@ -128,7 +107,6 @@ function displace1D(particleArray, index, xOffset, yOffset, delta, thresholds) {
     let newX = baseX;
     let newY = baseY;
     const z = particleArray[index].z;
-
     if (displacementProb < threshold_1) {
         // left
         newX = baseX - delta;
@@ -261,26 +239,13 @@ function randomWalks(numParticles, particleArray, windSpeed, windDir) {
 
     let thresholds = calculateThresholds(windDir, windSpeed);
     let randomWalks = [];
-    // let randomWalksX = [];
-    // let randomWalksY = [];
-    // let randomWalksZ = [];
-    // let velocity = [];
-    // let timestepVelocity = [];
     let systemUnstable = true;
     let timeStep = 0; // timestep = 0 is initial state
     randomWalks.push([...particleArray]);
-    // randomWalksX.push([...initialWalksX]);
-    // randomWalksY.push([...initialWalksY]);
-    // randomWalksZ.push([...initialWalksZ]);
-    // velocity.push(Array.from({ length: numParticles }).fill(0))
 
     while (systemUnstable) {
         timeStep++;
-        // randomWalksX[timeStep] = [];
-        // randomWalksY[timeStep] = [];
-        // randomWalksZ[timeStep] = [];
         randomWalks[timeStep] = [];
-        // timestepVelocity = [];
         let verticalDisplacement = Array.from({ length: numParticles }, () => Math.random())
         for (let j = 0; j < numParticles; j++) {
             let xPrev = randomWalks[timeStep - 1][j].x;
@@ -295,19 +260,14 @@ function randomWalks(numParticles, particleArray, windSpeed, windDir) {
                 continue;
             }
             // update coordinates and velocity accordingly        
-            // randomWalks[timeStep][j].z = z_prev - verticalDisplacement[j];
-            // randomWalks[timeStep][j].zVelocity = verticalDisplacement[j] - z_prev;
             const localVertDisplacement = verticalDisplacement[j]
             let displacedParticle = displace2D(xPrev, yPrev, zPrev, delta, localVertDisplacement, thresholds);
             randomWalks[timeStep].push(displacedParticle);
-            // timestepVelocity.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep, j));
         }
         if (allParticlesGrounded(randomWalks[timeStep])) {
             systemUnstable = false;
         }
-        // velocity.push(timestepVelocity)
     }
-    // return { randomWalksX, randomWalksY, randomWalksZ, velocity }
     return { randomWalks }
 }
 
@@ -459,7 +419,7 @@ async function renderVideo(params, writeStream) {
     for (let t = (view === "velocity" ? 1 : 0); t < timeStep; t++) {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, heightPx);
-        for (let p = 0; p < timeStep.length; p++) {
+        for (let p = 0; p < frames[t].length; p++) {
             const x = frames[t][p].x - centerX;
             const y = frames[t][p].y - centerY;
             const z = frames[t][p].z - centerZ;
@@ -477,21 +437,22 @@ async function renderVideo(params, writeStream) {
                 ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
             }
             else if (view === "velocity") {
-                // let maxSpeed = -Infinity;
-                // for (let t = 0; t < velocity.length; t++) {
-                //     for (let p = 0; p < velocity[t].length; p++) {
-                //         if (velocity[t][p] > maxSpeed) {
-                //             maxSpeed = velocity[t][p];
-                //         }
-                //     }
-                // }
-                // const speed = velocity[t][p];
-                let maxSpeed = findVelocity(maxSpeedX, maxSpeedY, maxSpeedZ)
-                const normSpeed = Math.min(speed / maxSpeed, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
+                const { xVel, yVel, zVel } = frames[t][p].getVelocity();
 
-                // Brightness scales with speed — dark red to bright red
-                const brightness = Math.floor(100 + 255 * normSpeed); // [50–255] range
-                ctx.fillStyle = `rgb(${brightness}, 0, 0)`; // Red only
+                // Normalize each component to range [0, 1]
+                const normX = Math.min(Math.abs(xVel / maxSpeedX), 1);
+                const normY = Math.min(Math.abs(yVel / maxSpeedY), 1);
+                const normZ = Math.min(Math.abs(zVel / maxSpeedZ), 1);
+
+                // Scale to RGB [100–255]
+                const base = 50;
+                // Boost midrange values
+                const r = Math.floor(Math.pow(normX, 0.5) * 255);  // sqrt
+                const g = Math.floor(Math.pow(normY, 0.5) * 255);
+                const b = Math.floor(Math.pow(normZ, 0.5) * 255);
+
+                // Apply color
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
             }
             else {
                 const base = 100; // minimum brightness (dark grey)

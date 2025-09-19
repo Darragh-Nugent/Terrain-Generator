@@ -45,6 +45,14 @@ class Particle {
             z: this.z,
         }
     }
+
+    getVelocity(){
+        return{
+            xVel: this.xVelocity,
+            yVel: this.yVelocity,
+            zVel: this.zVelocity
+        }
+    }
     add(other) {
         return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
     }
