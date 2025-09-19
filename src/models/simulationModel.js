@@ -3,9 +3,11 @@ const { createCanvas } = require('canvas');
 const { allParticlesGrounded, isEmptyConfiguration,
     calculateNumberParticles, calculateAvgPos,
     meetsSurvivalCondition, calculateParticleDrift,
-    calculateWindspeedFactor } = require("../utils/simulation")
+    calculateWindspeedFactor,
+    calculateAvgParticlePos,
+    findParticleBoundaries } = require("../utils/simulation")
 const { findBoundaries, findAvg } = require("../utils/arrayUtils");
-
+const Particle = require("../data/Particle");
 function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minNeighbour, maxNeighbour) {
     let cloudConfigs = calculateCloudConfig(initialState, minNeighbour, maxNeighbour, steps);
     // remove configurations that are dead, otherwise it will perform random walks on particles at (0,0,0)
@@ -22,7 +24,7 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
     let prevAvgPos = 0;
     // for each configuration, compute the random walks of each state / cloud config
     for (let i = 0; i < cloudConfigs.length; i++) {
-        let { initialX, initialY, initialZ, numParticles, averagePos } = initialiseState(cloudConfigs[i], regionHeight);
+        let { particleArray, numParticles, averagePos } = initialiseState(cloudConfigs[i], regionHeight);
         if (i === 0) {
             prevAvgPos = averagePos;
         } else {
@@ -33,86 +35,93 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             let offset_x = (prevAvgPos.x - averagePos.x)
             let offset_y = (prevAvgPos.y - averagePos.y)
             for (let k = 0; k < numParticles; k++) {
-                displace1D(initialX, initialY, k, offset_x, offset_y, delta, thresholds);
+                displace1D(particleArray, k, offset_x, offset_y, delta, thresholds);
             }
-            let new_avg_pos = {
-                x: calculateAvgPos(initialX),
-                y: calculateAvgPos(initialY)
+            const { xAvg, yAvg } = calculateAvgParticlePos(particleArray);
+            let newAvgPos = {
+                x: xAvg,
+                y: yAvg
             }
-            prevAvgPos = new_avg_pos;
+            prevAvgPos = newAvgPos;
         }
 
         // generate the time evolution arrays for the particles through random walks in format[all particles at time n, number of particles]
-        const walk = randomWalks(numParticles, initialX, initialY, initialZ, windSpeed, windDir);
+        const walk = randomWalks(numParticles, particleArray, windSpeed, windDir);
         batches.push(walk);
 
         // upper bound
-        if (walk.randomWalksX.length > maxSteps) {
+        if (walk.randomWalks.length > maxSteps) {
             maxSteps = walk.randomWalksX.length;
         }
     }
 
     // cloud config length is added as the next cloud configuration is offset by one
     const totalSteps = maxSteps + cloudConfigs.length - 1;
-    let sysCoordHistoryX = Array.from({ length: totalSteps }, () => []);
-    let sysCoordHistoryY = Array.from({ length: totalSteps }, () => []);
-    let sysCoordHistoryZ = Array.from({ length: totalSteps }, () => []);
-    let sysVelocityHistory = Array.from({ length: totalSteps }, () => []);
+    // let sysCoordHistoryX = Array.from({ length: totalSteps }, () => []);
+    // let sysCoordHistoryY = Array.from({ length: totalSteps }, () => []);
+    // let sysCoordHistoryZ = Array.from({ length: totalSteps }, () => []);
+    // let sysVelocityHistory = Array.from({ length: totalSteps }, () => []);
+    let sysParticleHistory = Array.from({ length: totalSteps }, () => []);
 
     // store each walk for each batch into the system --> note the offset required for each config as explained above
     for (let i = 0; i < batches.length; i++) {
-        const { randomWalksX, randomWalksY, randomWalksZ, velocity } = batches[i];
-        const localStepsForConfig = randomWalksX.length;
+        const { randomWalks } = batches[i];
+        const localStepsForConfig = randomWalks.length;
         // add random walks of each config into the global system coords history
         for (let step = 0; step < localStepsForConfig; step++) {
             // offset by config time --> e.g config 2 starts at global step 2
             const globalStep = i + step;
             if (globalStep >= totalSteps) break;
 
-            let numParticles = randomWalksZ[step].length;
+            let numParticles = randomWalks[step].length;
             // find if particle is falling or has reached ground
             for (let particle = 0; particle < numParticles; particle++) {
-                const x = randomWalksX[step][particle];
-                const y = randomWalksY[step][particle];
-                const z = randomWalksZ[step][particle];
-                let particle_velocity = velocity[step][particle];
+                const { x, y, z, xVel, yVel, zVel } = randomWalksX[step][particle].getCoordsAndVel();
+
+                // let particle_velocity = velocity[step][particle];
                 // if (!particle_velocity)console.log("Here",particle_velocity)
-                sysCoordHistoryX[globalStep].push(x);
-                sysCoordHistoryY[globalStep].push(y);
+                // sysCoordHistoryX[globalStep].push(x);
+                // sysCoordHistoryY[globalStep].push(y);
                 // prevent reaching below ground
                 if (z <= 0) {
-                    sysCoordHistoryZ[globalStep].push(0);
-                    sysVelocityHistory[globalStep].push(0)
+                    const newParticle = new Particle(x, y, 0, 0, 0, 0);
+                    sysParticleHistory[globalStep].push(newParticle);
+                    // sysCoordHistoryZ[globalStep].push(0);
+                    // sysVelocityHistory[globalStep].push(0)
                 }
                 else {
-                    sysCoordHistoryZ[globalStep].push(z);
-                    sysVelocityHistory[globalStep].push(particle_velocity)
+                    const newParticle = new Particle(x, y, z, xVel, yVel, zVel)
+                    sysParticleHistory.push(newParticle);
+                    // sysCoordHistoryZ[globalStep].push(z);
+                    // sysVelocityHistory[globalStep].push(particle_velocity)
                 }
             }
             // last step indicate particles have hit the ground - add particle to all timesteps
             if (step === localStepsForConfig - 1) {
                 const last = localStepsForConfig - 1;
-
+                const numParticles = randomWalks[last].length;
                 for (let future_steps = globalStep + 1; future_steps < totalSteps; future_steps++) {
-                    for (let p = 0; p < randomWalksZ[last].length; p++) {
-                        if (randomWalksZ[last][p] <= 0) { // landed
-                            sysCoordHistoryX[future_steps].push(randomWalksX[last][p]);
-                            sysCoordHistoryY[future_steps].push(randomWalksY[last][p]);
-                            sysCoordHistoryZ[future_steps].push(0);
-                            sysVelocityHistory[future_steps].push(0);
+                    for (let p = 0; p < numParticles; p++) {
+                        if (randomWalks[last][p] <= 0) { // landed
+                            // sysCoordHistoryX[future_steps].push(randomWalksX[last][p]);
+                            // sysCoordHistoryY[future_steps].push(randomWalksY[last][p]);
+                            // sysCoordHistoryZ[future_steps].push(0);
+                            // sysVelocityHistory[future_steps].push(0);
+                            const newParticle = new Particle(randomWalks[last][p].x, randomWalks[last][p].y, 0, 0, 0, 0);
+                            sysParticleHistory[globalStep].push(newParticle);
                         }
                     }
                 }
             }
         }
     }
-    return { sysCoordHistoryX, sysCoordHistoryY, sysCoordHistoryZ, sysVelocityHistory };
+    return { sysParticleHistory };
 }
 
-function displace1D(initialX, initialY, index, xOffset, yOffset, delta, thresholds) {
+function displace1D(particleArray, index, xOffset, yOffset, delta, thresholds) {
     const { threshold_1, threshold_2, threshold_3 } = thresholds;
-    const baseX = initialX[index] + xOffset;
-    const baseY = initialY[index] + yOffset;
+    const baseX = particleArray[index].x + xOffset;
+    const baseY = particleArray[index].y + yOffset;
     let displacementProb = Math.random();
     let newX = baseX;
     let newY = baseY;
@@ -130,14 +139,15 @@ function displace1D(initialX, initialY, index, xOffset, yOffset, delta, threshol
         // up
         newY = baseY + delta;
     }
-    initialX[index] = newX;
-    initialY[index] = newY;
+    initialX[index].x = newX;
+    initialY[index].y = newY;
 }
-function displace2D(xArray, yArray, timeStep, index, xPrev, yPrev, delta, thresholds) {
+function displace2D(randomWalks, timeStep, index, xPrev, yPrev, zPrev, delta,verticalDisplacement, thresholds) {
     const displacement_prob = Math.random();
     const { threshold_1, threshold_2, threshold_3 } = thresholds;
     let newX = xPrev;
     let newY = yPrev;
+    let newZ = zPrev - verticalDisplacement;
     // left
     if (displacement_prob < threshold_1) {
         newX = xPrev - delta;
@@ -154,8 +164,10 @@ function displace2D(xArray, yArray, timeStep, index, xPrev, yPrev, delta, thresh
     else {
         newY = yPrev + delta;
     }
-    xArray[timeStep][index] = newX;
-    yArray[timeStep][index] = newY;
+    let xVelocity = newX - xPrev;
+    let yVelocity = newY - yPrev;
+    let zVelocity = newZ - zPrev;
+    randomWalks[timeStep][index].setPositionAndVelocity({newX,newY,newZ,xVelocity,yVelocity,zVelocity})
 }
 
 
@@ -177,11 +189,7 @@ function initialiseState(initialState, regionHeight) {
     const minHeight = regionHeight - (regionHeight / 4)
 
     // time evolution array for every particle in the system
-    const initialX = new Array(numParticles).fill(0);
-    const initialY = new Array(numParticles).fill(0);
-    const initialZ = new Array(numParticles).fill(0).map(() =>
-        Math.random() * (maxHeight - minHeight) + minHeight
-    );
+    const particleArray = [];
 
     // keep track of particles
     let particleIndex = 0;
@@ -195,8 +203,8 @@ function initialiseState(initialState, regionHeight) {
             if (initialState[i][j] === 1) {
                 sumX += j;
                 sumY += i;
-                initialX[particleIndex] = j;
-                initialY[particleIndex] = i;
+                const z = Math.random() * (maxHeight - minHeight) + minHeight;
+                particleArray.push(new Particle(j, i, z));
                 particleIndex++;
             }
         }
@@ -205,7 +213,7 @@ function initialiseState(initialState, regionHeight) {
         x: sumX / particleIndex,
         y: sumY / particleIndex,
     }
-    return { initialX, initialY, initialZ, numParticles, averagePos };
+    return { particleArray, numParticles, averagePos };
 }
 
 function calculateThresholds(windDir, windSpeed) {
@@ -241,62 +249,64 @@ function calculateThresholds(windDir, windSpeed) {
     let threshold_3 = probLeft + probRight + probDown;
     return { threshold_1, threshold_2, threshold_3 };
 }
-function findVelocity(xArray, yArray, zArray, timeStep, particleIndex) {
-    let deltaX = xArray[timeStep][particleIndex] - xArray[timeStep - 1][particleIndex];
-    let deltaY = yArray[timeStep][particleIndex] - yArray[timeStep - 1][particleIndex];
-    let deltaZ = zArray[timeStep][particleIndex] - zArray[timeStep - 1][particleIndex];
-
+function findVelocity(deltaX,deltaY,deltaZ) {
     let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
     return distance;
 }
 
-function randomWalks(numParticles, initialWalksX, initialWalksY, initialWalksZ, windSpeed, windDir) {
+function randomWalks(numParticles, particleArray, windSpeed, windDir) {
     const delta = calculateParticleDrift(windSpeed);
 
     let thresholds = calculateThresholds(windDir, windSpeed);
-    let randomWalksX = [];
-    let randomWalksY = [];
-    let randomWalksZ = [];
-    let velocity = [];
-    let timestep_vel = [];
+    let randomWalks = [];
+    // let randomWalksX = [];
+    // let randomWalksY = [];
+    // let randomWalksZ = [];
+    // let velocity = [];
+    // let timestepVelocity = [];
     let systemUnstable = true;
     let timeStep = 0; // timestep = 0 is initial state
-    randomWalksX.push([...initialWalksX]);
-    randomWalksY.push([...initialWalksY]);
-    randomWalksZ.push([...initialWalksZ]);
-    velocity.push(Array.from({ length: numParticles }).fill(0))
+    randomWalks.push([...particleArray]);
+    // randomWalksX.push([...initialWalksX]);
+    // randomWalksY.push([...initialWalksY]);
+    // randomWalksZ.push([...initialWalksZ]);
+    // velocity.push(Array.from({ length: numParticles }).fill(0))
 
     while (systemUnstable) {
         timeStep++;
-        randomWalksX[timeStep] = [];
-        randomWalksY[timeStep] = [];
-        randomWalksZ[timeStep] = [];
-        timestep_vel = [];
-        let vertical_displacement = Array.from({ length: numParticles }, () => Math.random())
+        // randomWalksX[timeStep] = [];
+        // randomWalksY[timeStep] = [];
+        // randomWalksZ[timeStep] = [];
+        randomWalks[timeStep] = [];
+        // timestepVelocity = [];
+        let verticalDisplacement = Array.from({ length: numParticles }, () => Math.random())
         for (let j = 0; j < numParticles; j++) {
-            let x_prev = randomWalksX[timeStep - 1][j];
-            let y_prev = randomWalksY[timeStep - 1][j];
-            let z_prev = randomWalksZ[timeStep - 1][j];
+            let x_prev = randomWalks[timeStep - 1][j].x;
+            let y_prev = randomWalks[timeStep - 1][j].y;
+            let z_prev = randomWalks[timeStep - 1][j].z;
 
             // check if certain particle has already hit the ground (z = 0)
-            if (randomWalksZ[timeStep - 1][j] <= 0) {
+            if (randomWalks[timeStep - 1][j].z <= 0) {
                 // revert changes as previous iteration has already hit the ground
-                randomWalksZ[timeStep][j] = 0;
-                randomWalksX[timeStep][j] = x_prev;
-                randomWalksY[timeStep][j] = y_prev;
-                timestep_vel.push(0)
+                randomWalks[timeStep][j].z = 0;
+                randomWalks[timeStep][j].x = x_prev;
+                randomWalks[timeStep][j].y = y_prev;
+                // timestepVelocity.push(0)
                 continue;
             }
-            randomWalksZ[timeStep][j] = z_prev - vertical_displacement[j];
-            displace2D(randomWalksX, randomWalksY, timeStep, j, x_prev, y_prev, delta, thresholds)
-            timestep_vel.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep, j));
+            // update coordinates and velocity accordingly        
+            // randomWalks[timeStep][j].z = z_prev - verticalDisplacement[j];
+            // randomWalks[timeStep][j].zVelocity = verticalDisplacement[j] - z_prev;
+            displace2D(randomWalks, timeStep, j, x_prev, y_prev,z_prev, delta,verticalDisplacement[j], thresholds);
+            // timestepVelocity.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep, j));
         }
-        if (allParticlesGrounded(randomWalksZ[timeStep])) {
+        if (allParticlesGrounded(randomWalks[timeStep])) {
             systemUnstable = false;
         }
-        velocity.push(timestep_vel)
+        // velocity.push(timestepVelocity)
     }
-    return { randomWalksX, randomWalksY, randomWalksZ, velocity }
+    // return { randomWalksX, randomWalksY, randomWalksZ, velocity }
+    return { randomWalks }
 }
 
 function calculateNextConfig(state, neighbourDir, minNeighbour, maxNeighbour) {
@@ -401,10 +411,11 @@ async function renderVideo(params, writeStream) {
 
     // run simulation
     const sim = fallingSnow(initialState, steps, height, windSpeed, windDir, minNeighbour, maxNeighbour);
-    const framesX = sim.sysCoordHistoryX;
-    const framesY = sim.sysCoordHistoryY;
-    const framesZ = sim.sysCoordHistoryZ;
-    const velocity = sim.sysVelocityHistory;
+    // const framesX = sim.sysCoordHistoryX;
+    // const framesY = sim.sysCoordHistoryY;
+    // const framesZ = sim.sysCoordHistoryZ;
+    // const velocity = sim.sysVelocityHistory;
+    const frames = sim.sysParticleHistory;
 
     const width = 800, heightPx = 600;
     const canvas = createCanvas(width, heightPx);
@@ -432,7 +443,7 @@ async function renderVideo(params, writeStream) {
     });
 
     // center and scale calculation
-    const { maxX, minX, maxY, minY, maxZ, minZ } = findBoundaries(framesX, framesY, framesZ)
+    const { maxX, minX, maxY, minY, maxZ, minZ, maxSpeedX, minSpeedX, maxSpeedY, minSpeedY, maxSpeedZ, minSpeedZ } = findParticleBoundaries(frames).bounds;
 
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
@@ -442,14 +453,14 @@ async function renderVideo(params, writeStream) {
     const baseScale = (Math.min(width, heightPx) / 2 - 50) / maxDim;
     const angle = Math.PI / 6;
     const maxSize = Math.max(0.5, 1.5 - maxZ * 0.05);
-
-    for (let t = (view === "velocity" ? 1 : 0); t < framesX.length; t++) {
+    const timeStep = frames.length;
+    for (let t = (view === "velocity" ? 1 : 0); t < timeStep; t++) {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, heightPx);
-        for (let p = 0; p < framesX[t].length; p++) {
-            const x = framesX[t][p] - centerX;
-            const y = framesY[t][p] - centerY;
-            const z = framesZ[t][p] - centerZ;
+        for (let p = 0; p < timeStep.length; p++) {
+            const x = frames[t][p].x - centerX;
+            const y = frames[t][p].y - centerY;
+            const z = frames[t][p].z - centerZ;
             const minSize = maxSize * 0.2;
             const denom = Math.max(minSize, 1 - z * 0.05);
             const scale = 1 / denom;
@@ -464,22 +475,21 @@ async function renderVideo(params, writeStream) {
                 ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
             }
             else if (view === "velocity") {
-                let maxSpeed = -Infinity;
-                for (let t = 0; t < velocity.length; t++) {
-                    for (let p = 0; p < velocity[t].length; p++) {
-                        if (velocity[t][p] > maxSpeed) {
-                            maxSpeed = velocity[t][p];
-                        }
-                    }
-                }
-                const speed = velocity[t][p];
-
+                // let maxSpeed = -Infinity;
+                // for (let t = 0; t < velocity.length; t++) {
+                //     for (let p = 0; p < velocity[t].length; p++) {
+                //         if (velocity[t][p] > maxSpeed) {
+                //             maxSpeed = velocity[t][p];
+                //         }
+                //     }
+                // }
+                // const speed = velocity[t][p];
+                let maxSpeed = findVelocity(maxSpeedX,maxSpeedY,maxSpeedZ)
                 const normSpeed = Math.min(speed / maxSpeed, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
 
                 // Brightness scales with speed — dark red to bright red
                 const brightness = Math.floor(100 + 255 * normSpeed); // [50–255] range
                 ctx.fillStyle = `rgb(${brightness}, 0, 0)`; // Red only
-
             }
             else {
                 const base = 100; // minimum brightness (dark grey)
