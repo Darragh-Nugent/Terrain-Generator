@@ -26,5 +26,4 @@ services:
     restart: always   
 
 volumes:
-  mariadb-data:
   redis-data:

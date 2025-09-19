@@ -28,6 +28,24 @@ Resources:
             --query "Parameter.Value" \
             --output text)
 
+          # Fetch DB credentials from Parameter Store
+          DB_USER=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/db-username" \
+            --region ap-southeast-2 \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text)
+
+          DB_PASSWORD=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/db-password" \ 
+            --region ap-southeast-2 \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text)
+
+          
+          
+
           # Write to .env file for Compose
           echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/.env
 
@@ -40,33 +58,3 @@ Resources:
             docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
             docker compose up -d 
             '"
-  Resources:
-    MariaDBInstance:
-      Type: AWS::RDS::DBInstance
-      Properties:
-        DBInstanceIdentifier: TerrainMariaDB
-        Engine: mariadb
-        MasterUsername: admin
-        MasterUserPassword: Passw0rd
-        AllocatedStorage: 20
-        DBInstanceClass: db.t3.micro
-        VPCSecurityGroups:
-          - sg-032bd1ff8cf77dbb9
-        DBSubnetGroupName: !Ref DBSubnetGroup
-        PubliclyAccessible: true
-        BackupRetentionPeriod: 7
-        MultiAZ: false
-        Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: .
-        - Key: purpose
-          Value: assessment 2
-
-    DBSubnetGroup:
-      Type: AWS::RDS::DBSubnetGroup
-      Properties:
-        DBSubnetGroupDescription: Subnets for MariaDB
-        SubnetIds:
-          - subnet-04ca053dcbe5f49cc
