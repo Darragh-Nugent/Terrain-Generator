@@ -34,10 +34,12 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             const thresholds = calculateThresholds(windDir, windSpeed);
             let offset_x = (prevAvgPos.x - averagePos.x)
             let offset_y = (prevAvgPos.y - averagePos.y)
+
             for (let k = 0; k < numParticles; k++) {
                 displace1D(particleArray, k, offset_x, offset_y, delta, thresholds);
             }
             const { xAvg, yAvg } = calculateAvgParticlePos(particleArray);
+            /////////////////////////// ^^^^^^^^^^^^/ might be this
             let newAvgPos = {
                 x: xAvg,
                 y: yAvg
@@ -51,7 +53,7 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
 
         // upper bound
         if (walk.randomWalks.length > maxSteps) {
-            maxSteps = walk.randomWalksX.length;
+            maxSteps = walk.randomWalks.length;
         }
     }
 
@@ -76,7 +78,7 @@ function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minN
             let numParticles = randomWalks[step].length;
             // find if particle is falling or has reached ground
             for (let particle = 0; particle < numParticles; particle++) {
-                const { x, y, z, xVel, yVel, zVel } = randomWalksX[step][particle].getCoordsAndVel();
+                const { x, y, z, xVel, yVel, zVel } = randomWalks[step][particle].getCoordsAndVel();
 
                 // let particle_velocity = velocity[step][particle];
                 // if (!particle_velocity)console.log("Here",particle_velocity)
@@ -125,6 +127,7 @@ function displace1D(particleArray, index, xOffset, yOffset, delta, thresholds) {
     let displacementProb = Math.random();
     let newX = baseX;
     let newY = baseY;
+    const z = particleArray[index].z;
 
     if (displacementProb < threshold_1) {
         // left
@@ -139,10 +142,9 @@ function displace1D(particleArray, index, xOffset, yOffset, delta, thresholds) {
         // up
         newY = baseY + delta;
     }
-    initialX[index].x = newX;
-    initialY[index].y = newY;
+    particleArray[index].setPosition(newX, newY, z)
 }
-function displace2D(randomWalks, timeStep, index, xPrev, yPrev, zPrev, delta,verticalDisplacement, thresholds) {
+function displace2D(xPrev, yPrev, zPrev, delta, verticalDisplacement, thresholds) {
     const displacement_prob = Math.random();
     const { threshold_1, threshold_2, threshold_3 } = thresholds;
     let newX = xPrev;
@@ -167,7 +169,7 @@ function displace2D(randomWalks, timeStep, index, xPrev, yPrev, zPrev, delta,ver
     let xVelocity = newX - xPrev;
     let yVelocity = newY - yPrev;
     let zVelocity = newZ - zPrev;
-    randomWalks[timeStep][index].setPositionAndVelocity({newX,newY,newZ,xVelocity,yVelocity,zVelocity})
+    return new Particle(newX, newY, newZ, xVelocity, yVelocity, zVelocity)
 }
 
 
@@ -249,7 +251,7 @@ function calculateThresholds(windDir, windSpeed) {
     let threshold_3 = probLeft + probRight + probDown;
     return { threshold_1, threshold_2, threshold_3 };
 }
-function findVelocity(deltaX,deltaY,deltaZ) {
+function findVelocity(deltaX, deltaY, deltaZ) {
     let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
     return distance;
 }
@@ -281,23 +283,23 @@ function randomWalks(numParticles, particleArray, windSpeed, windDir) {
         // timestepVelocity = [];
         let verticalDisplacement = Array.from({ length: numParticles }, () => Math.random())
         for (let j = 0; j < numParticles; j++) {
-            let x_prev = randomWalks[timeStep - 1][j].x;
-            let y_prev = randomWalks[timeStep - 1][j].y;
-            let z_prev = randomWalks[timeStep - 1][j].z;
+            let xPrev = randomWalks[timeStep - 1][j].x;
+            let yPrev = randomWalks[timeStep - 1][j].y;
+            let zPrev = randomWalks[timeStep - 1][j].z;
 
             // check if certain particle has already hit the ground (z = 0)
             if (randomWalks[timeStep - 1][j].z <= 0) {
                 // revert changes as previous iteration has already hit the ground
-                randomWalks[timeStep][j].z = 0;
-                randomWalks[timeStep][j].x = x_prev;
-                randomWalks[timeStep][j].y = y_prev;
+                randomWalks[timeStep].push(new Particle(xPrev, yPrev, 0, 0, 0, 0));
                 // timestepVelocity.push(0)
                 continue;
             }
             // update coordinates and velocity accordingly        
             // randomWalks[timeStep][j].z = z_prev - verticalDisplacement[j];
             // randomWalks[timeStep][j].zVelocity = verticalDisplacement[j] - z_prev;
-            displace2D(randomWalks, timeStep, j, x_prev, y_prev,z_prev, delta,verticalDisplacement[j], thresholds);
+            const localVertDisplacement = verticalDisplacement[j]
+            let displacedParticle = displace2D(xPrev, yPrev, zPrev, delta, localVertDisplacement, thresholds);
+            randomWalks[timeStep].push(displacedParticle);
             // timestepVelocity.push(findVelocity(randomWalksX, randomWalksY, randomWalksZ, timeStep, j));
         }
         if (allParticlesGrounded(randomWalks[timeStep])) {
@@ -443,7 +445,7 @@ async function renderVideo(params, writeStream) {
     });
 
     // center and scale calculation
-    const { maxX, minX, maxY, minY, maxZ, minZ, maxSpeedX, minSpeedX, maxSpeedY, minSpeedY, maxSpeedZ, minSpeedZ } = findParticleBoundaries(frames).bounds;
+    const { maxX, minX, maxY, minY, maxZ, minZ, maxSpeedX, minSpeedX, maxSpeedY, minSpeedY, maxSpeedZ, minSpeedZ } = findParticleBoundaries(frames);
 
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
@@ -484,7 +486,7 @@ async function renderVideo(params, writeStream) {
                 //     }
                 // }
                 // const speed = velocity[t][p];
-                let maxSpeed = findVelocity(maxSpeedX,maxSpeedY,maxSpeedZ)
+                let maxSpeed = findVelocity(maxSpeedX, maxSpeedY, maxSpeedZ)
                 const normSpeed = Math.min(speed / maxSpeed, 1); // normalize and clamp to 0-1 // max delta is 3 so its roughly the max vel
 
                 // Brightness scales with speed — dark red to bright red
