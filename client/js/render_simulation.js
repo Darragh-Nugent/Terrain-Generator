@@ -2,6 +2,8 @@
 import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
 import { PointerLockControls } from '/js/PointerLockControls_fixed.js';
 import { OrbitControls } from '/js/OrbitControls_fixed.js';
+// import { findParticleBoundaries } from '/src/utils/simulation.js';
+
 // For better particles visually
 const alphaMap = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/circle.png');
 
@@ -63,20 +65,30 @@ window.randomInitialization = async function () {
     }
 
     // Step 4: Same as form handler logic
-    framesX = data.sysCoordHistoryX;
-    framesY = data.sysCoordHistoryY;
-    framesZ = data.sysCoordHistoryZ;
-
-    if (!framesX || !framesY || !framesZ || !framesX.length) {
+    // framesX = data.sysCoordHistoryX;
+    // framesY = data.sysCoordHistoryY;
+    // framesZ = data.sysCoordHistoryZ;
+    // velocity = data.sysVelocityHistory;
+    frames = data.sysParticleHistory;
+    computeStaticFrameMetrics();
+    const { minZ } = cachedHeightRange;
+    // offset the environement accordingly
+    let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+    let offset = 10
+    grid.position.y = floor;
+    axes.position.y = floor;
+    camera.position.y = floor + offset;
+    
+    if (!frames | !frames.length) {
         console.error('Bad frames data', data);
         return;
     }
 
     // Total frames and max points per frame
-    T = framesX.length;
+    T = frames.length;
     let maxN = 0;
-    for (let k = 0; k < framesX.length; k++) {
-        maxN = Math.max(maxN, framesX[k].length);
+    for (let k = 0; k < frames.length; k++) {
+        maxN = Math.max(maxN, frames[k].length);
     }
     N = maxN;
 
@@ -98,6 +110,58 @@ function initialiseTable(row, col) {
     for (let i = 0; i < row; i++) addRow(col);
 }
 initialiseTable(4, 4);
+
+// have to copy this over from util because the browser doesnt serve src
+function findParticleBoundaries(particleArray) {
+    const bounds = {
+        maxX: -Infinity, minX: Infinity,
+        maxY: -Infinity, minY: Infinity,
+        maxZ: -Infinity, minZ: Infinity,
+        maxSpeedX: -Infinity, minSpeedX: Infinity,
+        maxSpeedY: -Infinity, minSpeedY: Infinity,
+        maxSpeedZ: -Infinity, minSpeedZ: Infinity
+    };
+
+    for (let step = 0; step < particleArray.length; step++) {
+        for (let p = 0; p < particleArray[step].length; p++) {
+            const { x, y, z, xVelocity, yVelocity, zVelocity } = particleArray[step][p];
+
+            bounds.maxX = Math.max(bounds.maxX, x);
+            bounds.minX = Math.min(bounds.minX, x);
+
+            bounds.maxY = Math.max(bounds.maxY, y);
+            bounds.minY = Math.min(bounds.minY, y);
+
+            bounds.maxZ = Math.max(bounds.maxZ, z);
+            bounds.minZ = Math.min(bounds.minZ, z);
+
+            bounds.maxSpeedX = Math.max(bounds.maxSpeedX, xVelocity);
+            bounds.minSpeedX = Math.min(bounds.minSpeedX, xVelocity);
+
+            bounds.maxSpeedY = Math.max(bounds.maxSpeedY, yVelocity);
+            bounds.minSpeedY = Math.min(bounds.minSpeedY, yVelocity);
+
+            bounds.maxSpeedZ = Math.max(bounds.maxSpeedZ, zVelocity);
+            bounds.minSpeedZ = Math.min(bounds.minSpeedZ, zVelocity);
+        }
+    }
+    return bounds;
+}
+
+function getMinMaxZ(particles) {
+    let minZ = Infinity, maxZ = -Infinity;
+    for (const frame of particles) {
+        for (const p of frame) {
+            if (p.z < minZ) minZ = p.z;
+            if (p.z > maxZ) maxZ = p.z;
+        }
+    }
+    return { minZ, maxZ };
+}
+function computeStaticFrameMetrics() {
+    cachedBounds = getBoundsAndScale();
+    cachedHeightRange = getMinMaxZ(frames);
+}
 
 // --- THREE setup ---
 const host = document.getElementById('three');
@@ -177,7 +241,10 @@ let posAttr = null, colAttr = null;
 let positions = null, colors = null;
 
 // Animation state
-let framesX = null, framesY = null, framesZ = null;
+// let framesX = null, framesY = null, framesZ = null;
+let cachedBounds = null;
+let cachedHeightRange = null;
+let frames = null;
 let T = 0, N = 0;
 let frameIndex = 0;
 const frameDelay = 3;
@@ -195,26 +262,7 @@ function getViewMode() {
 // 
 // Calculate bounding box and scale to fit all points nicely in view
 function getBoundsAndScale() {
-    let maxX = -Infinity, minX = Infinity;
-    let maxY = -Infinity, minY = Infinity;
-    let maxZ = -Infinity, minZ = Infinity;
-
-    for (let frame = 0; frame < framesX.length; frame++) {
-        const xs = framesX[frame];
-        const ys = framesY[frame];
-        const zs = framesZ[frame];
-
-        for (let i = 0; i < xs.length; i++) {
-            if (xs[i] > maxX) maxX = xs[i];
-            if (xs[i] < minX) minX = xs[i];
-
-            if (ys[i] > maxY) maxY = ys[i];
-            if (ys[i] < minY) minY = ys[i];
-
-            if (zs[i] > maxZ) maxZ = zs[i];
-            if (zs[i] < minZ) minZ = zs[i];
-        }
-    }
+    const { maxX, minX, maxY, minY, maxZ, minZ, maxSpeedX, minSpeedX, maxSpeedY, minSpeedY, maxSpeedZ, minSpeedZ } = findParticleBoundaries(frames);
 
     // Center of bounding box
     const centerX = (minX + maxX) / 2;
@@ -225,7 +273,7 @@ function getBoundsAndScale() {
     const maxDim = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1e-6);
     const scale = 100 / maxDim;
 
-    return { centerX, centerY, centerZ, scale };
+    return { centerX, centerY, centerZ, scale, maxSpeedX, maxSpeedY, maxSpeedZ };
 }
 
 
@@ -265,53 +313,73 @@ const tmp = { cx: 0, cy: 0, cz: 0, scale: 1 };
 
 // Update particle positions and colors for frame k
 function updateFrame(k) {
-    if (!framesX || !framesY || !framesZ) return;
-    if (framesX.length === 0 || framesY.length === 0 || framesZ.length === 0) return;
-    if (k >= framesX.length) return;
-    const { centerX, centerY, centerZ, scale } = getBoundsAndScale();
+    if (!frames) return;
+    if (frames.length === 0) return;
+    if (k >= frames.length) return;
+    const { centerX, centerY, centerZ, scale, maxSpeedX, maxSpeedY, maxSpeedZ } = cachedBounds;
     tmp.scale = scale;
 
     // For velocity coloring, we need previous frame (use same frame if k==0)
-    const prev = Math.max(k - 1, 0);
-    const frameN = framesX[k].length;
+    const frameN = frames[k].length;
     for (let i = 0; i < N; i++) {
         if (i < frameN) {
-            const x = framesX[k][i] - centerX;
-            const y = framesY[k][i] - centerY;
-            const z = framesZ[k][i] - centerZ;
+            const { x, y, z, xVelocity, yVelocity, zVelocity } = frames[k][i];
 
-            positions[3 * i + 0] = x * scale;  // X stays X
-            positions[3 * i + 1] = z * scale;  // Z becomes Y (height)
-            positions[3 * i + 2] = y * scale;  // Y becomes Z (depth)
+            const xOffset = x - centerX;
+            const yOffset = y - centerY;
+            const zOffset = z - centerZ;
+
+            positions[3 * i + 0] = xOffset * scale;  // X stays X
+            positions[3 * i + 1] = zOffset * scale;  // Z becomes Y (height)
+            positions[3 * i + 2] = yOffset * scale;  // Y becomes Z (depth)
 
             // Color by view mode
             const mode = getViewMode();
             if (mode === 'depth') {
-                // map ry to 0..1
-                // Find rough normalized height using scale of 60/maxDim => ry ~ [-30, 30]
-                const t = THREE.MathUtils.clamp((z + 30) / 60, 0, 1);
-                // blue (low) -> white (high)
-                const r = 0.2 + 0.8 * t;
-                const g = 0.2 + 0.8 * t;
-                const b = 1.0 - 0.6 * t;
+                const { minZ, maxZ } = cachedHeightRange;
+                // Find rough normalized height
+                const t = THREE.MathUtils.clamp(
+                    (z - minZ) / (maxZ - minZ + 1e-6),
+                    0, 1
+                );
+
+                // pinkish
+                // const topR = 1.0, topG = 0.1, topB = 0.7; 
+                // const botR = 0.5, botG = 0.5, botB = 0.5; 
+
+                // goldish
+                const topR = 1.0, topG = 1, topB = 0.1; // warm gold
+                const botR = 0.5, botG = 0.5, botB = 0.5;  // neutral grey
+
+
+                // Lerp from top colour (t=1) to bottom colour (t=0)
+                const r = THREE.MathUtils.lerp(botR, topR, t);
+                const g = THREE.MathUtils.lerp(botG, topG, t);
+                const b = THREE.MathUtils.lerp(botB, topB, t);
                 colors[3 * i + 0] = r;
                 colors[3 * i + 1] = g;
                 colors[3 * i + 2] = b;
             } else if (mode === 'velocity') {
-                const vx = (framesX[k][i] - framesX[prev][i]);
-                const vy = (framesY[k][i] - framesY[prev][i]);
-                const vz = (framesZ[k][i] - framesZ[prev][i]);
-                const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
+                // Get the maximum speed across all axes for consistent normalization
+                const maxSpeed = Math.max(maxSpeedX, maxSpeedY, maxSpeedZ);
 
-                // Simple speed → color map (black -> red -> yellow -> white)
-                const t = THREE.MathUtils.clamp(v / 2.0, 0, 1); // adjust denominator for range
-                const r = THREE.MathUtils.lerp(0.1, 1.0, t);
-                const g = THREE.MathUtils.lerp(0.1, 0.9, t * 0.7);
-                const b = THREE.MathUtils.lerp(0.2, 0.2, t);
-                colors[3 * i + 0] = r;
-                colors[3 * i + 1] = g;
-                colors[3 * i + 2] = b;
-            } else {
+                const normX = Math.min(Math.pow(Math.abs(xVelocity) / maxSpeed, 2), 1); // Exponential scaling for more contrast
+                const normY = Math.min(Math.pow(Math.abs(yVelocity) / maxSpeed, 2), 1);
+                const normZ = Math.min(Math.pow(Math.abs(zVelocity) / maxSpeed, 2), 1);
+                // Enhance the color brightness by adjusting the base scaling factor
+                const base = 0.2; // Lower base for more contrast
+
+                // Adjust the color channels based on the normalized velocities
+                const r = base + normX * (1 - base); // Red from xVel
+                const g = base + normY * (1 - base); // Green from yVel
+                const b = base + normZ * (1 - base); // Blue from zVel
+
+                // Apply the clamped color values to the color array
+                colors[3 * i + 0] = THREE.MathUtils.clamp(r, 0, 1);
+                colors[3 * i + 1] = THREE.MathUtils.clamp(g, 0, 1);
+                colors[3 * i + 2] = THREE.MathUtils.clamp(b, 0, 1);
+            }
+            else {
                 // default
                 colors[3 * i + 0] = 0.95;
                 colors[3 * i + 1] = 0.95;
@@ -359,7 +427,7 @@ function tick() {
     } else {
         orbitControls.update();
     }
-    if (playing && framesX) {
+    if (playing && frames) {
         if (frameCounter === 0) {
             updateFrame(frameIndex);
             frameIndex = (frameIndex + 1) % T;
@@ -396,18 +464,23 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Expecting data: { sysCoordHistoryX, sysCoordHistoryY, sysCoordHistoryZ }
-    framesX = data.sysCoordHistoryX;
-    framesY = data.sysCoordHistoryY;
-    framesZ = data.sysCoordHistoryZ;
+    frames = data.sysParticleHistory;
+    computeStaticFrameMetrics();
+    const { minZ } = cachedHeightRange;
+    // offset the environement accordingly
+    let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+    let offset = 10;
+    grid.position.y = floor;
+    axes.position.y = floor;
+    camera.position.y = floor + offset;
 
-    if (!framesX || !framesY || !framesZ || !framesX.length) {
+    if (!frames || !frames.length) {
         console.error('Bad frames data', data);
         return;
     }
 
-    T = framesX.length;
-    N = Math.max(...framesX.map(f => f.length));
+    T = frames.length;
+    N = Math.max(...frames.map(f => f.length));
 
 
     initPointsIfNeeded();

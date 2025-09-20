@@ -1,17 +1,35 @@
-const {isAllNonPositive,isAllZeros2D,sumArray,findAvg} = require("./arrayUtils.js")
-function allParticlesGrounded(array) {
-    return isAllNonPositive(array);
+const { isAllNonPositive, isAllZeros2D, sumArray, findAvg } = require("./arrayUtils.js")
+function allParticlesGrounded(particleArray) {
+    return particleArray.every(p => p.z <= 0);
 }
+
 function isEmptyConfiguration(array) {
     return isAllZeros2D(array);
 }
 
-function calculateNumberParticles(state){
+function calculateNumberParticles(state) {
     return sumArray(state);
 }
 
 function calculateAvgPos(array) {
     return findAvg(array);
+}
+
+function calculateAvgParticlePos(particleArray) {
+    let xSum = 0;
+    let ySum = 0;
+    const numParticles = particleArray.length;
+    for (let i = 0; i < numParticles; i++) {
+        xSum += particleArray[i].x;
+        ySum += particleArray[i].y;
+    }
+    if (Number.isNaN(xSum) | Number.isNaN(ySum)) {
+        console.log("inside calc particle pos", xSum, ySum)
+    }
+    return {
+        xAvg: xSum / numParticles,
+        yAvg: ySum / numParticles
+    }
 }
 
 function meetsSurvivalCondition(liveNeighbours, minNeighbours, maxNeighbours) {
@@ -48,6 +66,42 @@ function calculateWindspeedFactor(windSpeed) {
     return maxFactor * 1 / (1 + Math.exp(-(windSpeed - 10)));
 }
 
+function findParticleBoundaries(particleArray) {
+    const bounds = {
+        maxX: -Infinity, minX: Infinity,
+        maxY: -Infinity, minY: Infinity,
+        maxZ: -Infinity, minZ: Infinity,
+        maxSpeedX: -Infinity, minSpeedX: Infinity,
+        maxSpeedY: -Infinity, minSpeedY: Infinity,
+        maxSpeedZ: -Infinity, minSpeedZ: Infinity
+    };
+
+    for (let step = 0; step < particleArray.length; step++) {
+        for (let p = 0; p < particleArray[step].length; p++) {
+            const { x, y, z, xVel, yVel, zVel } = particleArray[step][p].getCoordsAndVel();
+
+            bounds.maxX = Math.max(bounds.maxX, x);
+            bounds.minX = Math.min(bounds.minX, x);
+
+            bounds.maxY = Math.max(bounds.maxY, y);
+            bounds.minY = Math.min(bounds.minY, y);
+
+            bounds.maxZ = Math.max(bounds.maxZ, z);
+            bounds.minZ = Math.min(bounds.minZ, z);
+
+            bounds.maxSpeedX = Math.max(bounds.maxSpeedX, xVel);
+            bounds.minSpeedX = Math.min(bounds.minSpeedX, xVel);
+
+            bounds.maxSpeedY = Math.max(bounds.maxSpeedY, yVel);
+            bounds.minSpeedY = Math.min(bounds.minSpeedY, yVel);
+
+            bounds.maxSpeedZ = Math.max(bounds.maxSpeedZ, zVel);
+            bounds.minSpeedZ = Math.min(bounds.minSpeedZ, zVel);
+        }
+    }
+
+    return bounds;
+}
 
 module.exports = {
     allParticlesGrounded,
@@ -56,6 +110,8 @@ module.exports = {
     calculateAvgPos,
     meetsSurvivalCondition,
     calculateParticleDrift,
-    calculateWindspeedFactor
+    calculateWindspeedFactor,
+    calculateAvgParticlePos,
+    findParticleBoundaries
 }
 
