@@ -38,7 +38,7 @@ exports.loadStyles = async () => {
   // Send the command to get an item
   try {
     const response = await docClient.send(command);
-    console.log("Item data:", response.Items);
+    console.log("Data received");
     return response.Items;
   } catch (err) {
     console.log(err);

@@ -111,6 +111,7 @@
         credentials: "include",
       });
       const terrains = await res.json();
+
       const options = await getStyleOptions();
 
       const tableBody = document.querySelector("#terrainList tbody");
@@ -154,14 +155,13 @@
         loadMapBtn.onclick = () => showMap(terrain.id);
 
         const changeStyleDrop = document.createElement("select");
-        changeStyleDrop.value = terrain.style;
         options.forEach(style => {
           const option = document.createElement("option");
           option.value = style;
           option.textContent = style;
           changeStyleDrop.appendChild(option);
         });
-        changeStyleDrop.addEventListener("change", changeHandler)
+        changeStyleDrop.value = terrain.style;
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
@@ -169,7 +169,7 @@
 
         // Add event handler for editing terrain
         const changeHandler = () =>
-          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop.value);
+          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop);
 
         [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop]
           .forEach(input => input.addEventListener("change", changeHandler));
@@ -262,6 +262,7 @@
       const heightScale = 1000;
       const octaves = 8;
       const iterations = 50;
+      const style = "classic";
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
@@ -270,7 +271,7 @@
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
+          body: JSON.stringify({ seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {
@@ -301,7 +302,7 @@
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations, style})
+          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {

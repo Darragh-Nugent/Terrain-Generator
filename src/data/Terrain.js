@@ -215,6 +215,7 @@ class Terrain {
         octaves: this.octaves,
         iterations: this.iterations,
         userId: this.userId,
+        style: this.style
         };
     }
 }

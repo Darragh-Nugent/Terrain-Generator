@@ -1,8 +1,8 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  host: 'database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com',           
-  user: process.env.DB_USER || 'user',           
+  host: 'database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com',
+  user: process.env.DB_USER || 'user',
   password: process.env.DB_PASSWORD || 'pass',
   database: 'cohort_2025',
   port: 5432,
@@ -25,6 +25,13 @@ const pool = new Pool({
       )
     `);
 
+
+    // res =await client.query(`SELECT * FROM terrains`);
+    // console.log("response1", res.rows);
+    
+    // res =await client.query(`SELECT id, style FROM terrains`);
+    // console.log("response2", res.rows);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS terrains (
         id SERIAL PRIMARY KEY,
@@ -34,6 +41,7 @@ const pool = new Pool({
         heightScale INT NOT NULL,
         octaves INT NOT NULL,
         iterations INT NOT NULL,
+        style VARCHAR(50) NOT NULL,
         s3_2d_key VARCHAR(255),
         s3_3d_key VARCHAR(255)
       )
