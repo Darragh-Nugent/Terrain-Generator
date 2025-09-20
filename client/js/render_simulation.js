@@ -71,7 +71,14 @@ window.randomInitialization = async function () {
     // velocity = data.sysVelocityHistory;
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
-
+    const { minZ } = cachedHeightRange;
+    // offset the environement accordingly
+    let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+    let offset = 10
+    grid.position.y = floor;
+    axes.position.y = floor;
+    camera.position.y = floor + offset;
+    
     if (!frames | !frames.length) {
         console.error('Bad frames data', data);
         return;
@@ -341,7 +348,7 @@ function updateFrame(k) {
                 // const botR = 0.5, botG = 0.5, botB = 0.5; 
 
                 // goldish
-                const topR = 1.0, topG = 0.8, topB = 0.3; // warm gold
+                const topR = 1.0, topG = 1, topB = 0.1; // warm gold
                 const botR = 0.5, botG = 0.5, botB = 0.5;  // neutral grey
 
 
@@ -353,17 +360,21 @@ function updateFrame(k) {
                 colors[3 * i + 1] = g;
                 colors[3 * i + 2] = b;
             } else if (mode === 'velocity') {
-                // Normalize each velocity component separately to [0,1]
-                const normX = Math.min(Math.abs(xVelocity / maxSpeedX), 1);
-                const normY = Math.min(Math.abs(yVelocity / maxSpeedY), 1);
-                const normZ = Math.min(Math.abs(zVelocity / maxSpeedZ), 1);
+                // Get the maximum speed across all axes for consistent normalization
+                const maxSpeed = Math.max(maxSpeedX, maxSpeedY, maxSpeedZ);
 
-                // Make color more vibrant by boosting the base
-                const base = 0.6;
+                const normX = Math.min(Math.pow(Math.abs(xVelocity) / maxSpeed, 2), 1); // Exponential scaling for more contrast
+                const normY = Math.min(Math.pow(Math.abs(yVelocity) / maxSpeed, 2), 1);
+                const normZ = Math.min(Math.pow(Math.abs(zVelocity) / maxSpeed, 2), 1);
+                // Enhance the color brightness by adjusting the base scaling factor
+                const base = 0.2; // Lower base for more contrast
+
+                // Adjust the color channels based on the normalized velocities
                 const r = base + normX * (1 - base); // Red from xVel
                 const g = base + normY * (1 - base); // Green from yVel
                 const b = base + normZ * (1 - base); // Blue from zVel
 
+                // Apply the clamped color values to the color array
                 colors[3 * i + 0] = THREE.MathUtils.clamp(r, 0, 1);
                 colors[3 * i + 1] = THREE.MathUtils.clamp(g, 0, 1);
                 colors[3 * i + 2] = THREE.MathUtils.clamp(b, 0, 1);
@@ -453,14 +464,16 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Expecting data: {sysParticleHistory }
-    // framesX = data.sysCoordHistoryX;
-    // framesY = data.sysCoordHistoryY;
-    // framesZ = data.sysCoordHistoryZ;
-    // velocity = data.sysVelocityHistory;
-
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
+    const { minZ } = cachedHeightRange;
+    // offset the environement accordingly
+    let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+    let offset = 10;
+    grid.position.y = floor;
+    axes.position.y = floor;
+    camera.position.y = floor + offset;
+
     if (!frames || !frames.length) {
         console.error('Bad frames data', data);
         return;
