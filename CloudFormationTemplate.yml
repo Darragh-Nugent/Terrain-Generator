@@ -10,7 +10,12 @@ Resources:
       SecurityGroupIds:
         - sg-032bd1ff8cf77dbb9
       IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-0d85525f04e019c03
+      ImageId: ami-0a20423d8bac8090f
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 15
+            VolumeType: gp3
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -40,7 +45,7 @@ Resources:
             --secret-id "n11547227/terrain-app/db-password" \
             --region ap-southeast-2 \
             --query "SecretString" \
-            --output text)
+            --output text | jq -r .password)
 
           # Write to .env file for Compose
           echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env

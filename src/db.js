@@ -24,14 +24,7 @@ const pool = new Pool({
         password VARCHAR(100) NOT NULL
       )
     `);
-
-
-    // res =await client.query(`SELECT * FROM terrains`);
-    // console.log("response1", res.rows);
     
-    // res =await client.query(`SELECT id, style FROM terrains`);
-    // console.log("response2", res.rows);
-
     await client.query(`
       CREATE TABLE IF NOT EXISTS terrains (
         id SERIAL PRIMARY KEY,

@@ -1,5 +1,5 @@
 const Noise = require("noisejs").Noise;
-const { createCanvas, loadImage } = require("canvas");
+const { createCanvas } = require("canvas");
 const Point = require("./Point");
 
 

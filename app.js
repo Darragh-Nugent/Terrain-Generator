@@ -8,7 +8,6 @@ const cors = require("cors");
 const cookieParser = require('cookie-parser');
 
 const terrainRoutes = require("./src/routes/terrainRoutes");
-const authRoutes = require("./src/routes/authRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const styleRoutes = require("./src/routes/styleRoutes");
 
@@ -27,7 +26,6 @@ app.use(express.static(path.join(__dirname, "client")));
 
 app.use("/terrain", terrainRoutes);
 app.use("/user", userRoutes);
-app.use("/auth", authRoutes);
 app.use("/style", styleRoutes);
 
 app.use('/simulation', simulationRouter);

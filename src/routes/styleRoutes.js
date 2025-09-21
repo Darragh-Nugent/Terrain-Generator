@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const styleController = require("../controllers/styleController");
-const { loadStyles } = require("../models/styleModel");
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.get("/", authenticateToken, styleController.getStyles);

@@ -1,8 +1,6 @@
 const { createCanvas, } = require("canvas");
-const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
 const styleModel = require("../models/styleModel.js");
-const S3 = require("@aws-sdk/client-s3");
 const path = require('path');
 
 const SCALE = 4;

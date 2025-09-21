@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const redis = require('../../redisclient');
-const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 
 const tokenSecret =
