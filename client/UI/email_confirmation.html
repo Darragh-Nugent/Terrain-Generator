@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Confirm Your Email</title>
+    <link rel="stylesheet" href="/styles/styles.css" />
+</head>
+
+<body>
+    <div class="center_container">
+        <h2>Confirm Your Email</h2>
+        <form id="confirm-form">
+            Username: <input type="text" name="username" readonly /><br />
+            <!-- Email input & resend button, hidden by default -->
+            <div id="resend_section" style="display: none; margin-top: 15px;">
+                <label>
+                    Email: <input type="email" id="resend_email" name="email" placeholder="Enter your email" />
+                </label>
+                <button type="button" id="resend_button">Resend Code</button>
+                <div id="resend_message" style="color: green; margin-top: 5px;"></div>
+            </div>
+            Confirmation Code: <input type="text" name="confirmationCode" /><br />
+            <button type="submit">Confirm Email</button>
+            <div id="confirm_message" style="color: red; margin-top: 10px;"></div>
+
+
+
+            <button type="button" onclick="go_login()">Go Back To Login</button>
+        </form>
+    </div>
+
+    <script>
+        function go_login() {
+            window.location.href = `/user/login`;
+        }
+
+        // Elements
+        const confirmForm = document.getElementById("confirm-form");
+        const confirmMessage = document.getElementById("confirm_message");
+        const resendSection = document.getElementById("resend_section");
+        const resendButton = document.getElementById("resend_button");
+        const resendMessage = document.getElementById("resend_message");
+        const resendEmailInput = document.getElementById("resend_email");
+
+        // Get username and resend flag from URL params
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get("username");
+        const resend = params.get("resend");
+
+        // Fill username field
+        confirmForm.username.value = username || "";
+
+        // Show resend section only if ?resend=true
+        if (resend === 'true') {
+            resendSection.style.display = 'block';
+        }
+
+        // Confirm form submit
+        confirmForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            confirmMessage.textContent = "";
+
+            const confirmationCode = confirmForm.confirmationCode.value.trim();
+            const usernameVal = confirmForm.username.value.trim();
+
+            if (!confirmationCode) {
+                confirmMessage.style.color = "red";
+                confirmMessage.textContent = "Please enter the confirmation code.";
+                return;
+            }
+
+            try {
+                const response = await fetch("/user/confirm-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: usernameVal, confirmationCode }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    confirmMessage.style.color = "red";
+                    confirmMessage.textContent = "Error confirming email: " + error.error;
+                    return;
+                }
+
+                confirmMessage.style.color = "green";
+                confirmMessage.textContent = "Email confirmed successfully! Redirecting to login...";
+
+                setTimeout(() => {
+                    window.location.href = "/user/login";
+                }, 200);
+            } catch (error) {
+                confirmMessage.style.color = "red";
+                confirmMessage.textContent = "Network error: " + error.message;
+            }
+        });
+
+        // Resend code button click
+        resendButton.addEventListener("click", async () => {
+            resendMessage.textContent = "";
+            confirmMessage.textContent = "";
+
+            const email = resendEmailInput.value.trim();
+            const usernameVal = confirmForm.username.value.trim();
+
+            if (!email) {
+                resendMessage.style.color = "red";
+                resendMessage.textContent = "Please enter your email.";
+                return;
+            }
+
+            if (!usernameVal) {
+                resendMessage.style.color = "red";
+                resendMessage.textContent = "Username is required.";
+                return;
+            }
+
+            try {
+                const response = await fetch('/user/resend-confirmation-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameVal, email }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    resendMessage.style.color = "red";
+                    resendMessage.textContent = result.error || 'Failed to resend code.';
+                } else {
+                    resendMessage.style.color = "green";
+                    resendMessage.textContent = result.message || 'Confirmation code sent!';
+                }
+            } catch (err) {
+                resendMessage.style.color = "red";
+                resendMessage.textContent = 'Error resending code: ' + err.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

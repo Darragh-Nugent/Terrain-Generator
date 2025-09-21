@@ -18,18 +18,29 @@
             <button type="submit">Login</button>
             <button type="button" onclick="back()">Back</button>
         </form>
-    </div>
+        <div id="confirm_section" style="display: none; margin-top: 20px;">
+            <h3>Email Confirmation</h3>
+            Email: <input type="email" id="confirm_email"><br>
+            <button onclick="sendConfirmationCode()">Send Code</button><br><br>
+            Confirmation Code: <input type="text" id="confirmation_code"><br>
+            <button onclick="confirmEmail()">Confirm Email</button>
+            <div id="confirm_message" style="color: red; margin-top: 10px;"></div>
+        </div>
 
+    </div>
     <script>
         function back() {
             window.location.href = `/`;
         }
-
         const params = new URLSearchParams(window.location.search);
         const error = params.get('error');
         if (error) alert('Session expired. Please log in again.');
 
         const form = document.getElementById('login');
+        const confirmSection = document.getElementById('confirm_section');
+        const confirmEmailInput = document.getElementById('confirm_email');
+        const confirmCodeInput = document.getElementById('confirmation_code');
+        const confirmMessage = document.getElementById('confirm_message');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -56,8 +67,16 @@
                 });
                 if (!response.ok) {
                     const error = await response.json();
+                    const errorMsg = error?.error || 'Invalid credentials';
                     messageDiv.style.color = 'red';
-                    messageDiv.textContent = error?.error || 'Invalid credentials';
+                    messageDiv.textContent = errorMsg;
+
+                    if (errorMsg.includes("User is not confirmed")) {
+                        setTimeout(() => {
+                            window.location.href = `/user/confirm-email?username=${encodeURIComponent(username)}&resend=true`;
+                        }, 200);
+                    }
+
                     return;
                 }
                 const data = await response.json();
@@ -72,7 +91,6 @@
                 messageDiv.textContent = 'Network error: ' + error.error;
             }
         });
-
 
     </script>
 </body>
