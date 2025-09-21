@@ -1,13 +1,11 @@
 services:
   backend:
     build: .
-    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
     container_name: terrain-generator-backend
     ports:
       - "3000:3000" # host:container
     volumes:
-      - .:/app      # bind mount for live code changes
-      - /app/node_modules # prevent overwriting node_modules
       - ./videos:/videos
     environment:
       NODE_ENV: development
@@ -16,6 +14,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: cohort_2025
       S3_BUCKET: ${S3_BUCKET}
+      DYNAMO_NAME: ${DYNAMO_NAME}
      
 
   redis:
@@ -26,5 +25,4 @@ services:
     restart: always   
 
 volumes:
-  mariadb-data:
   redis-data:

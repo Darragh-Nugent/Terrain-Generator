@@ -111,6 +111,7 @@
         credentials: "include",
       });
       const terrains = await res.json();
+
       const options = await getStyleOptions();
 
       const tableBody = document.querySelector("#terrainList tbody");
@@ -139,12 +140,6 @@
         iterationsValue.type = 'number';
         iterationsValue.value = terrain.iterations;
 
-        const changeHandler = () =>
-          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue);
-
-        [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue]
-          .forEach(input => input.addEventListener("change", changeHandler));
-
         const makeCell = (el) => {
           const td = document.createElement("td");
           td.appendChild(el);
@@ -166,10 +161,18 @@
           option.textContent = style;
           changeStyleDrop.appendChild(option);
         });
+        changeStyleDrop.value = terrain.style;
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
         delBtn.onclick = (e) => { e.stopPropagation(); deleteTerrain(terrain.id); };
+
+        // Add event handler for editing terrain
+        const changeHandler = () =>
+          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop);
+
+        [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop]
+          .forEach(input => input.addEventListener("change", changeHandler));
 
         // Append all to the row
         row.appendChild(makeCell(seedValue));
@@ -231,7 +234,9 @@
 
     async function getStyleOptions() {
       try {
-        const res = await fetch(`${API_BASE}/style/`);
+        const res = await fetch(`${API_BASE}/style/`, {
+          credentials: "include",
+        });
 
         if (!res.ok) {
           throw new Error(`Failed to load styles: ${res.statusText}`);
@@ -257,6 +262,7 @@
       const heightScale = 1000;
       const octaves = 8;
       const iterations = 50;
+      const style = "classic";
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
@@ -265,7 +271,7 @@
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
+          body: JSON.stringify({ seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {
@@ -280,12 +286,13 @@
       }
     }
 
-    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl) {
+    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl, styleEl) {
       const seed = seedEl.value;
       const size = sizeEl.value;
       const heightScale = heightScaleEl.value;
       const octaves = octavesEl.value;
       const iterations = iterationsEl.value;
+      const style = styleEl.value;
 
 
       try {
@@ -295,7 +302,7 @@
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations })
+          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {

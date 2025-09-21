@@ -1,5 +1,5 @@
 const Noise = require("noisejs").Noise;
-const { createCanvas, loadImage } = require("canvas");
+const { createCanvas } = require("canvas");
 const Point = require("./Point");
 
 
@@ -11,8 +11,9 @@ class Terrain {
     octaves;
     iterations;
     userId;
+    style;
 
-    constructor(seed, size, heightScale = 10, octaves = 5, iterations = 0, id = 0, userId = 0)
+    constructor(seed, size, heightScale = 10, octaves = 5, iterations = 0, id = 0, userId = 0, style = 'classic')
     {   
         this.id = id; 
         this.seed = seed;
@@ -21,6 +22,7 @@ class Terrain {
         this.octaves = octaves;
         this.iterations = iterations;
         this.userId = userId;
+        this.style = style;
     }
 
     #perlin(noise, x, y, octaves = 5, persistence = 0.5, lacunarity = 2) {
@@ -213,6 +215,7 @@ class Terrain {
         octaves: this.octaves,
         iterations: this.iterations,
         userId: this.userId,
+        style: this.style
         };
     }
 }

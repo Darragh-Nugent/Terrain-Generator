@@ -9,4 +9,3 @@ client.on('error', (err) => console.error('Redis error:', err));
 })();
 
 module.exports = client;
-

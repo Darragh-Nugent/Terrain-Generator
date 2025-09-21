@@ -1,12 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const ruleController = require("../controllers/ruleController");
-const { loadStyles } = require("../models/styleModel");
+const styleController = require("../controllers/styleController");
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-router.get("/", async (req, res) => {
-  const styles = await loadStyles();
-  res.json(styles);
-});
+router.get("/", authenticateToken, styleController.getStyles);
 
 
 router.post("/", (req, res) => {

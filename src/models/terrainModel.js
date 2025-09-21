@@ -6,15 +6,15 @@ const Terrain = require("../data/Terrain");
 const bucketName = 'n11547227-a2-terrains';
 const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
-exports.addTerrain = async (seed, size, heightScale, octaves, iterations, userId) => {
+exports.addTerrain = async (seed, size, heightScale, octaves, iterations, style, userId) => {
     try {
         const result = await pool.query(`
-            INSERT INTO terrains (seed, size, heightScale, octaves, iterations, user_id)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO terrains (seed, size, heightScale, octaves, iterations, style, user_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING id
-        `, [seed, size, heightScale, octaves, iterations, userId]);
+        `, [seed, size, heightScale, octaves, iterations, style, userId]);
 
-        return new Terrain(Number(seed), size, heightScale, octaves, iterations, result.rows[0].id, userId);
+        return new Terrain(Number(seed), size, heightScale, octaves, iterations, result.rows[0].id, userId, style);
     } catch (err) {
         console.error('Error in addTerrain:', err.message);
     }
@@ -41,11 +41,11 @@ exports.editTerrain = async (newTerrain, userId) => {
         await deleteBucketObjects(newTerrain.id);
         await pool.query(`
         UPDATE terrains
-        SET seed = $1, size = $2, heightScale = $3, octaves = $4, iterations = $5, user_id = $6, s3_3d_key = NULL, s3_2d_key = NULL
-        WHERE id = $7
-        `, [newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, userId, newTerrain.id]);
+        SET seed = $1, size = $2, heightScale = $3, octaves = $4, iterations = $5, style = $6, user_id = $7, s3_3d_key = NULL, s3_2d_key = NULL
+        WHERE id = $8
+        `, [newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, newTerrain.style, userId, newTerrain.id]);
 
-        return new Terrain(newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, newTerrain.id, userId);
+        return new Terrain(newTerrain.seed, newTerrain.size, newTerrain.heightScale, newTerrain.octaves, newTerrain.iterations, newTerrain.id, userId, newTerrain.style);
 
     } catch (err) {
         console.error('Error in editTerrain:', err.message);
@@ -76,8 +76,9 @@ exports.hasTerrain = async (id, userId) => {
 exports.getAllFromUser = async (userId) => {
     try {
         const result = await pool.query('SELECT * FROM terrains WHERE user_id = $1', [userId]);
+        console.log("getAllFromUser result:", result.rows[0].style);
         return result.rows.map(row => new Terrain(
-            row.seed, row.size, row.heightscale, row.octaves, row.iterations, row.id, row.user_id
+            row.seed, row.size, row.heightscale, row.octaves, row.iterations, row.id, row.user_id, row.style
         ));
     } catch (err) {
         console.error('Error in getAllFromUser:', err.message);
@@ -90,7 +91,7 @@ exports.getFromUser = async (id, userId) => {
         if (result.rows.length === 0) return null;
 
         const row = result.rows[0];
-        return new Terrain(row.seed, row.size, row.heightscale, row.octaves, row.iterations, row.id, row.user_id);
+        return new Terrain(row.seed, row.size, row.heightscale, row.octaves, row.iterations, row.id, row.user_id, row.style);
 
     } catch (err) {
         console.error('Error in getFromUser:', err.message);

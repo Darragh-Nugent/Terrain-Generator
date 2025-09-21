@@ -10,7 +10,12 @@ Resources:
       SecurityGroupIds:
         - sg-032bd1ff8cf77dbb9
       IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-0c79b3a447d99f87a
+      ImageId: ami-0f894460b720ce324
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 15
+            VolumeType: gp3
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -28,8 +33,32 @@ Resources:
             --query "Parameter.Value" \
             --output text)
 
+          # Fetch DynamoDB table name from Parameter Store
+          DYNAMO_NAME=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/dynamo-name" \
+            --region ap-southeast-2 \
+            --query "Parameter.Value" \
+            --output text)
+
+          # Fetch DB credentials from Parameter Store and Secrets Manager
+          DB_USER=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/db-username" \
+            --region ap-southeast-2 \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text)
+
+          DB_PASSWORD=$(aws secretsmanager get-secret-value \
+            --secret-id "n11547227/terrain-app/db-password" \
+            --region ap-southeast-2 \
+            --query "SecretString" \
+            --output text | jq -r .password)
+                 
           # Write to .env file for Compose
-          echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/.env
+          echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
+          echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
+          echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
+          echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
 
           # Pull private ECR image and start containers
           su - ubuntu -c "bash -c '
@@ -37,36 +66,6 @@ Resources:
               | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
 
             cd /home/ubuntu/Terrain-Generator
-            docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
+            docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
             docker compose up -d 
             '"
-  Resources:
-    MariaDBInstance:
-      Type: AWS::RDS::DBInstance
-      Properties:
-        DBInstanceIdentifier: TerrainMariaDB
-        Engine: mariadb
-        MasterUsername: admin
-        MasterUserPassword: Passw0rd
-        AllocatedStorage: 20
-        DBInstanceClass: db.t3.micro
-        VPCSecurityGroups:
-          - sg-032bd1ff8cf77dbb9
-        DBSubnetGroupName: !Ref DBSubnetGroup
-        PubliclyAccessible: true
-        BackupRetentionPeriod: 7
-        MultiAZ: false
-        Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: .
-        - Key: purpose
-          Value: assessment 2
-
-    DBSubnetGroup:
-      Type: AWS::RDS::DBSubnetGroup
-      Properties:
-        DBSubnetGroupDescription: Subnets for MariaDB
-        SubnetIds:
-          - subnet-04ca053dcbe5f49cc

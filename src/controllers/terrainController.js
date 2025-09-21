@@ -1,18 +1,16 @@
 const { createCanvas, } = require("canvas");
-const sharp = require("sharp");
 const terrainModel = require("../models/terrainModel");
 const styleModel = require("../models/styleModel.js");
-const S3 = require("@aws-sdk/client-s3");
 const path = require('path');
 
 const SCALE = 4;
 
 async function addTerrain(req, res) {
   const userId = req.user.id;
-  const { seed, size, heightScale, octaves, iterations } = req.body;
+  const { seed, size, heightScale, octaves, iterations, style } = req.body;
 
   try {
-    const newTerrain = await terrainModel.addTerrain(seed, size, heightScale, octaves, iterations, userId);
+    const newTerrain = await terrainModel.addTerrain(seed, size, heightScale, octaves, iterations, style, userId);
     res.status(201).json(newTerrain);
   } catch (err) {
     res.status(500).json({ error: err.message });

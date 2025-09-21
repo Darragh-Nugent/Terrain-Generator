@@ -12,7 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.891.0",
     "@aws-sdk/client-s3": "^3.888.0",
+    "@aws-sdk/lib-dynamodb": "^3.891.0",
     "@aws-sdk/s3-request-presigner": "^3.888.0",
     "bcrypt": "^6.0.0",
     "canvas": "^3.1.2",
