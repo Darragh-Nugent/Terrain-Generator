@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+    <link rel="stylesheet" href="/styles/styles.css" />
+</head>
+
+<body>
+    <div class="center_container">
+        <h2>Register</h2>
+        <form id="register">
+            Username: <input type="text" name="username"><br>
+            Password: <input type="password" name="password"><br>
+            Confirm Password: <input type="password" name="confirm_password"><br>
+            <button type="submit">Register</button>
+            <div id="register_message" style="color: red; margin-top: 10px;"></div>
+            <button type="button" onclick="go_login()">Go Back To Login</button>
+        </form>
+    </div>
+
+    <script>
+        function go_login() {
+            window.location.href = `/user/login`;
+        }
+
+        const form = document.getElementById('register');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const messageDiv = document.getElementById('register_message');
+            messageDiv.textContent = '';
+
+            const username = form.username.value.trim();
+            const password = form.password.value;
+            const confirm_password = form.confirm_password.value;
+
+            if (!username || !password || !confirm_password) {
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Please fill all fields!';
+                return;
+            }
+
+            if (password !== confirm_password) {
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Passwords do not match!';
+                return;
+            }
+            const user_data = { username, password }
+            try {
+                const response = await fetch('/user/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user_data)
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    messageDiv.style.color = 'red';
+                    messageDiv.textContent = 'Error upon registration: ' + error.error;
+                    return;
+                }
+                messageDiv.style.color = 'green';
+                messageDiv.textContent = 'Successfully logging in..';
+
+                setTimeout(() => {
+                    window.location.href = `/user/login`;
+                }, 200);
+            } catch (error) {
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Network error: ' + error.error;
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>
