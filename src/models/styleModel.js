@@ -7,11 +7,6 @@ const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
 
 const qutUsername = "n11547227@qut.edu.au";
 
-// exports.loadStyles = () => {
-//   const data = fs.readFileSync(RULES_PATH);
-//   return JSON.parse(data);
-// }
-
 exports.loadStyles = async () => {
   console.log("DynamoDB Table Name:", process.env.DYNAMO_NAME);
   console.log("Key:", {

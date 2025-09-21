@@ -10,7 +10,7 @@ Resources:
       SecurityGroupIds:
         - sg-032bd1ff8cf77dbb9
       IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-0c79b3a447d99f87a
+      ImageId: ami-01dadc0959bc07dcb
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -53,6 +53,6 @@ Resources:
               | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
 
             cd /home/ubuntu/Terrain-Generator
-            docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a1:latest
+            docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
             docker compose up -d 
             '"
