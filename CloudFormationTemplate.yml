@@ -10,7 +10,7 @@ Resources:
       SecurityGroupIds:
         - sg-032bd1ff8cf77dbb9
       IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-0a20423d8bac8090f
+      ImageId: ami-0f894460b720ce324
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -33,7 +33,14 @@ Resources:
             --query "Parameter.Value" \
             --output text)
 
-          # Fetch DB credentials from Parameter Store
+          # Fetch DynamoDB table name from Parameter Store
+          DYNAMO_NAME=$(aws ssm get-parameter \
+            --name "/n11547227/terrain-app/dynamo-name" \
+            --region ap-southeast-2 \
+            --query "Parameter.Value" \
+            --output text)
+
+          # Fetch DB credentials from Parameter Store and Secrets Manager
           DB_USER=$(aws ssm get-parameter \
             --name "/n11547227/terrain-app/db-username" \
             --region ap-southeast-2 \
@@ -46,9 +53,10 @@ Resources:
             --region ap-southeast-2 \
             --query "SecretString" \
             --output text | jq -r .password)
-
+                 
           # Write to .env file for Compose
           echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
+          echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
           echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
           echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
 
