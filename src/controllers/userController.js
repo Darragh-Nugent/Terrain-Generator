@@ -242,16 +242,18 @@ exports.deleteUser = async (req, res) => {
     try {
         // Get the AccessToken from the cookies (this assumes the token is already there)
         const accessToken = req.cookies.accessToken;
+        const decoded = jwt.decode(accessToken);
         await blacklistToken(decoded.sub);
         // Call Cognito's DeleteUser command to delete the user from Cognito
         const result = await User.remove(accessToken);
 
         // Clear the authentication cookie
-        res.clearCookie('accessToken', { httpOnly: true, secure: false });
-        res.clearCookie('idToken', { httpOnly: true, secure: false }); // change to true when https
+        res.clearCookie('accessToken');
+        res.clearCookie('idToken'); // change to true when https
+        res.clearCookie('userInfo')
         res.status(200).json({ message: "Your account has been successfully deleted" });
     } catch (err) {
-        res.status(500).json({ message: "Error deleting your account: " + err.message });
+        res.status(500).json({ message: "Error deleting your account: " + err });
     }
 };
 // exports.updateUserPassword = async (req, res) => {

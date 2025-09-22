@@ -157,6 +157,7 @@ exports.confirmPassword = async (username, verificationCode, newPassword) => {
             Username: username,
             ConfirmationCode: verificationCode, // Code sent to the user
             Password: newPassword,               // The new password chosen by the user
+            SecretHash: secretHash(clientId, clientSecret, username)
         });
 
         const result = await client.send(command);

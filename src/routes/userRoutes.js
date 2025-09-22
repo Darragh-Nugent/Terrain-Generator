@@ -24,7 +24,6 @@ router.delete('/:id/delete',authenticateAccessToken,userController.deleteUser); 
 router.get('/:id/delete', authenticateAccessToken,userController.showDeletePage) // req auth
 
 router.post('/:id/logout',authenticateAccessToken,userController.logoutUser); // req auth
-router.get('/:id/delete', authenticateAccessToken,userController.showDeletePage) // req auth
 
 router.get('/me', authenticateIdToken, userController.getUserCookieInfo); // req auth
 

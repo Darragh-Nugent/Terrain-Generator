@@ -22,14 +22,14 @@
         <div class="center_container" style="margin-top: 40px;">
             <h3>Forgot Password?</h3>
             <form id="forgot_password_form">
-                Username: <input type="text" name="username"><br>
+                Email: <input type="text" name="username"><br>
                 <button type="submit">Send Verification Code</button>
                 <div id="forgot_password_message" style="color: red; margin-top: 10px;"></div>
             </form>
         </div>
 
         <!-- Confirm Password Reset Form -->
-        <div class="center_container" style="display: none; margin-top: 40px;">
+        <div class="center_container" id="confirmSection" style="display: none; margin-top: 40px;">
             <h3>Reset Password</h3>
             <form id="confirm_reset_form">
                 Username: <input type="text" name="username"><br>
@@ -48,7 +48,7 @@
     </div>
     <script>
         const msgDiv = document.getElementById('forgot_password_message');
-        const comfirmSection = document.getElementById('confirm_reset_form');
+        const comfirmSection = document.getElementById('confirmSection');
         msgDiv.textContent = '';
         const pathSegments = window.location.pathname.split('/');
         // pathSegments = ['', 'user', '1', 'update']
@@ -104,10 +104,10 @@
                     try {
                         error = await response.json();
                     } catch (parseErr) {
-                        error.error = response.statusText || 'Unknown error';
+                        error.message = response.statusText || 'Unknown error' ;
                     }
                     msgDiv.style.color = 'red';
-                    msgDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to delete user.');
+                    msgDiv.textContent = 'Error: ' + (`${error.message}` || 'Failed to delete user.');
                     return;
                 }
 
