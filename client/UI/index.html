@@ -56,7 +56,7 @@
                 userInfoDiv.innerHTML = `
                     <h1><strong>Welcome ${user.username}, To WinterScape</strong></h1>`;
                 // if user exists but no id in params yet
-                if (user.id && (!id || !Number(id))) {
+                if (user.id && !id ) {
                     window.location.href = `/?id=${user.id}`;
                 }
             } else {

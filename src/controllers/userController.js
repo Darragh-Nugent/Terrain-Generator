@@ -3,7 +3,8 @@ const User = require("../models/userModels");
 // const jwt = require("jsonwebtoken");
 const path = require('path');
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
-const jwt = require("aws-jwt-verify");
+const awsJwt = require("aws-jwt-verify");
+const jwt = require('jsonwebtoken');
 const { generateAccessToken, blacklistToken, tokenSecret } = require('../middleware/authMiddleware')
 const userPoolId = "ap-southeast-2_uLIJT0rVY";
 const clientId = "3q30pl220o1tbp1tlqp8eiovse"
@@ -39,7 +40,7 @@ exports.getAllUsers = (req, res) => {
 // }
 
 
-const accessVerifier = jwt.CognitoJwtVerifier.create({
+const accessVerifier = awsJwt.CognitoJwtVerifier.create({
     userPoolId: userPoolId,
     tokenUse: 'access', // or 'id' depending on the token type
     clientId: clientId,
@@ -47,24 +48,24 @@ const accessVerifier = jwt.CognitoJwtVerifier.create({
 
 exports.logoutUser = async (req, res) => {
     try {
-        const token = req.cookies.authToken;
+        const token = req.cookies.accessToken;
         const username = req.user.username;
         const id = req.user.id;
         if (!token) {
             return res.status(401).json({ error: "Missing auth token" });
         }
-        if (username && id) {
-            const exists = await User.checkUserExists(req.user.username);
-            if (!exists) return res.status(404).json({ error: "User does not exist" })
-        }
+        // if (username && id) {
+        //     const exists = await User.checkUserExists(req.user.username);
+        //     if (!exists) return res.status(404).json({ error: "User does not exist" })
+        // }
         const payload = await accessVerifier.verify(token);  // <-- verifies signature, expiration, issuer, etc.
 
         // Blacklist token or user session
         await blacklistToken(payload.sub);  // or payload.sub if your blacklist uses sub
 
         // Clear cookie
-        res.clearCookie('authToken', { httpOnly: true, secure: false }); // change to true when https
-
+        res.clearCookie('accessToken', { httpOnly: true, secure: false }); // change to true when https
+        res.clearCookie('idToken', { httpOnly: true, secure: false }); // change to true when https
         return res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
@@ -115,7 +116,50 @@ exports.login = async (req, res) => {
         return res.status(400).json({ error: err.message });
     }
 };
+exports.respondToMfaChallenge = async (req, res) => {
+    const { username, mfaCode, session, challengeName } = req.body;
 
+    if (!username || !mfaCode || !session) {
+        return res.status(400).json({ error: 'Username, MFA code, and session are required.' });
+    }
+
+    try {
+        const response = await User.respondToMFA(username, mfaCode, session, challengeName);
+
+        if (response.AuthenticationResult) {
+            const { IdToken, AccessToken } = response.AuthenticationResult;
+            const decodedToken = jwt.decode(IdToken);
+            console.log(IdToken,AccessToken);
+            const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
+            res.cookie('accessToken', AccessToken, {
+                httpOnly: true,
+                secure: false,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
+            res.cookie('idToken', IdToken, {
+                httpOnly: true,
+                secure: false,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
+
+            return res.status(200).json({
+                message: 'MFA verified and login successful.',
+                id: sub,
+                email,
+                username: cognitoUsername,
+                AccessToken,
+                IdToken,
+            });
+        } else {
+            return res.status(401).json({ error: 'MFA verification failed.' });
+        }
+    } catch (err) {
+        console.error('Error in MFA challenge:', err);
+        return res.status(500).json({ error: `Error responding to MFA challenge: ${err.name}` });
+    }
+};
 exports.AddUser = async (req, res) => {
     const { username, email, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username, password and email are all required' });
@@ -185,14 +229,14 @@ exports.resendConfirmationCode = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         // Get the AccessToken from the cookies (this assumes the token is already there)
-        const accessToken = req.cookies.authToken;
+        const accessToken = req.cookies.accessToken;
         await blacklistToken(decoded.sub);
         // Call Cognito's DeleteUser command to delete the user from Cognito
         const result = await User.remove(accessToken);
 
         // Clear the authentication cookie
-        res.clearCookie('authToken', { httpOnly: true, secure: false });
-
+        res.clearCookie('accessToken', { httpOnly: true, secure: false });
+        res.clearCookie('idToken', { httpOnly: true, secure: false }); // change to true when https
         res.status(200).json({ message: "Your account has been successfully deleted" });
     } catch (err) {
         res.status(500).json({ message: "Error deleting your account: " + err.message });
@@ -263,8 +307,8 @@ exports.getUserCookieInfo = async (req, res) => {
         const username = req.user.username;
         const id = req.user.id;
         if (username && id) {
-            const exists = await User.checkUserExists(req.user.username);
-            if (!exists) return res.status(404).json({ error: "User does not exist" })
+            // const exists = await User.checkUserExists(req.user.username);
+            // if (!exists) return res.status(404).json({ error: "User does not exist" })
 
             console.log(`authToken verified for user (${id}): ${username} at ${req.url}`);
             // Return the user info

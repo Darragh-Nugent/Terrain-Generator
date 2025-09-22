@@ -1,10 +1,10 @@
 // const pool = require('../db');
 // const Person = require("../data/Person");
 // const bcrypt = require('bcrypt');
-
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
-
+const jwt = require('jsonwebtoken');
+// const jwt = require("aws-jwt-verify");
 // can go in secrets manager 
 // https://ap-southeast-2.console.aws.amazon.com/cognito/v2/idp/user-pools/ap-southeast-2_uLIJT0rVY/applications/app-clients/3q30pl220o1tbp1tlqp8eiovse/quick-setup-guide?region=ap-southeast-2
 const clientId = "3q30pl220o1tbp1tlqp8eiovse";
@@ -302,23 +302,24 @@ exports.invalidateToken = async (accessToken) => {
 //     }
 // }
 
-exports.checkUserExists = async (username) => {
-    try {
-        const command = new Cognito.ListUsersCommand({
-            UserPoolId: userPoolId, // Replace with your User Pool ID
-            Filter: `username = "${username}"`, // Filter for username
-            Limit: 1, // Limit to only 1 result
-        });
+// exports.checkUserExists = async (username) => {
+//     try {
+//         console.log(username, "hjere in check user exits")
+//         const command = new Cognito.ListUsersCommand({
+//             UserPoolId: userPoolId, // Replace with your User Pool ID
+//             Filter: `cognito:username = "${username}"`, // Filter for username
+//             Limit: 1, // Limit to only 1 result
+//         });
 
-        const data = await client.send(command);
+//         const data = await client.send(command);
 
-        // If data.Users is not empty, the user exists
-        return { result: data.Users.length > 0 }; // Returns true if user exists
-    } catch (err) {
-        console.error('Error checking if user exists in Cognito:', err);
-        throw new Error(`Error checking user existance: ${err.name}: ${err.message}`);
-    }
-};
+//         // If data.Users is not empty, the user exists
+//         return { result: data.Users.length > 0 }; // Returns true if user exists
+//     } catch (err) {
+//         console.error('Error checking if user exists in Cognito:', err);
+//         throw new Error(`Error checking user existance: ${err.name}: ${err.message}`);
+//     }
+// };
 
 
 // exports.verifyUser = async (username, password) => {
@@ -338,6 +339,33 @@ exports.checkUserExists = async (username) => {
 //         throw new Error("Error verifying user: " + err.message)
 //     }
 // };
+
+exports.respondToMFA = async (username, mfaCode, session, challengeName) => {
+    // Map challenge names to the appropriate MFA code key
+    const codeKeyMap = {
+        EMAIL_OTP: 'EMAIL_OTP_CODE',
+        SOFTWARE_TOKEN_MFA: 'SOFTWARE_TOKEN_MFA_CODE',
+        SMS_MFA: 'SMS_MFA_CODE',
+    };
+
+    const codeKey = codeKeyMap[challengeName];
+
+    if (!codeKey) {
+        throw new Error(`Unsupported challenge name: ${challengeName}`);
+    }
+
+    const command = new Cognito.RespondToAuthChallengeCommand({
+        ChallengeName: challengeName,
+        ClientId: clientId,
+        ChallengeResponses: {
+            USERNAME: username,
+            [codeKey]: mfaCode, // Dynamically assign correct key
+            SECRET_HASH: secretHash(clientId, clientSecret, username),
+        },
+        Session: session,
+    });
+    return await client.send(command);
+};
 exports.verifyUser = async (username, password) => {
     try {
         const command = new Cognito.InitiateAuthCommand({
@@ -352,7 +380,17 @@ exports.verifyUser = async (username, password) => {
 
         // Send the command to initiate authentication
         const result = await client.send(command);
+        // Scenario 1 - if userpool MFA is mandatory
+        if (result.ChallengeName === 'SMS_MFA' || result.ChallengeName === 'SOFTWARE_TOKEN_MFA' || result.ChallengeName === "EMAIL_OTP") {
+            return {
+                challenge: true,
+                challengeName: result.ChallengeName,
+                session: result.Session, // for the /auth/mfa endpoint
+                message: 'MFA required. Please provide the MFA code.',
+            };
+        }
 
+        // Scenario 2- if userpool MFA is optional
         // If successful, Cognito returns authentication tokens (ID token, Access token)
         if (result.AuthenticationResult) {
             // You can extract user info from the AuthenticationResult or decode the ID token
