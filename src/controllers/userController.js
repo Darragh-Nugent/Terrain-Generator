@@ -64,8 +64,9 @@ exports.logoutUser = async (req, res) => {
         await blacklistToken(payload.sub);  // or payload.sub if your blacklist uses sub
 
         // Clear cookie
-        res.clearCookie('accessToken', { httpOnly: true, secure: false }); // change to true when https
-        res.clearCookie('idToken', { httpOnly: true, secure: false }); // change to true when https
+        res.clearCookie('userInfo');
+        res.clearCookie('accessToken');
+        res.clearCookie('idToken');
         return res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
@@ -99,18 +100,20 @@ exports.login = async (req, res) => {
     if (!username || !password) return res.status(400).json({ error: 'Please enter in a username and password!' });
     try {
         const user = await User.verifyUser(username, password);
-        res.cookie('accessToken', user.AccessToken, {
-            httpOnly: true,
-            secure: false,         // Set to true in production (HTTPS)
-            sameSite: 'Strict',
-            maxAge: 60 * 60 * 1000 // 60minutes
-        });
-        res.cookie('idToken', user.IdToken, {
-            httpOnly: true,
-            secure: false,         // Set to true in production (HTTPS)
-            sameSite: 'Strict',
-            maxAge: 60 * 60 * 1000 // 60minutes
-        });
+        if (user.AccessToken && user.IdToken) {
+            res.cookie('accessToken', user.AccessToken, {
+                httpOnly: true,
+                secure: false,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
+            res.cookie('idToken', user.IdToken, {
+                httpOnly: true,
+                secure: false,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
+        }
         return res.status(200).json(user);
     } catch (err) {
         return res.status(400).json({ error: err.message });
@@ -125,25 +128,34 @@ exports.respondToMfaChallenge = async (req, res) => {
 
     try {
         const response = await User.respondToMFA(username, mfaCode, session, challengeName);
-
+        console.log("response from mfa cognito", response)
         if (response.AuthenticationResult) {
             const { IdToken, AccessToken } = response.AuthenticationResult;
             const decodedToken = jwt.decode(IdToken);
-            console.log(IdToken,AccessToken);
+            console.log(decodedToken);
             const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
             res.cookie('accessToken', AccessToken, {
                 httpOnly: true,
                 secure: false,         // Set to true in production (HTTPS)
                 sameSite: 'Strict',
+                path: '/',
                 maxAge: 60 * 60 * 1000 // 60minutes
             });
             res.cookie('idToken', IdToken, {
                 httpOnly: true,
                 secure: false,         // Set to true in production (HTTPS)
                 sameSite: 'Strict',
+                path: '/',
                 maxAge: 60 * 60 * 1000 // 60minutes
             });
-
+            const userInfo = { id: sub, email, username: cognitoUsername }
+            res.cookie('userInfo', JSON.stringify(userInfo), {
+                httpOnly: false,
+                secure: false,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                path: '/',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
             return res.status(200).json({
                 message: 'MFA verified and login successful.',
                 id: sub,

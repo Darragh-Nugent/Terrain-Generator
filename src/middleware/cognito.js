@@ -37,7 +37,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
             req.path.startsWith('/api') ||
             req.headers['content-type'] === 'application/json';
 
-        if (!token || typeof token !== 'string') {
+        if (!token || typeof token !== 'string'|| token === 'undefined' || token === 'null') {
             console.log('JWT missing.');
             return expectsJson
                 ? res.status(401).json({ error: 'Please log in!' })
@@ -66,8 +66,8 @@ const createTokenMiddleware = (tokenName, verifier) => {
                 tenantId
             };
             const blacklisted = await isTokenBlacklisted(sub);
-            if (blacklisted || !username) {
-                console.warn(`JWT for user ${username} is blacklisted.`);
+            if (blacklisted ) {
+                console.warn(`JWT for user ${sub} is blacklisted.`);
                 return res.status(401).json({ error: 'Token has been invalidated' });
             }
             next();

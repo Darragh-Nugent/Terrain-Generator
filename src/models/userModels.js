@@ -137,6 +137,7 @@ exports.forgotPassword = async (username) => {
         const command = new Cognito.ForgotPasswordCommand({
             ClientId: clientId,
             Username: username,
+            SecretHash: secretHash(clientId, clientSecret, username)
         });
 
         const result = await client.send(command);

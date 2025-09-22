@@ -29,7 +29,7 @@
         </div>
 
         <!-- Confirm Password Reset Form -->
-        <div class="center_container" style="margin-top: 40px;">
+        <div class="center_container" style="display: none; margin-top: 40px;">
             <h3>Reset Password</h3>
             <form id="confirm_reset_form">
                 Username: <input type="text" name="username"><br>
@@ -47,9 +47,9 @@
         </div>
     </div>
     <script>
-
-        const messageDiv = document.getElementById('update_password');
-        messageDiv.textContent = '';
+        const msgDiv = document.getElementById('forgot_password_message');
+        const comfirmSection = document.getElementById('confirm_reset_form');
+        msgDiv.textContent = '';
         const pathSegments = window.location.pathname.split('/');
         // pathSegments = ['', 'user', '1', 'update']
 
@@ -73,20 +73,20 @@
                     } catch (parseErr) {
                         error.error = response.statusText || 'Unknown error';
                     }
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to logout');
+                    msgDiv.style.color = 'red';
+                    msgDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to logout');
                     return;
                 }
 
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Account deleted. Redirecting to home..';
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = 'Account deleted. Redirecting to home..';
 
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 200);
             } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + (error || '');
+                msgDiv.style.color = 'red';
+                msgDiv.textContent = 'Network error: ' + (error || '');
                 return;
             }
         }
@@ -106,20 +106,20 @@
                     } catch (parseErr) {
                         error.error = response.statusText || 'Unknown error';
                     }
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to delete user.');
+                    msgDiv.style.color = 'red';
+                    msgDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to delete user.');
                     return;
                 }
 
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Account deleted. Redirecting to login...';
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = 'Account deleted. Redirecting to login...';
 
                 setTimeout(() => {
                     window.location.href = '/user/login';
                 }, 200);
             } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + (error || '');
+                msgDiv.style.color = 'red';
+                msgDiv.textContent = 'Network error: ' + (error || '');
                 return;
             }
         }
@@ -129,14 +129,12 @@
         forgotForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = forgotForm.username.value.trim();
-            const msgDiv = document.getElementById('forgot_password_message');
             msgDiv.textContent = '';
 
             if (!username) {
                 msgDiv.textContent = "Please enter your username.";
                 return;
             }
-
             try {
                 const res = await fetch('/user/forgot-password', {
                     method: 'POST',
@@ -154,6 +152,7 @@
 
                 msgDiv.style.color = 'green';
                 msgDiv.textContent = "Verification code sent to your email.";
+                comfirmSection.style.display = 'block'
             } catch (err) {
                 msgDiv.textContent = "Network error: " + err.message;
             }

@@ -97,7 +97,8 @@
         });
 
         // Resend code button click
-        resendButton.addEventListener("click", async () => {
+        resendButton.addEventListener("click", async (e) => {
+            e.preventDefault();
             resendMessage.textContent = "";
             confirmMessage.textContent = "";
 
