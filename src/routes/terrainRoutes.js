@@ -12,6 +12,6 @@ router.post('/addTerrain', authenticateAccessToken, terrainController.addTerrain
 router.post('/editTerrain', authenticateAccessToken, terrainController.editTerrain)
 router.delete('/deleteTerrain', authenticateAccessToken, terrainController.deleteTerrain)
 
-router.get('/Terrain-Generator/:id/', authenticateAccessToken, terrainController.showTerrainGenerator)
+router.get('/Terrain-Generator/:id/', terrainController.showTerrainGenerator)
 
 module.exports = router;
