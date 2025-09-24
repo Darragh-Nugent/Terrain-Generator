@@ -1,8 +1,7 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/authMiddleware');
-const { authenticateIdToken,authenticateAccessToken } = require('../middleware/cognito');
+const { authenticateAccessToken } = require('../middleware/cognito');
 const {fallingSnow,fallingSnowVideo, showRenderPage,saveFallingSnowVideo} = require('../controllers/simulationController');
 
 router.post('/falling-snow-calculation', fallingSnow);
@@ -13,7 +12,7 @@ router.post('/simulation-snowfall-video', fallingSnowVideo);
 router.post('/save-snowfall-simulation',saveFallingSnowVideo);
 
 
-router.get("/3d-snowfall-simulation", authenticateAccessToken, showRenderPage);
+router.get("/3d-snowfall-simulation", showRenderPage);
 
 
 module.exports = router;

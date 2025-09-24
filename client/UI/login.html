@@ -66,6 +66,9 @@
                 // Success: Redirect or show message
                 messageDiv.style.color = 'green';
                 messageDiv.textContent = 'MFA verified. Logging in...';
+                localStorage.setItem('accessToken', data.AccessToken);
+                localStorage.setItem('idToken', data.IdToken);
+                localStorage.setItem('userInfo', data.UserInfo);
                 setTimeout(() => {
                     window.location.href = `/?id=${data.id}`;
                 }, 200);

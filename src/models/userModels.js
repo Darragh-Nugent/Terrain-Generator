@@ -36,7 +36,6 @@ exports.AddUser = async (uName, email, pass) => {
     }
 }
 
-/// need this after registration so users have to confirm their email ---------------------------------
 exports.confirmUser = async (uName, confirmationCode) => {
     try {
         // Check if username and confirmation code are provided

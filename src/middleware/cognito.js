@@ -30,14 +30,22 @@ function secretHash(clientId, clientSecret, username) {
 
 const createTokenMiddleware = (tokenName, verifier) => {
     return async (req, res, next) => {
-        const token = req.cookies[tokenName];
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        // console.log(req.headers)
+        let token;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+        else{
+            return res.status(404).json({ error: 'Authorization header missing' });
+        }
         const expectsJson =
             req.xhr ||
             req.headers.accept?.includes('application/json') ||
             req.path.startsWith('/api') ||
             req.headers['content-type'] === 'application/json';
 
-        if (!token || typeof token !== 'string'|| token === 'undefined' || token === 'null') {
+        if (!token || typeof token !== 'string' || token === 'undefined' || token === 'null') {
             console.log('JWT missing.');
             return expectsJson
                 ? res.status(401).json({ error: 'Please log in!' })
@@ -47,26 +55,29 @@ const createTokenMiddleware = (tokenName, verifier) => {
             const decoded = await verifier.verify(token);
             const {
                 sub,
-                'cognito:username': username,
+                'cognito:username': cognitoUsername = decoded.username,
                 email,
                 email_verified,
                 given_name,
                 family_name,
                 'custom:role': role,
-                'custom:tenant_id': tenantId
+                'custom:tenant_id': tenantId,
+                username,
             } = decoded;
-            console.log(username, "HERE IN COGNITO THE USERNAME");
+            console.log(decoded);
+            const finalUsername = cognitoUsername ?? username;
             req.user = {
                 id: sub,
-                username,
+                username: finalUsername,
                 email,
                 name: `${given_name || ''} ${family_name || ''}`.trim(),
                 email_verified,
                 role,
-                tenantId
+                tenantId,
+                token
             };
             const blacklisted = await isTokenBlacklisted(sub);
-            if (blacklisted ) {
+            if (blacklisted) {
                 console.warn(`JWT for user ${sub} is blacklisted.`);
                 return res.status(401).json({ error: 'Token has been invalidated' });
             }

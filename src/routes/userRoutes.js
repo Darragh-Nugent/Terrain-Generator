@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
-const { authenticateToken } = require('../middleware/authMiddleware');
 const { authenticateIdToken,authenticateAccessToken } = require('../middleware/cognito');
 
 router.get("/getAllUsers", userController.getAllUsers);
@@ -17,11 +16,11 @@ router.post('/login',userController.login);
 router.get('/login', userController.showLoginPage);
 
 // router.put('/:id/update',authenticateToken,userController.updateUserPassword); // req auth
-router.get('/:id/update', authenticateAccessToken,userController.showDeletePage); // req auth
+router.get('/:id/update',userController.showDeletePage); // req auth
 router.post('/confirm-password',authenticateAccessToken,userController.confirmPassword); // req auth
 router.post('/forgot-password',authenticateAccessToken, userController.forgotPassword) // req auth
 router.delete('/:id/delete',authenticateAccessToken,userController.deleteUser); // req auth
-router.get('/:id/delete', authenticateAccessToken,userController.showDeletePage) // req auth
+// router.get('/:id/delete', authenticateAccessToken,userController.showDeletePage) // req auth
 
 router.post('/:id/logout',authenticateAccessToken,userController.logoutUser); // req auth
 

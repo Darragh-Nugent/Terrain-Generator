@@ -27,11 +27,9 @@ const accessVerifier = awsJwt.CognitoJwtVerifier.create({
 
 exports.logoutUser = async (req, res) => {
     try {
-        const token = req.cookies.accessToken;
-        const username = req.user.username;
-        const id = req.user.id;
+        const token = req.user.token
         if (!token) {
-            return res.status(401).json({ error: "Missing auth token" });
+            return res.status(401).json({ error: "Missing authentication token" });
         }
 
         const payload = await accessVerifier.verify(token);  // <-- verifies signature, expiration, issuer, etc.
@@ -39,10 +37,10 @@ exports.logoutUser = async (req, res) => {
         // Blacklist token or user session
         await blacklistToken(payload.sub);  // or payload.sub if your blacklist uses sub
 
-        // Clear cookie
-        res.clearCookie('userInfo');
-        res.clearCookie('accessToken');
-        res.clearCookie('idToken');
+        // Clear cookie - handle in frontend remove local storage -------------------
+        // res.clearCookie('userInfo');
+        // res.clearCookie('accessToken');
+        // res.clearCookie('idToken');
         return res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
@@ -56,20 +54,21 @@ exports.login = async (req, res) => {
     if (!username || !password) return res.status(400).json({ error: 'Please enter in a username and password!' });
     try {
         const user = await User.verifyUser(username, password);
-        if (user.AccessToken && user.IdToken) {
-            res.cookie('accessToken', user.AccessToken, {
-                httpOnly: true,
-                secure: false,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
-                maxAge: 60 * 60 * 1000 // 60minutes
-            });
-            res.cookie('idToken', user.IdToken, {
-                httpOnly: true,
-                secure: false,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
-                maxAge: 60 * 60 * 1000 // 60minutes
-            });
-        }
+        // handle in frontend ------------- set local storage (only if MFA ISNT required (it is)---------------------------
+        // if (user.AccessToken && user.IdToken) {
+        //     res.cookie('accessToken', user.AccessToken, {
+        //         httpOnly: true,
+        //         secure: false,         // Set to true in production (HTTPS)
+        //         sameSite: 'Strict',
+        //         maxAge: 60 * 60 * 1000 // 60minutes
+        //     });
+        //     res.cookie('idToken', user.IdToken, {
+        //         httpOnly: true,
+        //         secure: false,         // Set to true in production (HTTPS)
+        //         sameSite: 'Strict',
+        //         maxAge: 60 * 60 * 1000 // 60minutes
+        //     });
+        // }
         return res.status(200).json(user);
     } catch (err) {
         return res.status(400).json({ error: err.message });
@@ -90,28 +89,29 @@ exports.respondToMfaChallenge = async (req, res) => {
             const decodedToken = jwt.decode(IdToken);
             console.log(decodedToken);
             const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
-            res.cookie('accessToken', AccessToken, {
-                httpOnly: true,
-                secure: false,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
-                path: '/',
-                maxAge: 60 * 60 * 1000 // 60minutes
-            });
-            res.cookie('idToken', IdToken, {
-                httpOnly: true,
-                secure: false,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
-                path: '/',
-                maxAge: 60 * 60 * 1000 // 60minutes
-            });
-            const userInfo = { id: sub, email, username: cognitoUsername }
-            res.cookie('userInfo', JSON.stringify(userInfo), {
-                httpOnly: false,
-                secure: false,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
-                path: '/',
-                maxAge: 60 * 60 * 1000 // 60minutes
-            });
+             // handle in frontend ------------- set local storage ---------------------------
+            // res.cookie('accessToken', AccessToken, {
+            //     httpOnly: true,
+            //     secure: false,         // Set to true in production (HTTPS)
+            //     sameSite: 'Strict',
+            //     path: '/',
+            //     maxAge: 60 * 60 * 1000 // 60minutes
+            // });
+            // res.cookie('idToken', IdToken, {
+            //     httpOnly: true,
+            //     secure: false,         // Set to true in production (HTTPS)
+            //     sameSite: 'Strict',
+            //     path: '/',
+            //     maxAge: 60 * 60 * 1000 // 60minutes
+            // });
+            const userInfo = JSON.stringify({ id: sub, email, username: cognitoUsername });
+            // res.cookie('userInfo', JSON.stringify(userInfo), {
+            //     httpOnly: false,
+            //     secure: false,         // Set to true in production (HTTPS)
+            //     sameSite: 'Strict',
+            //     path: '/',
+            //     maxAge: 60 * 60 * 1000 // 60minutes
+            // });
             return res.status(200).json({
                 message: 'MFA verified and login successful.',
                 id: sub,
@@ -119,6 +119,7 @@ exports.respondToMfaChallenge = async (req, res) => {
                 username: cognitoUsername,
                 AccessToken,
                 IdToken,
+                UserInfo: userInfo,
             });
         } else {
             return res.status(401).json({ error: 'MFA verification failed.' });
@@ -181,10 +182,11 @@ exports.deleteUser = async (req, res) => {
         // Call Cognito's DeleteUser command to delete the user from Cognito
         const result = await User.remove(accessToken);
 
+        // Clear cookie - handle in frontend remove local storage -------------------
         // Clear the authentication cookie
-        res.clearCookie('accessToken');
-        res.clearCookie('idToken'); // change to true when https
-        res.clearCookie('userInfo')
+        // res.clearCookie('accessToken');
+        // res.clearCookie('idToken'); // change to true when https
+        // res.clearCookie('userInfo')
         res.status(200).json({ message: "Your account has been successfully deleted" });
     } catch (err) {
         res.status(500).json({ message: "Error deleting your account: " + err });
@@ -244,8 +246,6 @@ exports.getUserCookieInfo = async (req, res) => {
         const username = req.user.username;
         const id = req.user.id;
         if (username && id) {
-            // const exists = await User.checkUserExists(req.user.username);
-            // if (!exists) return res.status(404).json({ error: "User does not exist" })
 
             console.log(`authToken verified for user (${id}): ${username} at ${req.url}`);
             // Return the user info

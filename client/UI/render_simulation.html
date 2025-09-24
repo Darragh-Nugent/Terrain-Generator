@@ -6,6 +6,18 @@
   <title>Cloud Simulation</title>
   <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
   <link rel="stylesheet" href="/styles/styles.css" />
+  <style>
+    /* Hide the main content initially */
+    #mainContent {
+      display: none;
+    }
+
+    #loading {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,91 +26,133 @@
       <button type="button" id="home" onclick="home()">Home Page</button>
     </div>
   </header>
-  <div class="center_container">
-    <h2>Cloud Simulation</h2>
-    <form id="simulation_form">
-      <div class="row">
-        Steps:
-        <input type="number" name="steps" value="50">
-        <div class="tooltip">Defines how many steps the simulation should run. Larger values might result in longer
-          computations.</div>
-      </div>
-
-      <div class="row">
-        Height:
-        <input type="number" name="height" value="10">
-        <div class="tooltip">Sets the height at which the clouds appear in the simulation. Higher values represent
-          higher clouds.</div>
-      </div>
-
-      <div class="row">
-        Wind Speed (50m/s Maximum):
-        <input type="number" name="windSpeed" value="5" min="0" max="50">
-        <div class="tooltip">Controls how fast the wind is blowing. Affects cloud movement direction and speed.</div>
-      </div>
-
-      <div class="row">
-        Wind Direction:
-        <label for="windDir">Wind Direction:</label>
-        <select name="windDir" id="windDir">
-          <option value="north">North</option>
-          <option value="south">South</option>
-          <option value="east">East</option>
-          <option value="west">West</option>
-        </select>
-        <div class="tooltip">Specifies the direction the wind is blowing from (North, South, East, or West).</div>
-      </div>
-
-      <div class="row">
-        Min Neighbour:
-        <input type="number" name="minNeighbour" value="3" min="0" max="8">
-        <div class="tooltip">Defines the minimum number of neighbours required for a cloud to survive in the simulation.
-        </div>
-      </div>
-
-      <div class="row">
-        Max Neighbour:
-        <input type="number" name="maxNeighbour" value="8" min="0" max="8">
-        <div class="tooltip">Defines the maximum number of neighbours allowed for a cloud to survive in the simulation.
-        </div>
-      </div>
-      <div class="row">
-        Initial State (Binary Only):
-        <table id="table"></table>
-        <div class="tooltip">Define the initial state of the grid with binary values (1 for cloud, 0 for no cloud).
-        </div>
-        <button type="button" onclick="addRow()">Add Row</button>
-        <button type="button" onclick="addCol()">Add Column</button>
-      </div>
-      <div class="row">
-        <label><input type="radio" name="view" value="velocity"> View Velocity</label>
-        <label><input type="radio" name="view" value="depth"> View Depth</label>
-        <label><input type="radio" name="view" value="default" checked> Default View</label>
-      </div>
-      <button type="submit">Run Simulation</button>
-      <div id="randomInit">
+  <div id="loading">Checking authentication...</div>
+  <div id="mainContent">
+    <div class="center_container">
+      <h2>Cloud Simulation</h2>
+      <form id="simulation_form">
         <div class="row">
-          <label for="size">Randomly Initialise (max 50×50):</label>
-          <input type="number" name="size" id="size" min="1" max="50">
+          Steps:
+          <input type="number" name="steps" value="50">
+          <div class="tooltip">Defines how many steps the simulation should run. Larger values might result in longer
+            computations.</div>
         </div>
-        <button type="button" onclick="randomInitialization()">Randomly Initialise State</button>
-      </div>
-      <button type="button" id="playPauseBtn">Pause</button>
-      <button type="button" onclick="saveFormData()">Download Form Data</button>
-      <button type="button" onclick="downloadSystemCoords()">Download System Coordinates</button>
+
+        <div class="row">
+          Height:
+          <input type="number" name="height" value="10">
+          <div class="tooltip">Sets the height at which the clouds appear in the simulation. Higher values represent
+            higher clouds.</div>
+        </div>
+
+        <div class="row">
+          Wind Speed (50m/s Maximum):
+          <input type="number" name="windSpeed" value="5" min="0" max="50">
+          <div class="tooltip">Controls how fast the wind is blowing. Affects cloud movement direction and speed.</div>
+        </div>
+
+        <div class="row">
+          Wind Direction:
+          <label for="windDir">Wind Direction:</label>
+          <select name="windDir" id="windDir">
+            <option value="north">North</option>
+            <option value="south">South</option>
+            <option value="east">East</option>
+            <option value="west">West</option>
+          </select>
+          <div class="tooltip">Specifies the direction the wind is blowing from (North, South, East, or West).</div>
+        </div>
+
+        <div class="row">
+          Min Neighbour:
+          <input type="number" name="minNeighbour" value="3" min="0" max="8">
+          <div class="tooltip">Defines the minimum number of neighbours required for a cloud to survive in the
+            simulation.
+          </div>
+        </div>
+
+        <div class="row">
+          Max Neighbour:
+          <input type="number" name="maxNeighbour" value="8" min="0" max="8">
+          <div class="tooltip">Defines the maximum number of neighbours allowed for a cloud to survive in the
+            simulation.
+          </div>
+        </div>
+        <div class="row">
+          Initial State (Binary Only):
+          <table id="table"></table>
+          <div class="tooltip">Define the initial state of the grid with binary values (1 for cloud, 0 for no cloud).
+          </div>
+          <button type="button" onclick="addRow()">Add Row</button>
+          <button type="button" onclick="addCol()">Add Column</button>
+        </div>
+        <div class="row">
+          <label><input type="radio" name="view" value="velocity"> View Velocity</label>
+          <label><input type="radio" name="view" value="depth"> View Depth</label>
+          <label><input type="radio" name="view" value="default" checked> Default View</label>
+        </div>
+        <button type="submit">Run Simulation</button>
+        <div id="randomInit">
+          <div class="row">
+            <label for="size">Randomly Initialise (max 50×50):</label>
+            <input type="number" name="size" id="size" min="1" max="50">
+          </div>
+          <button type="button" onclick="randomInitialization()">Randomly Initialise State</button>
+        </div>
+        <button type="button" id="playPauseBtn">Pause</button>
+        <button type="button" onclick="saveFormData()">Download Form Data</button>
+        <button type="button" onclick="downloadSystemCoords()">Download System Coordinates</button>
+    </div>
+    </form>
+    <div id="randomInitDiv" style="color: red; margin-top: 10px;"></div>
+    <div id="controls_info">
+      E to change perspective<br>
+      WASD to move<br>
+      Shift to go down<br>
+      Space to go up<br>
+      ESC to leave
+    </div>
+    <div id="three"></div>
   </div>
-  </form>
-  <div id="randomInitDiv" style="color: red; margin-top: 10px;"></div>
-  <div id="controls_info">
-    E to change perspective<br>
-    WASD to move<br>
-    Shift to go down<br>
-    Space to go up<br>
-    ESC to leave
-  </div>
-  </div>
-  <div id="three"></div>
   <script>
+    async function checkAuth() {
+      const loadingDiv = document.getElementById('loading');
+      const mainContent = document.getElementById('mainContent');
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        // No token, redirect to login
+        alert(`Please log in to access this feature`);
+        window.location.href = '/user/login';
+      }
+
+      try {
+        // Call your protected auth-check API endpoint
+        const res = await fetch('/auth/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          // Auth success — show main content, hide loading
+          loadingDiv.style.display = 'none';
+          mainContent.style.display = 'block';
+        } else {
+          // Auth failed — redirect to login or show error
+          const err = await res.json();
+          alert('Access denied: ' + err.error);
+          window.location.href = '/user/login';
+        }
+      } catch (err) {
+        // Network or unexpected error — redirect to login for safety
+        alert(`Unexpected error: `,err);
+        window.location.href = '/user/login';
+      }
+    }
+    window.onload = checkAuth;
+
     const form = document.getElementById('simulation_form');
     const table = document.getElementById('table');
     const randomSizeInput = document.querySelector('#randomInit input[name="size"]');

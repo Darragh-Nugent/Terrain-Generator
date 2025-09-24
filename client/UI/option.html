@@ -5,7 +5,18 @@
     <meta charset="UTF-8">
     <title>User Options</title>
     <link rel="stylesheet" href="/styles/styles.css" />
+    <style>
+        /* Hide the main content initially */
+        #mainContent {
+            display: none;
+        }
 
+        #loading {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
 
 </head>
 
@@ -16,37 +27,79 @@
             <button type="button" onclick="go_home()">Go Back Home</button>
         </div>
     </header>
-    <div class="center_container">
-        <h2>User Settings</h2>
-        <!-- Forgot Password Form -->
-        <div class="center_container" style="margin-top: 40px;">
-            <h3>Forgot Password?</h3>
-            <form id="forgot_password_form">
-                Email: <input type="text" name="username"><br>
-                <button type="submit">Send Verification Code</button>
-                <div id="forgot_password_message" style="color: red; margin-top: 10px;"></div>
-            </form>
-        </div>
+    <div id="loading">Checking authentication...</div>
+    <div id="mainContent">
+        <div class="center_container">
+            <h2>User Settings</h2>
+            <!-- Forgot Password Form -->
+            <div class="center_container" style="margin-top: 40px;">
+                <h3>Forgot Password?</h3>
+                <form id="forgot_password_form">
+                    Email: <input type="text" name="username"><br>
+                    <button type="submit">Send Verification Code</button>
+                    <div id="forgot_password_message" style="color: red; margin-top: 10px;"></div>
+                </form>
+            </div>
 
-        <!-- Confirm Password Reset Form -->
-        <div class="center_container" id="confirmSection" style="display: none; margin-top: 40px;">
-            <h3>Reset Password</h3>
-            <form id="confirm_reset_form">
-                Username: <input type="text" name="username"><br>
-                Verification Code: <input type="text" name="code"><br>
-                New Password: <input type="password" name="new_password"><br>
-                Confirm New Password: <input type="password" name="confirm_password"><br>
-                <button type="submit">Confirm Reset</button>
-                <div id="confirm_reset_message" style="color: red; margin-top: 10px;"></div>
-            </form>
-        </div>
+            <!-- Confirm Password Reset Form -->
+            <div class="center_container" id="confirmSection" style="display: none; margin-top: 40px;">
+                <h3>Reset Password</h3>
+                <form id="confirm_reset_form">
+                    Username: <input type="text" name="username"><br>
+                    Verification Code: <input type="text" name="code"><br>
+                    New Password: <input type="password" name="new_password"><br>
+                    Confirm New Password: <input type="password" name="confirm_password"><br>
+                    <button type="submit">Confirm Reset</button>
+                    <div id="confirm_reset_message" style="color: red; margin-top: 10px;"></div>
+                </form>
+            </div>
 
-        <div style="margin-top: 40px;">
-            <button type="button" onclick="delete_user()">Delete Account</button>
-            <div id="delete_user" style="color: red; margin-top: 10px;"></div>
+            <div style="margin-top: 40px;">
+                <button type="button" onclick="delete_user()">Delete Account</button>
+                <div id="delete_user" style="color: red; margin-top: 10px;"></div>
+            </div>
         </div>
     </div>
     <script>
+        async function checkAuth() {
+            const loadingDiv = document.getElementById('loading');
+            const mainContent = document.getElementById('mainContent');
+
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                // No token, redirect to login
+                alert(`Please log in to access this feature`);
+                window.location.href = '/user/login';
+            }
+
+            try {
+                // Call your protected auth-check API endpoint
+                const res = await fetch('/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    // Auth success — show main content, hide loading
+                    loadingDiv.style.display = 'none';
+                    mainContent.style.display = 'block';
+                } else {
+                    // Auth failed — redirect to login or show error
+                    const err = await res.json();
+                    alert('Access denied: ' + err.error);
+                    window.location.href = '/user/login';
+                }
+            } catch (err) {
+                // Network or unexpected error — redirect to login for safety
+                alert(`Unexpected error: `, err);
+                window.location.href = '/user/login';
+            }
+        }
+        window.onload = checkAuth;
+
+        const accessToken = localStorage.getItem("accessToken");
         const msgDiv = document.getElementById('forgot_password_message');
         const comfirmSection = document.getElementById('confirmSection');
         msgDiv.textContent = '';
@@ -62,8 +115,10 @@
             try {
                 const response = await fetch(`/user/${id}/logout`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: "include",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify({ reason: 'Ending session' })
                 })
                 if (!response.ok) {
@@ -80,7 +135,9 @@
 
                 msgDiv.style.color = 'green';
                 msgDiv.textContent = 'Account deleted. Redirecting to home..';
-
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('idToken');
+                localStorage.removeItem('userInfo');
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 200);
@@ -95,8 +152,10 @@
             try {
                 const response = await fetch(`/user/${id}/delete`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: "include",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify({ reason: 'No longer needed' })
                 })
                 if (!response.ok) {
@@ -104,7 +163,7 @@
                     try {
                         error = await response.json();
                     } catch (parseErr) {
-                        error.message = response.statusText || 'Unknown error' ;
+                        error.message = response.statusText || 'Unknown error';
                     }
                     msgDiv.style.color = 'red';
                     msgDiv.textContent = 'Error: ' + (`${error.message}` || 'Failed to delete user.');
@@ -113,7 +172,9 @@
 
                 msgDiv.style.color = 'green';
                 msgDiv.textContent = 'Account deleted. Redirecting to login...';
-
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('idToken');
+                localStorage.removeItem('userInfo');
                 setTimeout(() => {
                     window.location.href = '/user/login';
                 }, 200);
@@ -138,8 +199,10 @@
             try {
                 const res = await fetch('/user/forgot-password', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: "include",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify({ username })
                 });
 
