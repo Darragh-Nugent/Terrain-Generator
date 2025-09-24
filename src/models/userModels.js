@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const pool =require('../db')
 // can go in secrets manager 
 // https://ap-southeast-2.console.aws.amazon.com/cognito/v2/idp/user-pools/ap-southeast-2_uLIJT0rVY/applications/app-clients/3q30pl220o1tbp1tlqp8eiovse/quick-setup-guide?region=ap-southeast-2
-const clientId = "3q30pl220o1tbp1tlqp8eiovse";
-const clientSecret = "o6tpgds0s9fion8uii6gs8fa31djefrkg7m4rgi7cukb47iontk";
-const userPoolId = "ap-southeast-2_uLIJT0rVY";
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const userPoolId = process.env.USER_POOL_ID;
 const client = new Cognito.CognitoIdentityProviderClient({ region: 'ap-southeast-2' });
 const customId = "unused";
 
