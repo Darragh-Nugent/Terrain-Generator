@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const styleController = require("../controllers/styleController");
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { authenticateAccessToken } = require('../middleware/cognito');
 
-router.get("/", authenticateToken, styleController.getStyles);
+router.get("/", authenticateAccessToken, styleController.getStyles);
 
 
 router.post("/", (req, res) => {
