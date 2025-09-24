@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const { authenticateAccessToken } = require('../middleware/cognito');
 
-// router.post("/login", authController.login);
+router.get('/me', authenticateAccessToken, authController.verifyAuth); 
+
 
 module.exports = router;

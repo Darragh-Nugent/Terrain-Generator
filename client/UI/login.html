@@ -9,67 +9,155 @@
 </head>
 
 <body>
+    <header>
+        <div class="header-buttons">
+            <button type="button" id="home" onclick="back()">Home Page</button>
+        </div>
+    </header>
     <div class="center_container">
         <h2>Login</h2>
-        <form id="login">
-            Username: <input type="text" name="username"><br>
-            Password: <input type="password" name="password"><br>
-            <div id="login_message" style="color: red; margin-top: 10px;"></div>
-            <button type="submit">Login</button>
-            <button type="button" onclick="back()">Back</button>
-        </form>
-    </div>
+        <div>
+            <form id="login">
+                Username: <input type="text" name="username"><br>
+                Password: <input type="password" name="password"><br>
+                <div id="login_message" style="color: red; margin-top: 10px;"></div>
+                <button type="submit" id="loginButton">Login</button>
+            </form>
+            <div id="confirm_section" style="display: none; margin-top: 20px;">
+                <h3>Email Confirmation</h3>
+                Email: <input type="email" id="confirm_email"><br>
+                <button onclick="sendConfirmationCode()">Send Code</button><br><br>
+                Confirmation Code: <input type="text" id="confirmation_code"><br>
+                <button onclick="confirmEmail()">Confirm Email</button>
+                <div id="confirm_message" style="color: red; margin-top: 10px;"></div>
+            </div>
+        </div>
 
+    </div>
     <script>
         function back() {
             window.location.href = `/`;
         }
+        async function confirmEmail() {
+            const code = confirmCodeInput.value.trim();
+            const messageDiv = document.getElementById('login_message');
 
+            if (!code || !mfaUsername || !mfaSession) {
+                confirmMessage.textContent = 'Missing required fields.';
+                return;
+            }
+            try {
+                const response = await fetch('/user/mfa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: mfaUsername,
+                        mfaCode: code,
+                        session: mfaSession,
+                        challengeName: challengeName
+                    }),
+                    credentials: "include"
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    confirmMessage.textContent = data?.error || 'Failed to verify MFA code.';
+                    return;
+                }
+                // Success: Redirect or show message
+                messageDiv.style.color = 'green';
+                messageDiv.textContent = 'MFA verified. Logging in...';
+                localStorage.setItem('accessToken', data.AccessToken);
+                localStorage.setItem('idToken', data.IdToken);
+                localStorage.setItem('userInfo', data.UserInfo);
+                setTimeout(() => {
+                    window.location.href = `/?id=${data.id}`;
+                }, 200);
+            } catch (err) {
+                confirmMessage.textContent = 'Network error: ' + err.message;
+            }
+        }
         const params = new URLSearchParams(window.location.search);
         const error = params.get('error');
         if (error) alert('Session expired. Please log in again.');
 
         const form = document.getElementById('login');
-
+        const confirmSection = document.getElementById('confirm_section');
+        const confirmEmailInput = document.getElementById('confirm_email');
+        const confirmCodeInput = document.getElementById('confirmation_code');
+        const confirmMessage = document.getElementById('confirm_message');
+        const loginButton = document.getElementById('loginButton')
+        let mfaSession = null;
+        let mfaUsername = null;
+        let challengeName = null;
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const messageDiv = document.getElementById('login_message');
             messageDiv.textContent = '';
+            messageDiv.style.color = 'red';
 
+            // simple checks for uName and pass
             const username = form.username.value.trim();
             const password = form.password.value;
-            // const res = await handle_login(username, password)
+
             if (!username || !password) {
-                messageDiv.style.color = 'red';
                 messageDiv.textContent = 'Please enter both username and password.';
                 return;
             }
 
-            const user_data = { username, password };
+            const userData = { username, password };
 
+            // Login handler
             try {
                 const response = await fetch('/user/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user_data),
-                    credentials: "include"
+                    body: JSON.stringify(userData),
+                    credentials: 'include'
                 });
+
+                const data = await response.json();
+
+                // Handle error response
                 if (!response.ok) {
-                    const error = await response.json();
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = error?.error || 'Invalid credentials';
+                    const errorMsg = data?.error || 'Invalid credentials';
+                    messageDiv.textContent = errorMsg;
+
+                    // If user's email has not be confirmed yet
+                    if (errorMsg.includes("User is not confirmed")) {
+                        setTimeout(() => {
+                            window.location.href = `/user/confirm-email?username=${encodeURIComponent(username)}&resend=true`;
+                        }, 200);
+                    }
+
                     return;
                 }
-                const data = await response.json();
+
+                // Handle MFA challenge
+                if (data.challenge) {
+                    mfaSession = data.session;
+                    mfaUsername = username;
+                    challengeName = data.challengeName;
+                    confirmSection.style.display = 'block';
+                    confirmEmailInput.value = username;
+                    confirmEmailInput.disabled = true;
+                    loginButton.style.display = 'none';
+
+                    messageDiv.style.color = 'yellow';
+                    messageDiv.textContent = `MFA required. Please enter the code you received via ${data.challengeName}`;
+                    return;
+                }
+
+                // Successful login
                 messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Successfully logging in..';
-                // localStorage.setItem('authToken', data.authToken);
+                messageDiv.textContent = 'Successfully logging in...';
+
                 setTimeout(() => {
                     window.location.href = `/?id=${data.id}`;
                 }, 200);
+
             } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + error.error;
+                messageDiv.textContent = 'Network error: ' + (error?.message || 'Something went wrong');
             }
         });
 

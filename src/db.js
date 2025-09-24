@@ -11,7 +11,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000
 });
-
+// id VARCHAR(64) PRIMARY KEY,
+// user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 (async () => {
   const client = await pool.connect();
   try {

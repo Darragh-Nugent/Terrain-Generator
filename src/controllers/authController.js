@@ -1,19 +1,7 @@
-const User = require("../models/userModels");
-const authMiddleware = require('../middleware/authMiddleware');
-const bcrypt = require('bcrypt');
-
-exports.login = async (req, res) => {
-  const { username, password } = req.body;
-
-  const user = await User.findByUsername(username);
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-  console.log(password);
-
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ message: 'Invalid credentials' });
-
-  const token = authMiddleware.generateAccessToken(user);
-
-
-  res.json({ token });
+exports.verifyAuth = async (req, res) => {
+    // middleware attaches user
+    if (!req.user.username) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    return res.status(200).json({ message: 'Authenticated', user: req.user });
 };

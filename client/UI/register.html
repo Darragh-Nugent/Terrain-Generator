@@ -12,6 +12,7 @@
         <h2>Register</h2>
         <form id="register">
             Username: <input type="text" name="username"><br>
+            Email: <input type="email" name="email"><br>
             Password: <input type="password" name="password"><br>
             Confirm Password: <input type="password" name="confirm_password"><br>
             <button type="submit">Register</button>
@@ -33,10 +34,11 @@
             messageDiv.textContent = '';
 
             const username = form.username.value.trim();
+            const email = form.email.value.trim();
             const password = form.password.value;
             const confirm_password = form.confirm_password.value;
 
-            if (!username || !password || !confirm_password) {
+            if (!username || !password || !confirm_password || !email) {
                 messageDiv.style.color = 'red';
                 messageDiv.textContent = 'Please fill all fields!';
                 return;
@@ -47,7 +49,7 @@
                 messageDiv.textContent = 'Passwords do not match!';
                 return;
             }
-            const user_data = { username, password }
+            const user_data = { username, password, email }
             try {
                 const response = await fetch('/user/register', {
                     method: 'POST',
@@ -64,7 +66,7 @@
                 messageDiv.textContent = 'Successfully logging in..';
 
                 setTimeout(() => {
-                    window.location.href = `/user/login`;
+                    window.location.href = `/user/confirm-email?username=${encodeURIComponent(username)}`;
                 }, 200);
             } catch (error) {
                 messageDiv.style.color = 'red';

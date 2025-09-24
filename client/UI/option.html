@@ -5,7 +5,18 @@
     <meta charset="UTF-8">
     <title>User Options</title>
     <link rel="stylesheet" href="/styles/styles.css" />
+    <style>
+        /* Hide the main content initially */
+        #mainContent {
+            display: none;
+        }
 
+        #loading {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
 
 </head>
 
@@ -16,25 +27,82 @@
             <button type="button" onclick="go_home()">Go Back Home</button>
         </div>
     </header>
-    <div class="center_container">
-        <h2>User Settings</h2>
-        <form id="change_password">
-            Username: <input type="text" name="username"><br>
-            Old Password: <input type="password" name="old_password"><br>
-            New Password: <input type="password" name="new_password"><br>
-            Confirm New Password: <input type="password" name="confirm_password"><br>
-            <button type="submit">Change Password</button>
-            <div id="update_password" style="color: red; margin-top: 10px;"></div>
-        </form>
-        <div style="margin-top: 40px;">
-            <button type="button" onclick="delete_user()">Delete Account</button>
-            <div id="delete_user" style="color: red; margin-top: 10px;"></div>
+    <div id="loading">Checking authentication...</div>
+    <div id="mainContent">
+        <div class="center_container">
+            <h2>User Settings</h2>
+            <!-- Forgot Password Form -->
+            <div class="center_container" style="margin-top: 40px;">
+                <h3>Forgot Password?</h3>
+                <form id="forgot_password_form">
+                    Email: <input type="text" name="username"><br>
+                    <button type="submit">Send Verification Code</button>
+                    <div id="forgot_password_message" style="color: red; margin-top: 10px;"></div>
+                </form>
+            </div>
+
+            <!-- Confirm Password Reset Form -->
+            <div class="center_container" id="confirmSection" style="display: none; margin-top: 40px;">
+                <h3>Reset Password</h3>
+                <form id="confirm_reset_form">
+                    Username: <input type="text" name="username"><br>
+                    Verification Code: <input type="text" name="code"><br>
+                    New Password: <input type="password" name="new_password"><br>
+                    Confirm New Password: <input type="password" name="confirm_password"><br>
+                    <button type="submit">Confirm Reset</button>
+                    <div id="confirm_reset_message" style="color: red; margin-top: 10px;"></div>
+                </form>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <button type="button" onclick="delete_user()">Delete Account</button>
+                <div id="delete_user" style="color: red; margin-top: 10px;"></div>
+            </div>
         </div>
     </div>
     <script>
+        async function checkAuth() {
+            const loadingDiv = document.getElementById('loading');
+            const mainContent = document.getElementById('mainContent');
 
-        const messageDiv = document.getElementById('update_password');
-        messageDiv.textContent = '';
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                // No token, redirect to login
+                alert(`Please log in to access this feature`);
+                window.location.href = '/user/login';
+            }
+
+            try {
+                // Call your protected auth-check API endpoint
+                const res = await fetch('/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    // Auth success — show main content, hide loading
+                    loadingDiv.style.display = 'none';
+                    mainContent.style.display = 'block';
+                } else {
+                    // Auth failed — redirect to login or show error
+                    const err = await res.json();
+                    alert('Access denied: ' + err.error);
+                    window.location.href = '/user/login';
+                }
+            } catch (err) {
+                // Network or unexpected error — redirect to login for safety
+                alert(`Unexpected error: `, err);
+                window.location.href = '/user/login';
+            }
+        }
+        window.onload = checkAuth;
+
+        const accessToken = localStorage.getItem("accessToken");
+        const msgDiv = document.getElementById('forgot_password_message');
+        const comfirmSection = document.getElementById('confirmSection');
+        msgDiv.textContent = '';
         const pathSegments = window.location.pathname.split('/');
         // pathSegments = ['', 'user', '1', 'update']
 
@@ -47,8 +115,10 @@
             try {
                 const response = await fetch(`/user/${id}/logout`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: "include",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify({ reason: 'Ending session' })
                 })
                 if (!response.ok) {
@@ -58,20 +128,22 @@
                     } catch (parseErr) {
                         error.error = response.statusText || 'Unknown error';
                     }
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to logout');
+                    msgDiv.style.color = 'red';
+                    msgDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to logout');
                     return;
                 }
 
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Account deleted. Redirecting to home..';
-
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = 'Account deleted. Redirecting to home..';
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('idToken');
+                localStorage.removeItem('userInfo');
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 200);
             } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + (error || '');
+                msgDiv.style.color = 'red';
+                msgDiv.textContent = 'Network error: ' + (error || '');
                 return;
             }
         }
@@ -80,8 +152,10 @@
             try {
                 const response = await fetch(`/user/${id}/delete`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: "include",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
                     body: JSON.stringify({ reason: 'No longer needed' })
                 })
                 if (!response.ok) {
@@ -89,89 +163,115 @@
                     try {
                         error = await response.json();
                     } catch (parseErr) {
-                        error.error = response.statusText || 'Unknown error';
+                        error.message = response.statusText || 'Unknown error';
                     }
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to delete user.');
+                    msgDiv.style.color = 'red';
+                    msgDiv.textContent = 'Error: ' + (`${error.message}` || 'Failed to delete user.');
                     return;
                 }
 
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Account deleted. Redirecting to login...';
-
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = 'Account deleted. Redirecting to login...';
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('idToken');
+                localStorage.removeItem('userInfo');
                 setTimeout(() => {
                     window.location.href = '/user/login';
                 }, 200);
             } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + (error || '');
+                msgDiv.style.color = 'red';
+                msgDiv.textContent = 'Network error: ' + (error || '');
                 return;
             }
         }
 
-        const form = document.getElementById('change_password');
-        form.addEventListener('submit', async (e) => {
+        // Forgot Password Handler
+        const forgotForm = document.getElementById('forgot_password_form');
+        forgotForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const username = forgotForm.username.value.trim();
+            msgDiv.textContent = '';
 
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
+            if (!username) {
+                msgDiv.textContent = "Please enter your username.";
+                return;
+            }
+            try {
+                const res = await fetch('/user/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({ username })
+                });
 
-            const username = form.username.value.trim();
-            const new_password = form.new_password.value;
-            const old_password = form.old_password.value;
-            const confirm_password = form.confirm_password.value;
-            if (!username || !new_password || !confirm_password || !old_password) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Please fill in all fields!';
+                const data = await res.json();
+
+                if (!res.ok) {
+                    msgDiv.textContent = 'Error: ' + (data.error || 'Unable to send code');
+                    return;
+                }
+
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = "Verification code sent to your email.";
+                comfirmSection.style.display = 'block'
+            } catch (err) {
+                msgDiv.textContent = "Network error: " + err.message;
+            }
+        });
+
+        // Confirm Password Reset Handler
+        const confirmForm = document.getElementById('confirm_reset_form');
+        confirmForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = confirmForm.username.value.trim();
+            const code = confirmForm.code.value.trim();
+            const new_password = confirmForm.new_password.value;
+            const confirm_password = confirmForm.confirm_password.value;
+            const msgDiv = document.getElementById('confirm_reset_message');
+            msgDiv.textContent = '';
+
+            if (!username || !code || !new_password || !confirm_password) {
+                msgDiv.textContent = "All fields are required.";
                 return;
             }
 
             if (new_password !== confirm_password) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'New passwords do not match.';
+                msgDiv.textContent = "Passwords do not match.";
                 return;
             }
-
-            if (old_password === new_password) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'New password must not be the old password!';
-                return;
-            }
-            const user_data = { username, old_password, new_password }
 
             try {
-                const response = await fetch(`/user/${id}/update`, {
-                    method: 'PUT',
+                const res = await fetch('/user/confirm-password', {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: "include",
-                    body: JSON.stringify(user_data)
+                    body: JSON.stringify({
+                        username,
+                        verificationCode: code,
+                        newPassword: new_password
+                    })
                 });
-                if (!response.ok) {
-                    let error = { error: 'Failed to update password.' };
-                    try {
-                        error = await response.json();
-                    } catch (parseErr) {
-                        // response was not JSON, so fallback to status text
-                        error.error = response.statusText || 'Unknown error';
-                    }
-                    messageDiv.style.color = 'red';
-                    messageDiv.textContent = 'Error: ' + (`${error.error}` || 'Failed to update password.');
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    msgDiv.textContent = 'Error: ' + (data.error || 'Unable to reset password');
                     return;
                 }
-                messageDiv.style.color = 'green';
-                messageDiv.textContent = 'Password changed. Redirecting to login...';
 
+                msgDiv.style.color = 'green';
+                msgDiv.textContent = "Password reset successful. Redirecting to login...";
                 setTimeout(() => {
-                    window.location.href = '/user/login';
-                }, 200);
+                    window.location.href = "/user/login";
+                }, 1500);
 
-            } catch (error) {
-                messageDiv.style.color = 'red';
-                messageDiv.textContent = 'Network error: ' + error.message;
-                return
+            } catch (err) {
+                msgDiv.textContent = "Network error: " + err.message;
             }
-
         });
+
 
 
     </script>

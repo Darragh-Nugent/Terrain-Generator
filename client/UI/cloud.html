@@ -98,6 +98,7 @@
   <video id="video" controls autoplay style="width:100%; height:600px;"></video>
 
   <script>
+    const token = localStorage.getItem("accessToken");
     const form = document.getElementById('simulation_form');
     const randomInitializationForm = document.getElementById('randomInit')
     const table = document.getElementById('table');
@@ -286,10 +287,12 @@
 
     async function getUser() {
       try {
-        const userData = await fetch(`/user/me`, {
+        const userData = await fetch(`/auth/me`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: "include",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         })
         if (userData.ok) {
           return true;
