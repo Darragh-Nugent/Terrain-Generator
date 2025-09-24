@@ -1,11 +1,8 @@
 const User = require("../models/userModels");
-// const bcrypt = require('bcrypt');
-// const jwt = require("jsonwebtoken");
 const path = require('path');
-const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const awsJwt = require("aws-jwt-verify");
 const jwt = require('jsonwebtoken');
-const { generateAccessToken, blacklistToken, tokenSecret } = require('../middleware/authMiddleware')
+const { blacklistToken } = require('../middleware/cognito')
 const userPoolId = "ap-southeast-2_uLIJT0rVY";
 const clientId = "3q30pl220o1tbp1tlqp8eiovse"
 
@@ -19,25 +16,7 @@ exports.getAllUsers = (req, res) => {
         .catch(err => res.status(500).json({ error: 'Both names and password is required' }));
 };
 
-// exports.logoutUser = async (req, res) => {
-//     const username = req.user.username;
-//     const id = req.user.id;
-//     if (username && id) {
-//         const exists = await User.checkUserExists(req.user.username);
-//         if (!exists) return res.status(404).json({ error: "User does not exist" })
 
-//         // Blacklists token
-//         const token = req.cookies.authToken; // access token
-//         const decoded = jwt.verify(token, tokenSecret);
-//         await blacklistToken(decoded.sub);
-//         await User.invalidateToken(token)
-//         // Clear the token from the cookies (logout the user)
-//         res.clearCookie('authToken', { httpOnly: true, secure: false });
-
-//         return res.status(200).json({ message: "User had logged out" });
-//     }
-//     else return res.status(404).json({ error: "Missing authentication cookies!" })
-// }
 
 
 const accessVerifier = awsJwt.CognitoJwtVerifier.create({
@@ -54,10 +33,7 @@ exports.logoutUser = async (req, res) => {
         if (!token) {
             return res.status(401).json({ error: "Missing auth token" });
         }
-        // if (username && id) {
-        //     const exists = await User.checkUserExists(req.user.username);
-        //     if (!exists) return res.status(404).json({ error: "User does not exist" })
-        // }
+
         const payload = await accessVerifier.verify(token);  // <-- verifies signature, expiration, issuer, etc.
 
         // Blacklist token or user session
@@ -74,26 +50,6 @@ exports.logoutUser = async (req, res) => {
     }
 };
 
-// exports.login = async (req, res) => {
-//     const { username, password } = req.body;
-//     if (!username || !password) return res.status(400).json({ error: 'Please enter in a username and password!' });
-//     try {
-//         const user = await User.verifyUser(username, password);
-//         const authToken = await generateAccessToken({
-//             username: user.username,
-//             id: user.id
-//         });
-//         res.cookie('authToken', authToken, {
-//             httpOnly: true,
-//             secure: false,         // Set to true in production (HTTPS)
-//             sameSite: 'Strict',
-//             maxAge: 60 * 30 * 1000 // 30minutes
-//         });
-//         return res.status(200).json(user);
-//     } catch (err) {
-//         return res.status(400).json({ error: err.message });
-//     }
-// };
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
@@ -215,28 +171,6 @@ exports.resendConfirmationCode = async (req, res) => {
     }
 };
 
-// exports.deleteUser = async (req, res) => {
-//     try {
-
-//         const token = req.cookies.authToken;
-//         const decoded = jwt.verify(token, tokenSecret);
-//         // Get user ID from the URL (route is /user/:id/delete)
-//         const userId = req.params.id;
-//         // Check if the decoded token's user ID matches the one in the URL
-//         if (Number(decoded.id) !== Number(userId)) {
-//             return res.status(403).json({ error: 'You are not authorized to delete this user' });
-//         }
-//         await blacklistToken(decoded.jti);
-//         // Clear the token from the cookies (logout the user)
-//         res.clearCookie('authToken', { httpOnly: true, secure: false });
-
-//         const results = await User.remove(userId);
-//         if (!results.deleted) return res.status(404).json({ error: 'User ID not found!' });
-//         return res.status(200).json({ message: 'User has been deleted!' });
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message })
-//     }
-// };
 
 exports.deleteUser = async (req, res) => {
     try {
@@ -256,17 +190,6 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: "Error deleting your account: " + err });
     }
 };
-// exports.updateUserPassword = async (req, res) => {
-//     const { old_password, new_password } = req.body;
-//     const username = req.user.username;
-//     try {
-//         const result = await User.update(username, old_password, new_password);
-//         if (!result.updated) return res.status(404).json({ error: 'User ID not found!' });
-//         return res.status(200).json({ message: 'User updated' });
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message })
-//     }
-// };
 
 // Step 1: Trigger forgot password (send code)
 exports.forgotPassword = async (req, res) => {
