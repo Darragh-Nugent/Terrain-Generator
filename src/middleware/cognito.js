@@ -36,7 +36,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1];
         }
-        else{
+        else {
             return res.status(404).json({ error: 'Authorization header missing' });
         }
         const expectsJson =
@@ -63,6 +63,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
                 'custom:role': role,
                 'custom:tenant_id': tenantId,
                 username,
+                jti,
             } = decoded;
             console.log(decoded);
             const finalUsername = cognitoUsername ?? username;
@@ -76,7 +77,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
                 tenantId,
                 token
             };
-            const blacklisted = await isTokenBlacklisted(sub);
+            const blacklisted = await isTokenBlacklisted(jti);
             if (blacklisted) {
                 console.warn(`JWT for user ${sub} is blacklisted.`);
                 return res.status(401).json({ error: 'Token has been invalidated' });
@@ -97,13 +98,13 @@ const authenticateAccessToken = createTokenMiddleware('accessToken', accessVerif
 const authenticateIdToken = createTokenMiddleware('idToken', idVerifier);
 
 // Blacklist a token (for example, during logout)
-const isTokenBlacklisted = async (sub) => {
-    const data = await redis.get(sub);
+const isTokenBlacklisted = async (jti) => {
+    const data = await redis.get(jti);
     return data === 'blacklisted';
 };
 // Function to invalidate the token (for example, during logout)
-const blacklistToken = async (sub) => {
-    await redis.set(sub, 'blacklisted', { EX: 3600 });  // Store `jti` for 30 minutes
-    console.log(`Token with jti: ${sub} has been blacklisted.`);
+const blacklistToken = async (jti) => {
+    await redis.set(jti, 'blacklisted', { EX: 3600 });  // Store `jti` for 30 minutes
+    console.log(`Token with jti: ${jti} has been blacklisted.`);
 };
 module.exports = { authenticateAccessToken, blacklistToken, isTokenBlacklisted, authenticateIdToken };

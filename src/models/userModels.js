@@ -1,7 +1,7 @@
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
-
+const pool =require('../db')
 // can go in secrets manager 
 // https://ap-southeast-2.console.aws.amazon.com/cognito/v2/idp/user-pools/ap-southeast-2_uLIJT0rVY/applications/app-clients/3q30pl220o1tbp1tlqp8eiovse/quick-setup-guide?region=ap-southeast-2
 const clientId = "3q30pl220o1tbp1tlqp8eiovse";
@@ -28,6 +28,17 @@ exports.AddUser = async (uName, email, pass) => {
         const res = await client.send(command);
         console.log("SignUp response: ", res);
 
+        // add user to postgre
+        const id = res.UserSub;
+        try {
+            const result = await pool.query(
+                'INSERT INTO users (id, username, password) VALUES ($1, $2, %3) RETURNING id',
+                [id, uName, pass]
+            );
+            return { id: id, uName, pass };
+        } catch (err) {
+            console.log(err);
+        }
         // Return a response indicating the user was created (but not the `sub` yet)
         return { message: "User created successfully, please check email for confirmation" };
     } catch (err) {

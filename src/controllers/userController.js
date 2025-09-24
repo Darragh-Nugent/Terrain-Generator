@@ -35,7 +35,7 @@ exports.logoutUser = async (req, res) => {
         const payload = await accessVerifier.verify(token);  // <-- verifies signature, expiration, issuer, etc.
 
         // Blacklist token or user session
-        await blacklistToken(payload.sub);  // or payload.sub if your blacklist uses sub
+        await blacklistToken(payload.jti);  // or payload.sub if your blacklist uses sub
 
         // Clear cookie - handle in frontend remove local storage -------------------
         // res.clearCookie('userInfo');
@@ -178,7 +178,7 @@ exports.deleteUser = async (req, res) => {
         // Get the AccessToken from the cookies (this assumes the token is already there)
         const accessToken = req.cookies.accessToken;
         const decoded = jwt.decode(accessToken);
-        await blacklistToken(decoded.sub);
+        await blacklistToken(decoded.jti);
         // Call Cognito's DeleteUser command to delete the user from Cognito
         const result = await User.remove(accessToken);
 
