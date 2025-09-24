@@ -55,6 +55,17 @@
       padding: 5px;
       text-align: center;
     }
+
+    /* Hide the main content initially */
+    #mainContent {
+      display: none;
+    }
+
+    #loading {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 
@@ -64,37 +75,80 @@
       <button type="button" id="register" onclick="home()">Home Page</button>
     </div>
   </header>
-  <h1>Terrain Generator</h1>
+  <div id="loading">Checking authentication...</div>
+  <div id="mainContent">
+    <h1>Terrain Generator</h1>
 
-  <!-- Terrains -->
-  <div id="terrainSection" class="hidden">
-    <h2>Your Terrains</h2>
-    <table id="terrainList">
-      <thead>
-        <tr>
-          <th>Seed</th>
-          <th>Size</th>
-          <th>Height Scale</th>
-          <th>Octaves</th>
-          <th>Iterations</th>
-          <th>3D Map</th>
-          <th>Height Map</th>
-          <th>Style</th>
-          <th>Delete</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Terrains -->
+    <div id="terrainSection" class="hidden">
+      <h2>Your Terrains</h2>
+      <table id="terrainList">
+        <thead>
+          <tr>
+            <th>Seed</th>
+            <th>Size</th>
+            <th>Height Scale</th>
+            <th>Octaves</th>
+            <th>Iterations</th>
+            <th>3D Map</th>
+            <th>Height Map</th>
+            <th>Style</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-    <button onclick="addTerrain()">Add Terrain</button>
+      <button onclick="addTerrain()">Add Terrain</button>
 
-    <div id="terrainDisplay">
-      <h3>Selected Terrain</h3>
-      <img id="terrainImage" src="" alt="Terrain will appear here">
+      <div id="terrainDisplay">
+        <h3>Selected Terrain</h3>
+        <img id="terrainImage" src="" alt="Terrain will appear here">
+      </div>
     </div>
   </div>
 
   <script>
+
+    async function checkAuth() {
+      const loadingDiv = document.getElementById('loading');
+      const mainContent = document.getElementById('mainContent');
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        // No token, redirect to login
+        alert(`Please log in to access this feature`);
+        window.location.href = '/user/login';
+      }
+
+      try {
+        // Call your protected auth-check API endpoint
+        const res = await fetch('/auth/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          // Auth success — show main content, hide loading
+          loadingDiv.style.display = 'none';
+          mainContent.style.display = 'block';
+        } else {
+          // Auth failed — redirect to login or show error
+          const err = await res.json();
+          alert('Access denied: ' + err.error);
+          window.location.href = '/user/login';
+        }
+      } catch (err) {
+        // Network or unexpected error — redirect to login for safety
+        alert(`Unexpected error: `, err);
+        window.location.href = '/user/login';
+      }
+    }
+    window.onload = checkAuth;
+
+    const token = localStorage.getItem("accessToken");
     const id = new URLSearchParams(window.location.search).get('id');
     function home() {
       window.location.href = id ? `/?id=${id}` : `/`;
@@ -108,10 +162,13 @@
 
     async function loadTerrains() {
       const res = await fetch(`${API_BASE}/terrain/getAllTerrainsFromUser`, {
-        credentials: "include",
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       const terrains = await res.json();
-
       const options = await getStyleOptions();
 
       const tableBody = document.querySelector("#terrainList tbody");
@@ -140,6 +197,12 @@
         iterationsValue.type = 'number';
         iterationsValue.value = terrain.iterations;
 
+        const changeHandler = () =>
+          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue);
+
+        [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue]
+          .forEach(input => input.addEventListener("change", changeHandler));
+
         const makeCell = (el) => {
           const td = document.createElement("td");
           td.appendChild(el);
@@ -161,18 +224,10 @@
           option.textContent = style;
           changeStyleDrop.appendChild(option);
         });
-        changeStyleDrop.value = terrain.style;
 
         const delBtn = document.createElement("button");
         delBtn.innerText = "Delete";
         delBtn.onclick = (e) => { e.stopPropagation(); deleteTerrain(terrain.id); };
-
-        // Add event handler for editing terrain
-        const changeHandler = () =>
-          editTerrain(terrain.id, seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop);
-
-        [seedValue, sizeValue, heightScaleValue, octavesValue, iterationsValue, changeStyleDrop]
-          .forEach(input => input.addEventListener("change", changeHandler));
 
         // Append all to the row
         row.appendChild(makeCell(seedValue));
@@ -193,7 +248,11 @@
     async function showTerrain(id, style) {
       try {
         const res = await fetch(`${API_BASE}/terrain/get3DTerrain?id=${id}&styleQuery=${style}`, {
-          credentials: "include",
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (!res.ok) {
@@ -214,7 +273,10 @@
     async function showMap(id) {
       try {
         const res = await fetch(`${API_BASE}/terrain/getHeightMapImage?id=${id}`, {
-          credentials: "include",
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
         });
 
         if (!res.ok) {
@@ -235,7 +297,10 @@
     async function getStyleOptions() {
       try {
         const res = await fetch(`${API_BASE}/style/`, {
-          credentials: "include",
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
         });
 
         if (!res.ok) {
@@ -262,16 +327,15 @@
       const heightScale = 1000;
       const octaves = 8;
       const iterations = 50;
-      const style = "classic";
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          credentials: "include",
-          body: JSON.stringify({ seed, size, heightScale, octaves, iterations, style })
+          body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
         });
 
         if (!res.ok) {
@@ -286,23 +350,22 @@
       }
     }
 
-    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl, styleEl) {
+    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl) {
       const seed = seedEl.value;
       const size = sizeEl.value;
       const heightScale = heightScaleEl.value;
       const octaves = octavesEl.value;
       const iterations = iterationsEl.value;
-      const style = styleEl.value;
 
 
       try {
         const res = await fetch(`${API_BASE}/terrain/editTerrain`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          credentials: "include",
-          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations, style })
+          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations })
         });
 
         if (!res.ok) {
@@ -320,7 +383,10 @@
     async function deleteTerrain(id) {
       await fetch(`${API_BASE}/terrain/deleteTerrain?id=${id}`, {
         method: "DELETE",
-        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
       });
       await loadTerrains();
     }

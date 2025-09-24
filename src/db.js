@@ -11,15 +11,21 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000
 });
-
+// id VARCHAR(64) PRIMARY KEY,
+// user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 (async () => {
   const client = await pool.connect();
   try {
     console.log('PostgreSQL connection successful.');
 
     await client.query(`
+      DROP TABLE IF EXISTS terrains;
+      DROP TABLE IF EXISTS users;
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(100) NOT NULL
       )
@@ -28,7 +34,7 @@ const pool = new Pool({
     await client.query(`
       CREATE TABLE IF NOT EXISTS terrains (
         id SERIAL PRIMARY KEY,
-        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         seed INT NOT NULL,
         size INT NOT NULL,
         heightScale INT NOT NULL,
