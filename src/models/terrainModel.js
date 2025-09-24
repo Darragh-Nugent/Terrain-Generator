@@ -77,6 +77,7 @@ exports.getAllFromUser = async (userId) => {
     try {
         const result = await pool.query('SELECT * FROM terrains WHERE user_id = $1', [userId]);
         console.log("getAllFromUser result:", result.rows[0].style);
+        if (result.rows.length === 0) return [];
         return result.rows.map(row => new Terrain(
             row.seed, row.size, row.heightscale, row.octaves, row.iterations, row.id, row.user_id, row.style
         ));
