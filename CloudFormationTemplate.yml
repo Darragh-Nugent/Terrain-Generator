@@ -4,11 +4,12 @@ Resources:
 
   Group88LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
+    DeletionPolicy: Retain
     Properties:
       LaunchTemplateName: Group-88-Launch-Template
       LaunchTemplateData:
         InstanceType: t2.small
-        ImageId: ami-0f894460b720ce324
+        ImageId: ami-06bb01988f2118dc0
         IamInstanceProfile:
           Name: CAB432-Instance-Role
         SecurityGroupIds:
