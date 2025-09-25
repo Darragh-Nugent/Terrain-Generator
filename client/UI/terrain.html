@@ -146,7 +146,6 @@
         window.location.href = '/user/login';
       }
     }
-    window.onload = checkAuth;
 
     const token = localStorage.getItem("accessToken");
     const id = new URLSearchParams(window.location.search).get('id');
@@ -392,7 +391,18 @@
       await loadTerrains();
     }
 
-    loadTerrains().then(() => show("terrainSection"))
+    window.onload = async () => {
+      await checkAuth();
+
+      try {
+        loadTerrains();
+        show("terrainSection");
+      } catch (err) {
+        console.error("Error loading terrains on page load:", err);
+        alert("Failed to load terrains.");
+      }
+    }
+
   </script>
 </body>
 
