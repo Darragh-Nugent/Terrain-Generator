@@ -11,10 +11,10 @@ services:
       - ./videos:/videos
     environment:
       NODE_ENV: development
-      DB_HOST: database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com
+      DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: cohort_2025
+      DB_NAME: ${DB_NAME}
       S3_BUCKET: ${S3_BUCKET}
       DYNAMO_NAME: ${DYNAMO_NAME}
      

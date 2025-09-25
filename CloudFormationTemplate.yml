@@ -4,7 +4,6 @@ Resources:
 
   Group88LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
-    DeletionPolicy: Retain
     Properties:
       LaunchTemplateName: Group-88-Launch-Template
       LaunchTemplateData:
@@ -37,6 +36,20 @@ Resources:
             DYNAMO_NAME=$(aws ssm get-parameter \
               --name "/n11547227/terrain-app/dynamo-name" \
               --region ap-southeast-2 \
+              --query "Parameter.Value" \
+              --output text)
+
+            DB_HOST=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/db-host" \
+              --region ap-southeast-2 \
+              --with-decryption \
+              --query "Parameter.Value" \
+              --output text)
+
+            DB_NAME=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/db-name" \
+              --region ap-southeast-2 \
+              --with-decryption \
               --query "Parameter.Value" \
               --output text)
 
@@ -75,6 +88,8 @@ Resources:
 
             echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
             echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
+            echo "DB_HOST=$DB_HOST" >> /home/ubuntu/Terrain-Generator/.env
+            echo "DB_NAME=$DB_NAME" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
             echo "REDIS_URL=$REDIS_URL" >> /home/ubuntu/Terrain-Generator/.env
@@ -107,7 +122,6 @@ Resources:
 
   S3BucketParameter:
     Type: AWS::SSM::Parameter
-    DeletionPolicy: Retain
     Properties:
       Name: "/n11547227/terrain-app/s3-bucket"
       Type: String
@@ -115,7 +129,6 @@ Resources:
 
   DynamoNameParameter:
     Type: AWS::SSM::Parameter
-    DeletionPolicy: Retain
     Properties:
       Name: "/n11547227/terrain-app/dynamo-name"
       Type: String
@@ -123,17 +136,31 @@ Resources:
 
   DatabaseUserParameter:
     Type: AWS::SSM::Parameter
-    DeletionPolicy: Retain
     Properties:
       Name: "/n11547227/terrain-app/db-username"
       Type: String
       Value: "s289"
 
+  DatabaseHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/db-host"
+      Type: String
+      Value: "database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com"
+  
+  DatabaseNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/db-name"
+      Type: String
+      Value: "cohort_2025"
+
   RedisURLParameter:
     Type: AWS::SSM::Parameter
-    DeletionPolicy: Retain
     Properties:
       Name: "/n11547227/terrain-app/redis-url"
       Type: String
       Value: "rediss://master.group88-winterscape.km2jzi.apse2.cache.amazonaws.com:6379"
+
+      
 
