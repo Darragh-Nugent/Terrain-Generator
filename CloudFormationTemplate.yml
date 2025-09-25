@@ -8,7 +8,7 @@ Resources:
       LaunchTemplateName: Group-88-Launch-Template
       LaunchTemplateData:
         InstanceType: t2.small
-        ImageId: ami-06bb01988f2118dc0
+        ImageId: ami-0c1691a934175445e
         IamInstanceProfile:
           Name: CAB432-Instance-Role
         SecurityGroupIds:
