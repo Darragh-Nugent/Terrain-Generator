@@ -13,6 +13,7 @@ const styleRoutes = require("./src/routes/styleRoutes");
 const authRouter = require("./src/routes/authRoutes");
 const simulationRouter = require('./src/routes/simulationRoutes');
 const indexRouter = require('./src/routes/indexRoutes');
+const healthCheckRouter = require('./src/routes/healthcheckRoutes');
 
 const app = express();
 const port = 3000;
@@ -29,6 +30,7 @@ app.use("/user", userRoutes);
 app.use("/style", styleRoutes);
 app.use("/auth",authRouter);
 app.use('/simulation', simulationRouter);
+app.use('/healthcheck',healthCheckRouter)
 app.use('/', indexRouter)
 
 app.listen(port, "0.0.0.0", () => {
