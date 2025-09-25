@@ -66,8 +66,8 @@ Resources:
               --query "SecretString" \
               --output text | jq -r .password)
 
-            REDIS_URL=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/redis-url" \
+            MEMCACHED_URL=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/memcached-url" \
               --region ap-southeast-2 \
               --query "Parameter.Value" \
               --output text)
@@ -92,7 +92,7 @@ Resources:
             echo "DB_NAME=$DB_NAME" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
-            echo "REDIS_URL=$REDIS_URL" >> /home/ubuntu/Terrain-Generator/.env
+            echo "MEMCACHED_URL=$MEMCACHED_URL" >> /home/ubuntu/Terrain-Generator/.env
             echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
             echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
             echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
@@ -155,12 +155,12 @@ Resources:
       Type: String
       Value: "cohort_2025"
 
-  RedisURLParameter:
+  MemcachedURLParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: "/n11547227/terrain-app/redis-url"
+      Name: "/n11547227/terrain-app/memcached-url"
       Type: String
-      Value: "rediss://master.group88-winterscape.km2jzi.apse2.cache.amazonaws.com:6379"
+      Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
 
       
 

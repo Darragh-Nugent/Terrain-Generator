@@ -9,6 +9,8 @@ services:
       - "3000:3000" # host:container
     volumes:
       - ./videos:/videos
+    depends_on:
+      - memcached
     environment:
       NODE_ENV: development
       DB_HOST: ${DB_HOST}
@@ -17,14 +19,11 @@ services:
       DB_NAME: ${DB_NAME}
       S3_BUCKET: ${S3_BUCKET}
       DYNAMO_NAME: ${DYNAMO_NAME}
+      MEMCACHED_URL: ${MEMCACHED_URL}
+
+  memcached:
+    image: memcached:alpine
+    container_name: memcached
+    ports:
+      - "11211:11211"
      
-
-  redis:
-    image: redis:alpine 
-    container_name: redis
-    volumes:
-      - redis-data:/data 
-    restart: always   
-
-volumes:
-  redis-data:

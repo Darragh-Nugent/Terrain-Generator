@@ -1,7 +1,7 @@
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const awsJwt = require("aws-jwt-verify");
 const crypto = require("crypto");
-const redis = require("../../redisclient"); // Assuming redis is being used to blacklist tokens
+const memcache = require("../../memcachedClient");
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const userPoolId = process.env.USER_POOL_ID;
@@ -98,12 +98,12 @@ const authenticateIdToken = createTokenMiddleware('idToken', idVerifier);
 
 // Blacklist a token (for example, during logout)
 const isTokenBlacklisted = async (jti) => {
-    const data = await redis.get(jti);
-    return data === 'blacklisted';
+    const result = await memcache.get(jti);
+    return result.value?.toString() === 'blacklisted';
 };
 // Function to invalidate the token (for example, during logout)
 const blacklistToken = async (jti) => {
-    await redis.set(jti, 'blacklisted', { EX: 3600 });  // Store `jti` for 30 minutes
+    await memcache.set(jti, 'blacklisted', { expires: 3600 }); // 1 hour TTL
     console.log(`Token with jti: ${jti} has been blacklisted.`);
 };
 module.exports = { authenticateAccessToken, blacklistToken, isTokenBlacklisted, authenticateIdToken };
