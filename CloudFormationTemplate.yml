@@ -53,12 +53,36 @@ Resources:
             --region ap-southeast-2 \
             --query "SecretString" \
             --output text | jq -r .password)
+          
+          CLIENT_ID=$(aws secretsmanager get-secret-value \
+            --secret-id "n11547227/terrain-app/db-password" \
+            --region ap-southeast-2 \
+            --query "SecretString" \
+            --output text | jq -r .CLIENT_ID)
+
+          CLIENT_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "n11547227/terrain-app/db-password" \
+            --region ap-southeast-2 \
+            --query "SecretString" \
+            --output text | jq -r .CLIENT_SECRET)
+
+          USER_POOL_ID=$(aws secretsmanager get-secret-value \
+            --secret-id "n11547227/terrain-app/db-password" \
+            --region ap-southeast-2 \
+            --query "SecretString" \
+            --output text | jq -r .USER_POOL_ID)
+          
                  
           # Write to .env file for Compose
           echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
           echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
           echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
           echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
+
+          # Cognito secrets
+          echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
+          echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
+          echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
 
           # Pull private ECR image and start containers
           su - ubuntu -c "bash -c '

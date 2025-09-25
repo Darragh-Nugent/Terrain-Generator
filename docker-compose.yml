@@ -1,6 +1,8 @@
 services:
   backend:
     build: .
+    env_file:
+      - .env
     image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
     container_name: terrain-generator-backend
     ports:

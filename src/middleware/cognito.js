@@ -2,10 +2,9 @@ const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const awsJwt = require("aws-jwt-verify");
 const crypto = require("crypto");
 const redis = require("../../redisclient"); // Assuming redis is being used to blacklist tokens
-
-const userPoolId = "ap-southeast-2_uLIJT0rVY";  // Your Cognito User Pool ID
-const clientId = "3q30pl220o1tbp1tlqp8eiovse";  // Your Cognito App Client ID
-const clientSecret = "o6tpgds0s9fion8uii6gs8fa31djefrkg7m4rgi7cukb47iontk";  // Your Cognito App Client Secret
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const userPoolId = process.env.USER_POOL_ID;
 
 // Verifiers for Cognito tokens (ID Token or Access Token)
 const accessVerifier = awsJwt.CognitoJwtVerifier.create({

@@ -143,12 +143,15 @@
         } else {
           // Auth failed — redirect to login or show error
           const err = await res.json();
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('idToken');
+          localStorage.removeItem('userInfo');
           alert('Access denied: ' + err.error);
           window.location.href = '/user/login';
         }
       } catch (err) {
         // Network or unexpected error — redirect to login for safety
-        alert(`Unexpected error: `,err);
+        alert(`Unexpected error: `, err);
         window.location.href = '/user/login';
       }
     }
