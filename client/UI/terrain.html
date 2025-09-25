@@ -278,6 +278,7 @@
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         });
 
@@ -330,6 +331,7 @@
       const heightScale = 1000;
       const octaves = 8;
       const iterations = 50;
+      const style = "classic";
 
       try {
         const res = await fetch(`${API_BASE}/terrain/addTerrain`, {
@@ -338,7 +340,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ seed, size, heightScale, octaves, iterations })
+          body: JSON.stringify({ seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {

@@ -18,6 +18,11 @@ const pool = new Pool({
   try {
     console.log('PostgreSQL connection successful.');
 
+    // await client.query(`
+    //   DROP TABLE IF EXISTS terrains;
+    //   DROP TABLE IF EXISTS users;
+    // `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY,

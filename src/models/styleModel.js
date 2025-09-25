@@ -8,11 +8,11 @@ const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
 const qutUsername = "n11547227@qut.edu.au";
 
 exports.loadStyles = async () => {
-  console.log("DynamoDB Table Name:", process.env.DYNAMO_NAME);
-  console.log("Key:", {
-    'qut-username': qutUsername,
-    user_id: 0,
-  });
+  // console.log("DynamoDB Table Name:", process.env.DYNAMO_NAME);
+  // console.log("Key:", {
+  //   'qut-username': qutUsername,
+  //   user_id: 0,
+  // });
 
   const client = new DynamoDB.DynamoDBClient({ region: "ap-southeast-2" });
   const docClient = DynamoDBLib.DynamoDBDocumentClient.from(client);

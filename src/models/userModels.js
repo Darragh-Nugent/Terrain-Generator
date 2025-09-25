@@ -32,7 +32,7 @@ exports.AddUser = async (uName, email, pass) => {
         const id = res.UserSub;
         try {
             const result = await pool.query(
-                'INSERT INTO users (id, username, password) VALUES ($1, $2, %3) RETURNING id',
+                'INSERT INTO users (id, username, password) VALUES ($1, $2, $3) RETURNING id',
                 [id, uName, pass]
             );
             return { id: id, uName, pass };

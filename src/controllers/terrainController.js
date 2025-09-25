@@ -11,6 +11,7 @@ async function addTerrain(req, res) {
 
   try {
     const newTerrain = await terrainModel.addTerrain(seed, size, heightScale, octaves, iterations, style, userId);
+    console.log(newTerrain);
     res.status(201).json(newTerrain);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -52,7 +53,7 @@ async function getAllFromUser(req, res) {
   try {
     const terrains = await terrainModel.getAllFromUser(userId);
     if (!terrains) return res.status(404).json({ error: 'There are no terrains for this user' });
-    res.status(201).json(terrains);
+    res.status(200).json(terrains);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

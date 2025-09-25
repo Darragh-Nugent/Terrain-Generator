@@ -18,7 +18,6 @@ async function main() {
 
 
     for (const style of data) {
-        console.log(style);
         command = new DynamoDBLib.PutCommand({
             TableName: process.env.DYNAMO_NAME,
             Item: {
