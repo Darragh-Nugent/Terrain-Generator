@@ -93,3 +93,27 @@ Resources:
             docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
             docker compose up -d 
             '"
+
+  S3BucketParameter:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    Properties:
+      Name: "/n11547227/terrain-app/s3-bucket"
+      Type: String
+      Value: "n11547227-a2-terrains"
+
+  DynamoNameParameter:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    Properties:
+      Name: "/n11547227/terrain-app/dynamo-name"
+      Type: String
+      Value: "n11547227-styles"
+
+  DatabaseUserParameter:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    Properties:
+      Name: "/n11547227/terrain-app/db-username"
+      Type: String
+      Value: "s289"
