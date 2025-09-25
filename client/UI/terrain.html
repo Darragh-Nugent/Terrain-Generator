@@ -357,22 +357,24 @@
       }
     }
 
-    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl) {
+    async function editTerrain(id, seedEl, sizeEl, heightScaleEl, octavesEl, iterationsEl, styleEl) {
       const seed = seedEl.value;
       const size = sizeEl.value;
       const heightScale = heightScaleEl.value;
       const octaves = octavesEl.value;
       const iterations = iterationsEl.value;
+      const style = styleEl.value;
 
 
       try {
         const res = await fetch(`${API_BASE}/terrain/editTerrain`, {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations })
+          credentials: "include",
+          body: JSON.stringify({ id, seed, size, heightScale, octaves, iterations, style })
         });
 
         if (!res.ok) {
