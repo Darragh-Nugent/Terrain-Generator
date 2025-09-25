@@ -135,5 +135,5 @@ Resources:
     Properties:
       Name: "/n11547227/terrain-app/redis-url"
       Type: String
-      Value: "redis://master.group88-winterscape.km2jzi.apse2.cache.amazonaws.com:6379"
+      Value: "rediss://master.group88-winterscape.km2jzi.apse2.cache.amazonaws.com:6379"
 
