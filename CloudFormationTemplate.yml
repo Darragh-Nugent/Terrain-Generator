@@ -1,98 +1,101 @@
-Description: Launchs EC2 instance and pulls and runs a container for the Terrain Generator app
+Description: Launches an EC2 instance via AutoScalingGroup and runs the Terrain Generator container
 
 Resources:
 
-  EC2Instance:
-    Type: AWS::EC2::Instance
+  Group88LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      InstanceType: t2.small
-      SubnetId: subnet-075811427d5564cf9
-      SecurityGroupIds:
-        - sg-032bd1ff8cf77dbb9
-      IamInstanceProfile: CAB432-Instance-Role
-      ImageId: ami-0f894460b720ce324
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs:
-            VolumeSize: 15
-            VolumeType: gp3
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          set -xe
+      LaunchTemplateName: Group-88-Launch-Template
+      LaunchTemplateData:
+        InstanceType: t2.small
+        ImageId: ami-0f894460b720ce324
+        IamInstanceProfile:
+          Name: CAB432-Instance-Role
+        SecurityGroupIds:
+          - sg-032bd1ff8cf77dbb9
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 15
+              VolumeType: gp3
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -xe
 
-          # Start Docker (should already be installed in AMI)
-          systemctl start docker
-          systemctl enable docker
-          usermod -aG docker ubuntu
+            systemctl start docker
+            systemctl enable docker
+            usermod -aG docker ubuntu
 
-          # Fetch bucket name from Parameter Store
-          BUCKET_NAME=$(aws ssm get-parameter \
-            --name "/n11547227/terrain-app/s3-bucket" \
-            --region ap-southeast-2 \
-            --query "Parameter.Value" \
-            --output text)
+            BUCKET_NAME=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/s3-bucket" \
+              --region ap-southeast-2 \
+              --query "Parameter.Value" \
+              --output text)
 
-          # Fetch DynamoDB table name from Parameter Store
-          DYNAMO_NAME=$(aws ssm get-parameter \
-            --name "/n11547227/terrain-app/dynamo-name" \
-            --region ap-southeast-2 \
-            --query "Parameter.Value" \
-            --output text)
+            DYNAMO_NAME=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/dynamo-name" \
+              --region ap-southeast-2 \
+              --query "Parameter.Value" \
+              --output text)
 
-          # Fetch DB credentials from Parameter Store and Secrets Manager
-          DB_USER=$(aws ssm get-parameter \
-            --name "/n11547227/terrain-app/db-username" \
-            --region ap-southeast-2 \
-            --with-decryption \
-            --query "Parameter.Value" \
-            --output text)
+            DB_USER=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/db-username" \
+              --region ap-southeast-2 \
+              --with-decryption \
+              --query "Parameter.Value" \
+              --output text)
 
-          DB_PASSWORD=$(aws secretsmanager get-secret-value \
-            --secret-id "n11547227/terrain-app/db-password" \
-            --region ap-southeast-2 \
-            --query "SecretString" \
-            --output text | jq -r .password)
-          
-          CLIENT_ID=$(aws secretsmanager get-secret-value \
-            --secret-id "n11547227/terrain-app/db-password" \
-            --region ap-southeast-2 \
-            --query "SecretString" \
-            --output text | jq -r .CLIENT_ID)
+            DB_PASSWORD=$(aws secretsmanager get-secret-value \
+              --secret-id "n11547227/terrain-app/db-password" \
+              --region ap-southeast-2 \
+              --query "SecretString" \
+              --output text | jq -r .password)
 
-          CLIENT_SECRET=$(aws secretsmanager get-secret-value \
-            --secret-id "n11547227/terrain-app/db-password" \
-            --region ap-southeast-2 \
-            --query "SecretString" \
-            --output text | jq -r .CLIENT_SECRET)
+            COGNITO_SECRET=$(aws secretsmanager get-secret-value \
+              --secret-id "n11547227/terrain-app/cognito" \
+              --region ap-southeast-2 \
+              --query "SecretString" \
+              --output text)
 
-          USER_POOL_ID=$(aws secretsmanager get-secret-value \
-            --secret-id "n11547227/terrain-app/db-password" \
-            --region ap-southeast-2 \
-            --query "SecretString" \
-            --output text | jq -r .USER_POOL_ID)
-          
-                 
-          # Write to .env file for Compose
-          echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
-          echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
-          echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
-          echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
+            CLIENT_ID=$(echo $COGNITO_SECRET | jq -r .client_id)
+            CLIENT_SECRET=$(echo $COGNITO_SECRET | jq -r .client_secret)
+            USER_POOL_ID=$(echo $COGNITO_SECRET | jq -r .user_pool_id)
 
-          # Cognito secrets
-          echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
-          echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
-          echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
 
-          # Pull private ECR image and start containers
-          su - ubuntu -c "bash -c '
-            aws ecr get-login-password --region ap-southeast-2 \
-              | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
+            mkdir -p /home/ubuntu/Terrain-Generator
+            touch /home/ubuntu/Terrain-Generator/.env
 
-            cd /home/ubuntu/Terrain-Generator
-            docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
-            docker compose up -d 
+            echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
+            echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
+            echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
+            echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
+            echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
+            echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
+            echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
+
+            su - ubuntu -c "bash -c '
+              aws ecr get-login-password --region ap-southeast-2 \
+                | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
+
+              cd /home/ubuntu/Terrain-Generator
+              docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
+              docker compose up -d
             '"
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - subnet-075811427d5564cf9
+      MinSize: "1"
+      MaxSize: "1"
+      DesiredCapacity: "1"
+      TargetGroupARNs:
+        - arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group88-Winterscape-tg/08eaa7d2b1f3122f
+      LaunchTemplate:
+        LaunchTemplateId: !Ref Group88LaunchTemplate
+        Version: !GetAtt Group88LaunchTemplate.LatestVersionNumber
 
   S3BucketParameter:
     Type: AWS::SSM::Parameter
@@ -117,3 +120,4 @@ Resources:
       Name: "/n11547227/terrain-app/db-username"
       Type: String
       Value: "s289"
+
