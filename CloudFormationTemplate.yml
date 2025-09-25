@@ -4,11 +4,12 @@ Resources:
 
   Group88LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
+    DeletionPolicy: Retain
     Properties:
       LaunchTemplateName: Group-88-Launch-Template
       LaunchTemplateData:
         InstanceType: t2.small
-        ImageId: ami-0f894460b720ce324
+        ImageId: ami-06bb01988f2118dc0
         IamInstanceProfile:
           Name: CAB432-Instance-Role
         SecurityGroupIds:
@@ -52,6 +53,12 @@ Resources:
               --query "SecretString" \
               --output text | jq -r .password)
 
+            REDIS_URL=$(aws ssm get-parameter \
+              --name "/n11547227/terrain-app/redis-url" \
+              --region ap-southeast-2 \
+              --query "Parameter.Value" \
+              --output text)
+
             COGNITO_SECRET=$(aws secretsmanager get-secret-value \
               --secret-id "n11547227/terrain-app/cognito" \
               --region ap-southeast-2 \
@@ -70,6 +77,7 @@ Resources:
             echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
             echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
+            echo "REDIS_URL=$REDIS_URL" >> /home/ubuntu/Terrain-Generator/.env
             echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
             echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
             echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
@@ -92,7 +100,7 @@ Resources:
       MaxSize: "1"
       DesiredCapacity: "1"
       TargetGroupARNs:
-        - arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group88-Winterscape-tg/08eaa7d2b1f3122f
+        - arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group-88-Winterscape-tg/cb52202b90e00630
       LaunchTemplate:
         LaunchTemplateId: !Ref Group88LaunchTemplate
         Version: !GetAtt Group88LaunchTemplate.LatestVersionNumber
@@ -120,4 +128,12 @@ Resources:
       Name: "/n11547227/terrain-app/db-username"
       Type: String
       Value: "s289"
+
+  RedisURLParameter:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    Properties:
+      Name: "/n11547227/terrain-app/redis-url"
+      Type: String
+      Value: "redis://master.group88-winterscape.km2jzi.apse2.cache.amazonaws.com:6379"
 
