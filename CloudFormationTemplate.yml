@@ -128,6 +128,41 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref Group88LaunchTemplate
         Version: !GetAtt Group88LaunchTemplate.LatestVersionNumber
+    
+  TerrainStylesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: n11547227-styles
+      AttributeDefinitions:
+        - AttributeName: qut-username
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: qut-username
+          KeyType: HASH 
+        - AttributeName: id
+          KeyType: RANGE 
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
+        - Key: purpose
+          Value: assessment 2
+
+  TerrainBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: n11547227-a2-terrains
+      Tags:
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
+        - Key: purpose
+          Value: assessment 2
 
   S3BucketParameter:
     Type: AWS::SSM::Parameter
