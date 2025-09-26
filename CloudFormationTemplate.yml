@@ -32,6 +32,13 @@ Resources:
               VolumeType: gp3
         TagSpecifications:
           - ResourceType: instance
+            Tags:
+            - Key: qut-username
+              Value: !Ref QutUsername
+            - Key: qut-username2
+              Value: !Ref QutUsername2
+            - Key: purpose
+              Value: !Ref Purpose
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
