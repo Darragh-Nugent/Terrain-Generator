@@ -1,3 +1,4 @@
+const e = require("express");
 const styleModel = require("../models/styleModel.js");
 const path = require('path');
 
@@ -10,3 +11,14 @@ exports.getStyles = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+exports.addStyle = async (req, res) => {
+  try {
+    const newStyle = req.body;
+    await styleModel.addStyle(newStyle);
+    res.status(200).json({ message: "Style added successfully." });
+  } catch (err) {
+    console.error("Error adding style:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

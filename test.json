@@ -1,0 +1,7 @@
+{
+  "name": "test",
+  "mapping": [
+    { "max": 0.5, "color": "#FFFFFF" },  
+    { "max": 1.0, "color": "#000000" }
+  ]
+}

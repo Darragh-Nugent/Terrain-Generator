@@ -66,6 +66,13 @@
       text-align: center;
       margin-top: 2rem;
     }
+
+    .button-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
   </style>
 </head>
 
@@ -99,7 +106,14 @@
         <tbody></tbody>
       </table>
 
-      <button onclick="addTerrain()">Add Terrain</button>
+      <button onclick="addTerrain()">Add Terrain</button> <br>
+
+      <div class="button-group"></div>
+        <label for="jsonFileInput" class="custom-file-label">Choose JSON file to upload style:</label>
+        <input type="file" id="jsonFileInput" accept=".json" /> <br>
+        <button onclick="uploadJson()">Upload Style</button>
+      </div>
+
 
       <div id="terrainDisplay">
         <h3>Selected Terrain</h3>
@@ -398,6 +412,43 @@
         },
       });
       await loadTerrains();
+    }
+
+    async function uploadJson() {
+      const fileInput = document.getElementById('jsonFileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a JSON file.");
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const jsonData = JSON.parse(text);
+
+        // Send the JSON to your backend
+        const res = await fetch('/style/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // same token as used elsewhere
+          },
+          body: JSON.stringify(jsonData)
+        });
+
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(`Upload failed: ${msg}`);
+        }
+
+        alert("JSON uploaded successfully!");
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("Failed to upload JSON: " + err.message);
+      }
+
+      loadTerrains();
     }
 
     window.onload = async () => {

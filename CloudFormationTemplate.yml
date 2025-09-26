@@ -18,6 +18,15 @@ Resources:
             Ebs:
               VolumeSize: 15
               VolumeType: gp3
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: qut-username
+                Value: n11547227@qut.edu.au
+              - Key: qut-username2
+                Value: n11596708@qut.edu.au
+              - Key: purpose
+                Value: assessment 2
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash

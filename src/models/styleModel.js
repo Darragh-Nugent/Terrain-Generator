@@ -1,6 +1,6 @@
 const DynamoDB = require("@aws-sdk/client-dynamodb");
 const DynamoDBLib = require("@aws-sdk/lib-dynamodb");
-const fs = require("fs");
+const { v4: uuidv4 } = require('uuid');
 const path = require("path");
 
 const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
@@ -40,9 +40,27 @@ exports.loadStyles = async () => {
   }
 }
 
-exports.addRule = async (newRule) => {
-  const rules = loadStyles();
-  rules.push(newRule);
-  fs.writeFileSync(RULES_PATH, JSON.stringify(rules, null, 2));
-  return newRule;
+exports.addStyle = async (newStyle) => {
+  const client = new DynamoDB.DynamoDBClient({ region: "ap-southeast-2" });
+  const docClient = DynamoDBLib.DynamoDBDocumentClient.from(client);
+
+  const command = new DynamoDBLib.PutCommand({
+    TableName: process.env.DYNAMO_NAME,
+    Item: {
+      "qut-username": qutUsername,
+      id: uuidv4(),
+      name: newStyle.name,
+      user_id: 0,
+      mapping: newStyle.mapping,
+    }
+  });
+
+  try {
+    await docClient.send(command);
+    console.log("Style added to DynamoDB.");
+    return newStyle;
+  } catch (err) {
+    console.error("DynamoDB error:", err);
+    throw err;
+  }
 }
