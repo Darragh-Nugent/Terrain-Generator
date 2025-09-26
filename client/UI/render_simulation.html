@@ -102,6 +102,7 @@
         <button type="button" id="playPauseBtn">Pause</button>
         <button type="button" onclick="saveFormData()">Download Form Data</button>
         <button type="button" onclick="downloadSystemCoords()">Download System Coordinates</button>
+        <button type="button" onclick="tryLoadFromS3()">Load Previous Simulation</button>
     </div>
     </form>
     <div id="randomInitDiv" style="color: red; margin-top: 10px;"></div>
@@ -301,7 +302,6 @@
       formData.maxNeighbour = Number(formData.maxNeighbour);
       return formData;
     }
-
   </script>
   <script type="module" src="/js/render_simulation.js" defer></script>
 </body>

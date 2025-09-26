@@ -1,4 +1,4 @@
-const { fallingSnow, renderVideo, saveRenderVideo } = require('../models/simulationModel')
+const { fallingSnow, renderVideo, saveRenderVideo, create3DSimulationBucket, getPresigned3DSimulation } = require('../models/simulationModel')
 const path = require('path');
 const fs = require('fs');
 
@@ -51,5 +51,34 @@ exports.showRenderPage = async (req, res) => {
     }
 };
 
+exports.saveSimulationData = async (req, res) => {
+  try {
+    const simulationId = req.params.id;
+    const simulationData = req.body;
 
+    await create3DSimulationBucket(simulationId, simulationData);
+
+    res.status(200).json({ message: 'Simulation data saved successfully' });
+  } catch (err) {
+    console.error('Error saving simulation data:', err);
+    res.status(500).json({ error: 'Failed to save simulation data' });
+  }
+};
+
+exports.getSimulationPresignedUrl = async (req, res) => {
+  try {
+    const simulationId = req.params.id;
+
+    const presignedUrl = await getPresigned3DSimulation(simulationId);
+
+    if (!presignedUrl) {
+      return res.status(404).json({ error: 'Simulation data not found' });
+    }
+
+    res.status(200).json({ url: presignedUrl });
+  } catch (err) {
+    console.error('Error generating presigned URL:', err);
+    res.status(500).json({ error: 'Failed to generate presigned URL' });
+  }
+};
 

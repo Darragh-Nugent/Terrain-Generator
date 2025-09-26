@@ -6,8 +6,13 @@ const { allParticlesGrounded, isEmptyConfiguration,
     calculateWindspeedFactor,
     calculateAvgParticlePos,
     findParticleBoundaries } = require("../utils/simulation")
-const { findBoundaries, findAvg } = require("../utils/arrayUtils");
 const Particle = require("../data/Particle");
+const S3 = require("@aws-sdk/client-s3");
+const S3Presigner = require("@aws-sdk/s3-request-presigner");
+
+const bucketName = process.env.S3_BUCKET;
+const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
+
 function fallingSnow(initialState, steps, regionHeight, windSpeed, windDir, minNeighbour, maxNeighbour) {
     let cloudConfigs = calculateCloudConfig(initialState, minNeighbour, maxNeighbour, steps);
     // remove configurations that are dead, otherwise it will perform random walks on particles at (0,0,0)
@@ -478,10 +483,37 @@ async function renderVideo(params, writeStream) {
     });
 }
 
+async function create3DSimulationBucket(id, simulationData){
+    try {
+        const objectKey = `simulation/${id}.json`;
+        await s3Client.send(new S3.PutObjectCommand({
+            Bucket: bucketName,
+            Key: objectKey,
+            Body: JSON.stringify(simulationData),
+            ContentType: "application/json",
+        }));
+        return objectKey;
+    } catch (err) {
+        console.error('Error in createHeight3DSimulationBucket:', err.message);
+    }
+}
+
+async function getPresigned3DSimulation(id){
+    try {
+        const objectKey = `simulation/${id}.json`;
+        const command = new S3.GetObjectCommand({ Bucket: bucketName, Key: objectKey });
+        return await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 
 module.exports = {
     fallingSnow,
     cellularAutomata,
     renderVideo,
-    saveRenderVideo
+    saveRenderVideo,
+    getPresigned3DSimulation,
+    create3DSimulationBucket
 }

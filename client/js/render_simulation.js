@@ -9,7 +9,7 @@ const alphaMap = new THREE.TextureLoader().load('https://threejs.org/examples/te
 
 const form = document.getElementById('simulation_form');
 const table = document.getElementById('table');
-
+const id = new URLSearchParams(window.location.search).get('id');
 // Helper to build payload object for backend from form data and initial state table
 function buildPayload(formData, initialState) {
     return {
@@ -33,6 +33,75 @@ async function fetchSimulation(payload) {
 
     const data = await res.json();
     return { res, data };
+}
+
+async function saveSimulationToS3(id, simulationData) {
+    const saveResponse = await fetch(`/save-3d-simulation/${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify(simulationData) // or whatever you want to save
+    });
+    return saveResponse;
+}
+
+async function getSimulationFromS3(id) {
+    const urlResponse = await fetch(`/3d-simulation-url/${id}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+    });
+
+    if (urlResponse.ok) {
+        const { url } = await urlResponse.json();
+        console.log('Presigned URL:', url);
+        // You can now display the video or download it directly using this URL
+    } else {
+        messageDiv.textContent = 'Failed to retrieve simulation URL';
+    }
+}
+
+
+window.tryLoadFromS3 = async function() {
+    try {
+        const res = await fetch(`/3d-simulation-url/${id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+        if (!res.ok) {
+            console.warn("No saved simulation found in S3");
+            return;
+        }
+        const { url } = await res.json();
+        const fileRes = await fetch(url);
+        const simData = await fileRes.json();
+
+        frames = simData;
+        computeStaticFrameMetrics();
+        const { minZ } = cachedHeightRange;
+        let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+        let offset = 10;
+        grid.position.y = floor;
+        axes.position.y = floor;
+        camera.position.y = floor + offset;
+
+        T = frames.length;
+        N = Math.max(...frames.map(f => f.length));
+
+        initPointsIfNeeded();
+        frameIndex = 0;
+        playing = true;
+        playPauseBtn.textContent = 'Pause';
+
+        console.log("Loaded simulation from S3.");
+    } catch (err) {
+        console.error("Error loading simulation from S3:", err);
+    }
 }
 
 // Initialize the simulation with a random grid state (optional for user)
@@ -64,11 +133,19 @@ window.randomInitialization = async function () {
         return;
     }
 
+    // save to s3 bucket
+    try {
+        const saveRes = await saveSimulationToS3(id, data.sysParticleHistory);
+        if (saveRes.ok) {
+            console.log('Simulation saved to S3 successfully!');
+        } else {
+            console.warn('Failed to save simulation to S3');
+        }
+    } catch (err) {
+        console.error('Error saving simulation to S3:', err);
+    }
+
     // Step 4: Same as form handler logic
-    // framesX = data.sysCoordHistoryX;
-    // framesY = data.sysCoordHistoryY;
-    // framesZ = data.sysCoordHistoryZ;
-    // velocity = data.sysVelocityHistory;
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
     const { minZ } = cachedHeightRange;
@@ -78,7 +155,7 @@ window.randomInitialization = async function () {
     grid.position.y = floor;
     axes.position.y = floor;
     camera.position.y = floor + offset;
-    
+
     if (!frames | !frames.length) {
         console.error('Bad frames data', data);
         return;
