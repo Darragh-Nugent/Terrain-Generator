@@ -24,10 +24,10 @@ i-08cbbd9b4e9dbb965
 
 ### Core - First data persistence service
 
-- **AWS service name:**  Postgres
+- **AWS service name:**  PostgresSQL
 - **What data is being stored?:** Terrain Metadata
-- **Why is this service suited to this data?:** Terrain metadata is always structured the same way and is tabular
-- **Why is are the other services used not suitable for this data?:** Given the data's nature NoSQL databases or S3 buckets won't have as efficient reads/writes as SQL
+- **Why is this service suited to this data?:** Terrain metadata is highly structured and fits naturally into a relational, tabular format
+- **Why is are the other services used not suitable for this data?:** Given the data's tabular nature, NoSQL databases or S3 buckets won't have as efficient reads/writes as SQL databases
 - **Bucket/instance/table name:** s289.terrains
 - **Video timestamp:**
 - **Relevant files:**
@@ -37,9 +37,9 @@ i-08cbbd9b4e9dbb965
 ### Core - Second data persistence service
 
 - **AWS service name:**  DynamoDB
-- **What data is being stored?:** Style JSON files
-- **Why is this service suited to this data?:** DynamoDB is well sutied for JSON files
-- **Why is are the other services used not suitable for this data?:** SQL has no easy way of storing JSON files with variable size and S3 buckets are not able to structure them as efficiently
+- **What data is being stored?:** Style configuration files in JSON format
+- **Why is this service suited to this data?:** DynamoDB is a NoSQL database optimized for storing semi-structured data like JSON.
+- **Why is are the other services used not suitable for this data?:** SQL is best suited for structured, relational data anmd not semi-structured files and S3 buckets are not able to structure them as efficiently for key-based access
 - **Bucket/instance/table name:** n11547227-styles
 - **Video timestamp:**
 - **Relevant files:**
@@ -49,8 +49,8 @@ i-08cbbd9b4e9dbb965
 ### Third data service
 
 - **AWS service name:**  S3 Bucket
-- **What data is being stored?:** Image data
-- **Why is this service suited to this data?:** S3 buckets are perfect for large file data
+- **What data is being stored?:** Terrain images
+- **Why is this service suited to this data?:** S3 buckets are ideal for storing large image files
 - **Why is are the other services used not suitable for this data?:** Image data is too large to work efficiently with SQL and NoSQL databases
 - **Bucket/instance/table name:** n11547227-a2-terrains
 - **Video timestamp:**
