@@ -5,7 +5,6 @@ const client = createClient({
   url: `${REDIS_URL}`, 
   socket: {
     connectTimeout: 10000,  // Increase timeout to 10 seconds
-    tls: {}  // For encrypted connection if Transit Encryption is enabled
   }
 });
 
