@@ -2,7 +2,6 @@
 import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
 import { PointerLockControls } from '/js/PointerLockControls_fixed.js';
 import { OrbitControls } from '/js/OrbitControls_fixed.js';
-// import { findParticleBoundaries } from '/src/utils/simulation.js';
 
 // For better particles visually
 const alphaMap = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/circle.png');
@@ -12,8 +11,8 @@ const table = document.getElementById('table');
 const id = new URLSearchParams(window.location.search).get('id');
 // Helper to build payload object for backend from form data and initial state table
 function buildPayload(formData, initialState) {
-    return {
-        initialState: initialState,
+    const payload = {
+        initialState,
         steps: Number(formData.steps),
         height: Number(formData.height),
         windSpeed: Number(formData.windSpeed),
@@ -21,6 +20,11 @@ function buildPayload(formData, initialState) {
         minNeighbour: Number(formData.minNeighbour),
         maxNeighbour: Number(formData.maxNeighbour),
     };
+
+    if (id) {
+        payload.id = id;
+    }
+    return payload;
 }
 
 // Send the simulation payload to backend and get result JSON
@@ -35,39 +39,9 @@ async function fetchSimulation(payload) {
     return { res, data };
 }
 
-async function saveSimulationToS3(id, simulationData) {
-    const saveResponse = await fetch(`/save-3d-simulation/${id}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify(simulationData) // or whatever you want to save
-    });
-    return saveResponse;
-}
-
-async function getSimulationFromS3(id) {
-    const urlResponse = await fetch(`/3d-simulation-url/${id}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-    });
-
-    if (urlResponse.ok) {
-        const { url } = await urlResponse.json();
-        console.log('Presigned URL:', url);
-        // You can now display the video or download it directly using this URL
-    } else {
-        messageDiv.textContent = 'Failed to retrieve simulation URL';
-    }
-}
-
-
-window.tryLoadFromS3 = async function() {
+window.tryLoadFromS3 = async function () {
     try {
-        const res = await fetch(`/3d-simulation-url/${id}`, {
+        const res = await fetch(`/simulation/3d-simulation-url/${id}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -75,13 +49,14 @@ window.tryLoadFromS3 = async function() {
         });
         if (!res.ok) {
             console.warn("No saved simulation found in S3");
+            console.log(id);
             return;
         }
         const { url } = await res.json();
         const fileRes = await fetch(url);
         const simData = await fileRes.json();
 
-        frames = simData;
+        frames = simData.sysParticleHistory;
         computeStaticFrameMetrics();
         const { minZ } = cachedHeightRange;
         let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
@@ -131,18 +106,6 @@ window.randomInitialization = async function () {
     if (!res.ok) {
         console.error('Error JSON:', data);
         return;
-    }
-
-    // save to s3 bucket
-    try {
-        const saveRes = await saveSimulationToS3(id, data.sysParticleHistory);
-        if (saveRes.ok) {
-            console.log('Simulation saved to S3 successfully!');
-        } else {
-            console.warn('Failed to save simulation to S3');
-        }
-    } catch (err) {
-        console.error('Error saving simulation to S3:', err);
     }
 
     // Step 4: Same as form handler logic
@@ -540,7 +503,6 @@ form.addEventListener('submit', async (e) => {
         console.error('Error JSON:', data);
         return;
     }
-
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
     const { minZ } = cachedHeightRange;

@@ -494,7 +494,7 @@ async function create3DSimulationBucket(id, simulationData){
         }));
         return objectKey;
     } catch (err) {
-        console.error('Error in createHeight3DSimulationBucket:', err.message);
+        console.error('Error in create3DSimulationBucket:', err.message);
     }
 }
 
@@ -505,6 +505,7 @@ async function getPresigned3DSimulation(id){
         return await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
     } catch (err) {
         console.log(err);
+        return null; 
     }
 }
 
