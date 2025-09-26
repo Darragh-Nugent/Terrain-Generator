@@ -166,12 +166,6 @@ Resources:
           StringAttributeConstraints:
             MinLength: 1
             MaxLength: 2048
-        - Name: custom:id
-          AttributeDataType: String
-          Mutable: false
-          Required: false
-          StringAttributeConstraints:
-            MinLength: 1
         - Name: email
           AttributeDataType: String
           Mutable: true
