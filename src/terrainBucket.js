@@ -2,7 +2,7 @@ const S3 = require("@aws-sdk/client-s3");
 
 const bucketName = process.env.S3_BUCKET
 const qut_username = 'n11547227@qut.edu.au'
-const qut_username2 = ''
+const qut_username2 = 'n11596708@qut.edu.au'
 const purpose = 'assessment 2'
 
 async function CreateBucket() {

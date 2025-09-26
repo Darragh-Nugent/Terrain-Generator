@@ -9,7 +9,6 @@ const path = require("path");
 const RULES_PATH = path.join(__dirname, "data", "rules.json");
 
 const qutUsername = "n11547227@qut.edu.au";
-const sortKey = "name";
 
 async function main() {
     const client = new DynamoDB.DynamoDBClient({ region: "ap-southeast-2" });
@@ -31,9 +30,8 @@ async function main() {
 
         try {
             const response = await docClient.send(command);
-            //console.log("Put command response:", response);
         } catch (err) {
-            //console.log(err);
+            console.log(err);
         }
 
     }
