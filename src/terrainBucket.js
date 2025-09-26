@@ -1,6 +1,6 @@
 const S3 = require("@aws-sdk/client-s3");
 
-const bucketName = 'n11547227-a2-terrains'
+const bucketName = process.env.S3_BUCKET
 const qut_username = 'n11547227@qut.edu.au'
 const qut_username2 = ''
 const purpose = 'assessment 2'
