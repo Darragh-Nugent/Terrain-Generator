@@ -69,7 +69,7 @@ i-08cbbd9b4e9dbb965
 
 - **ElastiCache instance name:** group-88-winterscape-memcache
 - **What data is being cached?:** JWT tokens
-- **Why is this data likely to be accessed frequently?:** Every time a user performs an authenticated route (most of our routes) it needs to check if the token has been invalidated. Likewise, its ttl attribute will automatically clean up tokens which will be extremely important when the application scales up to users.
+- **Why is this data likely to be accessed frequently?:** Every time a user performs an authenticated route (most of our routes) it needs to check if the token has been invalidated. Likewise, its TTL attribute will automatically clean up tokens which will be extremely important when the application scales up to users.
 - **Video timestamp:**
 - **Relevant files:**
     - src/controllers/userController.js
