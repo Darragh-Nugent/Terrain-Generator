@@ -144,7 +144,7 @@ i-023f65507fce85ab8
 ### Secrets manager
 
 - **Secrets names:** 
-    - n11547227/terrain-app/cognito-credentials
+    - n11547227/terrain-app/cognito-credentials2
     - n11547227/terrain-app//db-password
 - **Video timestamp:**
 - **Relevant files:**

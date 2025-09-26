@@ -94,7 +94,7 @@ Resources:
               --output text)
 
             COGNITO_SECRET=$(aws secretsmanager get-secret-value \
-              --secret-id "n11547227/terrain-app/cognito-credentials" \
+              --secret-id "n11547227/terrain-app/cognito-credentials2" \
               --region ap-southeast-2 \
               --query "SecretString" \
               --output text)
@@ -306,7 +306,7 @@ Resources:
   CognitoSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: "n11547227/terrain-app/cognito-credentials"
+      Name: "n11547227/terrain-app/cognito-credentials2"
       Description: "Cognito client credentials and user pool ID"
       SecretString: !Sub |
         {
