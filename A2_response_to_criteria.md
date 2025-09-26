@@ -17,19 +17,19 @@ Overview
 - **Student number:** n11547227
 - **Partner name (if applicable):** Bon Nguyen
 - **Application name:** Winterscape
-- **Two line description:** We have created an app that allows users to both generate 3D terrain images as well as simulate snowfall
+- **Two line description:** We have created an app that allows users to both generate 3D terrain images as well as simulate snowfall.
 - **EC2 instance name or ID:**
-i-08cbbd9b4e9dbb965
+i-023f65507fce85ab8
 ------------------------------------------------
 
 ### Core - First data persistence service
 
 - **AWS service name:**  PostgresSQL
 - **What data is being stored?:** Terrain Metadata
-- **Why is this service suited to this data?:** Terrain metadata is highly structured and fits naturally into a relational, tabular format
-- **Why is are the other services used not suitable for this data?:** Given the data's tabular nature, NoSQL databases or S3 buckets won't have as efficient reads/writes as SQL databases
+- **Why is this service suited to this data?:** Terrain metadata is highly structured and fits naturally into a relational, tabular format.
+- **Why is are the other services used not suitable for this data?:** Given the data's tabular nature, NoSQL databases or S3 buckets won't have as efficient reads/writes as SQL databases.
 - **Bucket/instance/table name:** s289.terrains
-- **Video timestamp:**
+- **Video timestamp:** 00:10
 - **Relevant files:**
     - src/db.js
     - src/models/terrainModel.js
@@ -37,11 +37,11 @@ i-08cbbd9b4e9dbb965
 ### Core - Second data persistence service
 
 - **AWS service name:**  DynamoDB
-- **What data is being stored?:** Style configuration files in JSON format
+- **What data is being stored?:** Style configuration files in JSON format.
 - **Why is this service suited to this data?:** DynamoDB is a NoSQL database optimized for storing semi-structured data like JSON.
-- **Why is are the other services used not suitable for this data?:** SQL is best suited for structured, relational data anmd not semi-structured files and S3 buckets are not able to structure them as efficiently for key-based access
+- **Why is are the other services used not suitable for this data?:** SQL is best suited for structured, relational data anmd not semi-structured files and S3 buckets are not able to structure them as efficiently for key-based access.
 - **Bucket/instance/table name:** n11547227-styles
-- **Video timestamp:**
+- **Video timestamp:** 00:38
 - **Relevant files:**
     - src/dynamo.js
     - src/models/styleModel.js
@@ -49,11 +49,11 @@ i-08cbbd9b4e9dbb965
 ### Third data service
 
 - **AWS service name:**  S3 Bucket
-- **What data is being stored?:** Terrain images
-- **Why is this service suited to this data?:** S3 buckets are ideal for storing large image files
-- **Why is are the other services used not suitable for this data?:** Image data is too large to work efficiently with SQL and NoSQL databases
+- **What data is being stored?:** Terrain images.
+- **Why is this service suited to this data?:** S3 buckets are ideal for storing large image files.
+- **Why is are the other services used not suitable for this data?:** Image data is too large to work efficiently with SQL and NoSQL databases.
 - **Bucket/instance/table name:** n11547227-a2-terrains
-- **Video timestamp:**
+- **Video timestamp:** 1:20
 - **Relevant files:**
     - src/terrainBucket.js
     - src/models/terrainModel.js
@@ -61,7 +61,7 @@ i-08cbbd9b4e9dbb965
 ### S3 Pre-signed URLs
 
 - **S3 Bucket names:** n11547227-a2-terrains
-- **Video timestamp:**
+- **Video timestamp:** 1:45
 - **Relevant files:**
     - src/models/terrainModel.js
 
@@ -70,18 +70,19 @@ i-08cbbd9b4e9dbb965
 - **ElastiCache instance name:** group-88-winterscape-memcache
 - **What data is being cached?:** JWT tokens
 - **Why is this data likely to be accessed frequently?:** Every time a user performs an authenticated route (most of our routes) it needs to check if the token has been invalidated. Likewise, its TTL attribute will automatically clean up tokens which will be extremely important when the application scales up to users.
-- **Video timestamp:**
+- **Video timestamp:** 2:12
 - **Relevant files:**
     - src/controllers/userController.js
     - src/middleware/cognito.js
 
 ### Core - Statelessness
 
-- **What data is stored within your application that is not stored in cloud data services?:** [eg. intermediate video files that have been transcoded but not stabilised]
-- **Why is this data not considered persistent state?:** [eg. intermediate files can be recreated from source if they are lost]
-- **How does your application ensure data consistency if the app suddenly stops?:** [eg. journal used to record data transactions before they are done.  A separate task scans the journal and corrects problems on startup and once every 5 minutes afterwards. ]
+- **What data is stored within your application that is not stored in cloud data services?:** Heightmap data for terrain. Ffmpeg for 2D simualtion.
+- **Why is this data not considered persistent state?:** For heightmap data, the application is mainly designed for storing the metadata and images of the terrain and not the exact heightmap values. They can be easily regenerated it needed. For ffmpeg, users do not require an account to access this. As such there is no account to save unique data to. Because it can easily be regenrerated if deleted.
+- **How does your application ensure data consistency if the app suddenly stops?:** If the app stops, heightmap data is simply regernerated from metadata stored in PostgreSQL. Similarly, the ffpeg can be regenerated using the same inital conditions.
 - **Relevant files:**
-    -
+    - src/controllers/terrainController
+    - src/models/terrainModel
 
 ### Graceful handling of persistent connections
 
@@ -95,14 +96,14 @@ i-08cbbd9b4e9dbb965
 
 - **User pool name:** Assessment 2 - Group 88 - WinterScape 
 - **How are authentication tokens handled by the client?:** Response to login request returns an IdToken and Access token (AFTER validating MFA).
-- **Video timestamp:**
+- **Video timestamp:** 3:12
 - **Relevant files:**
     - src/models/userModels.js
 
 ### Cognito multi-factor authentication
 
 - **What factors are used for authentication:** Password, Email One-Time Passcode
-- **Video timestamp:**
+- **Video timestamp:** 3:50
 - **Relevant files:**
     -   src/models/userModels.js
 
@@ -123,7 +124,7 @@ i-08cbbd9b4e9dbb965
 ### Core - DNS with Route53
 
 - **Subdomain**:  winterscape.cab432.com
-- **Video timestamp:**
+- **Video timestamp:** 4:15
 
 ### Parameter store
 
@@ -134,7 +135,7 @@ i-08cbbd9b4e9dbb965
     - n11547227/terrain-app/dynamo-name
     - n11547227/terrain-app/memcahed-url
     - n11547227/terrain-app/s3-bucket
-- **Video timestamp:**
+- **Video timestamp:** 4:20
 - **Relevant files:**
     - CloudFormationTemplate.yml
     - src/db.js
@@ -155,7 +156,7 @@ i-08cbbd9b4e9dbb965
 
 - **Technology used:** Cloud Formation
 - **Services deployed:** Launch template/EC2 intance, Auto scaling group, Parameter store parameters.
-- **Video timestamp:**
+- **Video timestamp:** 4:42
 - **Relevant files:**
     - CloudFormationTemplate.yml
     - src/db.js
