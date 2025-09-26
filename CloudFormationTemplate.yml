@@ -1,5 +1,17 @@
 Description: Launches an EC2 instance via AutoScalingGroup and runs the Terrain Generator container
 
+Parameters:
+  QutUsername:
+    Type: String
+    Default: n11547227@qut.edu.au
+  QutUsername2:
+    Type: String
+    Default: n11596708@qut.edu.au
+  Purpose:
+    Type: String
+    Default: assessment 2
+
+
 Resources:
 
   Group88LaunchTemplate:
@@ -18,15 +30,15 @@ Resources:
             Ebs:
               VolumeSize: 15
               VolumeType: gp3
-        TagSpecifications:
-          - ResourceType: instance
-            Tags:
-              - Key: qut-username
-                Value: n11547227@qut.edu.au
-              - Key: qut-username2
-                Value: n11596708@qut.edu.au
-              - Key: purpose
-                Value: assessment 2
+        TagSpecifications: 
+          - ResourceType: instance 
+            Tags: 
+              - Key: qut-username 
+                Value: !Ref QutUsername 
+              - Key: qut-username2 
+                Value: !Ref QutUsername2 
+              - Key: purpose 
+                Value: !Ref Purpose
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
@@ -82,7 +94,7 @@ Resources:
               --output text)
 
             COGNITO_SECRET=$(aws secretsmanager get-secret-value \
-              --secret-id "n11547227/terrain-app/cognito" \
+              --secret-id "n11547227/terrain-app/cognito-credentials" \
               --region ap-southeast-2 \
               --query "SecretString" \
               --output text)
@@ -129,12 +141,132 @@ Resources:
         LaunchTemplateId: !Ref Group88LaunchTemplate
         Version: !GetAtt Group88LaunchTemplate.LatestVersionNumber
 
+     # Cognito User Pool (added as a new resource)
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: "Assessment 2 - Group 88 - WinterScape"
+      MfaConfiguration: "ON"
+      EnabledMfas: 
+        - EMAIL_OTP
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+      Schema:
+        - Name: sub
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+          StringAttributeConstraints:
+            MinLength: "1"
+            MaxLength: "2048"
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+          StringAttributeConstraints:
+            MinLength: "0"
+            MaxLength: "2048"
+        - Name: email_verified
+          AttributeDataType: Boolean
+          Mutable: true
+          Required: false
+      AutoVerifiedAttributes:
+        - email
+      VerificationMessageTemplate:
+        DefaultEmailOption: "CONFIRM_WITH_CODE"
+      EmailConfiguration:
+        EmailSendingAccount: "DEVELOPER"
+        SourceArn: "arn:aws:ses:ap-southeast-2:901444280953:identity/cab432.com"
+        From: "CAB432 logins <logins@cab432.com>"
+      EmailVerificationMessage: "Your verification code is {####}."
+      EmailVerificationSubject: CAB432 - Please verify your email
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate: []
+      DeletionProtection: "ACTIVE"
+      UsernameConfiguration:
+        CaseSensitive: false
+      UserPoolTags:
+        qut-username: "n11596708@qut.edu.au"
+        qut-username2: "n11547227@qut.edu.au"
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "WinterScape - Group 88 - Assessment 2"
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: true   # client secret
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - "https://d84l1y8p4kdic.cloudfront.net"
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - phone
+      AllowedOAuthFlowsUserPoolClient: true
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      EnablePropagateAdditionalUserContextData: false
+      AuthSessionValidity: 3
+    
+  TerrainStylesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: n11547227-styles
+      AttributeDefinitions:
+        - AttributeName: qut-username
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: qut-username
+          KeyType: HASH 
+        - AttributeName: id
+          KeyType: RANGE 
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
+        - Key: purpose
+          Value: assessment 2
+
+  TerrainBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: n11547227-a2-terrains
+
   S3BucketParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: "/n11547227/terrain-app/s3-bucket"
       Type: String
       Value: "n11547227-a2-terrains"
+  
+  MemcachedCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      CacheNodeType: cache.t3.micro 
+      Engine: memcached
+      NumCacheNodes: 1
+      ClusterName: group-88-winterscape-memcache 
+      CacheSubnetGroupName: "CAB432-subnets"
+      VpcSecurityGroupIds:
+        - sg-07707a36aa1599475
 
   DynamoNameParameter:
     Type: AWS::SSM::Parameter
@@ -170,6 +302,43 @@ Resources:
       Name: "/n11547227/terrain-app/memcached-url"
       Type: String
       Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
+
+  CognitoSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: "n11547227/terrain-app/cognito-credentials"
+      Description: "Cognito client credentials and user pool ID"
+      SecretString: !Sub |
+        {
+          "client_id": "${CognitoUserPoolClient.ClientId}",
+          "client_secret": "${CognitoUserPoolClient.ClientSecret}",
+          "user_pool_id": "${CognitoUserPool}"
+        }
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
+
+Outputs:
+  CognitoUserPoolId:
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: Group88-CognitoUserPoolId
+
+  CognitoClientId:
+    Value: !Ref CognitoUserPoolClient
+    Export:
+      Name: Group88-CognitoClientId
+
+  CognitoClientSecret:
+    Value: !GetAtt CognitoUserPoolClient.ClientSecret
+    Export:
+      Name: Group88-CognitoClientSecret
+
+
 
       
 
