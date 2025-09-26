@@ -67,12 +67,13 @@ i-08cbbd9b4e9dbb965
 
 ### In-memory cache
 
-- **ElastiCache instance name:**
-- **What data is being cached?:** [eg. Thumbnails from YouTube videos obatined from external API]
-- **Why is this data likely to be accessed frequently?:** [ eg. Thumbnails from popular YouTube videos are likely to be shown to multiple users ]
+- **ElastiCache instance name:** group-88-winterscape-memcache
+- **What data is being cached?:** JWT tokens
+- **Why is this data likely to be accessed frequently?:** Every time a user performs an authenticated route (most of our routes) it needs to check if the token has been invalidated. Likewise, its ttl attribute will automatically clean up tokens which will be extremely important when the application scales up to users.
 - **Video timestamp:**
 - **Relevant files:**
-    -
+    - src/controllers/userController.js
+    - src/middleware/cognito.js
 
 ### Core - Statelessness
 
@@ -92,18 +93,18 @@ i-08cbbd9b4e9dbb965
 
 ### Core - Authentication with Cognito
 
-- **User pool name:**
-- **How are authentication tokens handled by the client?:** [eg. Response to login request sets a cookie containing the token.]
+- **User pool name:** Assessment 2 - Group 88 - WinterScape 
+- **How are authentication tokens handled by the client?:** Response to login request returns an IdToken and Access token (AFTER validating MFA).
 - **Video timestamp:**
 - **Relevant files:**
-    -
+    - src/models/userModels.js
 
 ### Cognito multi-factor authentication
 
-- **What factors are used for authentication:** [eg. password, SMS code]
+- **What factors are used for authentication:** Password, Email One-Time Passcode
 - **Video timestamp:**
 - **Relevant files:**
-    -
+    -   src/models/userModels.js
 
 ### Cognito federated identities
 
@@ -121,7 +122,7 @@ i-08cbbd9b4e9dbb965
 
 ### Core - DNS with Route53
 
-- **Subdomain**:  [eg. myawesomeapp.cab432.com]
+- **Subdomain**:  winterscape.cab432.com
 - **Video timestamp:**
 
 ### Parameter store
