@@ -1,5 +1,17 @@
 Description: Launches an EC2 instance via AutoScalingGroup and runs the Terrain Generator container
 
+Parameters:
+  QutUsername:
+    Type: String
+    Default: n11547227@qut.edu.au
+  QutUsername2:
+    Type: String
+    Default: n11596708@qut.edu.au
+  Purpose:
+    Type: String
+    Default: assessment 2
+
+
 Resources:
 
   Group88LaunchTemplate:
@@ -21,12 +33,13 @@ Resources:
         TagSpecifications:
           - ResourceType: instance
             Tags:
-              - Key: qut-username
-                Value: n11547227@qut.edu.au
-              - Key: qut-username2
-                Value: n11596708@qut.edu.au
-              - Key: purpose
-                Value: assessment 2
+        Tags:
+          - Key: qut-username
+            Value: !Ref QutUsername
+          - Key: qut-username2
+            Value: !Ref QutUsername2
+          - Key: purpose
+            Value: !Ref Purpose
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
@@ -170,6 +183,13 @@ Resources:
       Name: "/n11547227/terrain-app/s3-bucket"
       Type: String
       Value: "n11547227-a2-terrains"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
 
   DynamoNameParameter:
     Type: AWS::SSM::Parameter
@@ -177,6 +197,13 @@ Resources:
       Name: "/n11547227/terrain-app/dynamo-name"
       Type: String
       Value: "n11547227-styles"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
 
   DatabaseUserParameter:
     Type: AWS::SSM::Parameter
@@ -184,6 +211,13 @@ Resources:
       Name: "/n11547227/terrain-app/db-username"
       Type: String
       Value: "s289"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
 
   DatabaseHostParameter:
     Type: AWS::SSM::Parameter
@@ -191,6 +225,13 @@ Resources:
       Name: "/n11547227/terrain-app/db-host"
       Type: String
       Value: "database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
   
   DatabaseNameParameter:
     Type: AWS::SSM::Parameter
@@ -198,6 +239,13 @@ Resources:
       Name: "/n11547227/terrain-app/db-name"
       Type: String
       Value: "cohort_2025"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
 
   MemcachedURLParameter:
     Type: AWS::SSM::Parameter
@@ -205,6 +253,33 @@ Resources:
       Name: "/n11547227/terrain-app/memcached-url"
       Type: String
       Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
+
+  CognitoSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: "n11547227/terrain-app/cognito"
+      Description: "Cognito client credentials and user pool ID"
+      SecretString: !Sub |
+        {
+          "client_id": "YOUR_CLIENT_ID_HERE",
+          "client_secret": "YOUR_CLIENT_SECRET_HERE",
+          "user_pool_id": "YOUR_USER_POOL_ID_HERE"
+        }
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
+
 
       
 
