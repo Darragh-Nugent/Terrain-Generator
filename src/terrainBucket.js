@@ -6,17 +6,14 @@ const qut_username2 = ''
 const purpose = 'assessment 2'
 
 async function CreateBucket() {
-    // Creating a client for sending commands to S3
     s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
     try {
-    // 1. Create the bucket
     const createResp = await s3Client.send(
       new S3.CreateBucketCommand({ Bucket: bucketName })
     );
     console.log("Bucket created:", createResp.Location);
 
-    // 2. Apply tags
     const tagResp = await s3Client.send(
       new S3.PutBucketTaggingCommand({
         Bucket: bucketName,
