@@ -3,9 +3,8 @@ const path = require('path');
 const awsJwt = require("aws-jwt-verify");
 const jwt = require('jsonwebtoken');
 const { blacklistToken } = require('../middleware/cognito')
-const userPoolId = "ap-southeast-2_uLIJT0rVY";
-const clientId = "3q30pl220o1tbp1tlqp8eiovse"
-
+const clientId = process.env.CLIENT_ID;
+const userPoolId = process.env.USER_POOL_ID;
 
 exports.getAllUsers = (req, res) => {
     User.getAll()
