@@ -32,14 +32,6 @@ Resources:
               VolumeType: gp3
         TagSpecifications:
           - ResourceType: instance
-            Tags:
-        Tags:
-          - Key: qut-username
-            Value: !Ref QutUsername
-          - Key: qut-username2
-            Value: !Ref QutUsername2
-          - Key: purpose
-            Value: !Ref Purpose
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
@@ -271,6 +263,24 @@ Resources:
           Value: !Ref QutUsername2
         - Key: purpose
           Value: !Ref Purpose
+  
+  MemcachedCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      CacheNodeType: cache.t3.micro 
+      Engine: memcached
+      NumCacheNodes: 1
+      ClusterName: group-88-winterscape-memcache 
+      CacheSubnetGroupName: "CAB432-subnets"
+      VpcSecurityGroupIds:
+        - sg-07707a36aa1599475
+    Tags:
+      - Key: qut-username
+        Value: !Ref QutUsername
+      - Key: qut-username2
+        Value: !Ref QutUsername2
+      - Key: purpose
+        Value: !Ref Purpose
 
   DynamoNameParameter:
     Type: AWS::SSM::Parameter
