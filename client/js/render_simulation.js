@@ -2,18 +2,17 @@
 import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
 import { PointerLockControls } from '/js/PointerLockControls_fixed.js';
 import { OrbitControls } from '/js/OrbitControls_fixed.js';
-// import { findParticleBoundaries } from '/src/utils/simulation.js';
 
 // For better particles visually
 const alphaMap = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/circle.png');
 
 const form = document.getElementById('simulation_form');
 const table = document.getElementById('table');
-
+const id = new URLSearchParams(window.location.search).get('id');
 // Helper to build payload object for backend from form data and initial state table
 function buildPayload(formData, initialState) {
-    return {
-        initialState: initialState,
+    const payload = {
+        initialState,
         steps: Number(formData.steps),
         height: Number(formData.height),
         windSpeed: Number(formData.windSpeed),
@@ -21,6 +20,11 @@ function buildPayload(formData, initialState) {
         minNeighbour: Number(formData.minNeighbour),
         maxNeighbour: Number(formData.maxNeighbour),
     };
+
+    if (id) {
+        payload.id = id;
+    }
+    return payload;
 }
 
 // Send the simulation payload to backend and get result JSON
@@ -33,6 +37,46 @@ async function fetchSimulation(payload) {
 
     const data = await res.json();
     return { res, data };
+}
+
+window.tryLoadFromS3 = async function () {
+    try {
+        const res = await fetch(`/simulation/3d-simulation-url/${id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+        if (!res.ok) {
+            console.warn("No saved simulation found in S3");
+            console.log(id);
+            return;
+        }
+        const { url } = await res.json();
+        const fileRes = await fetch(url);
+        const simData = await fileRes.json();
+
+        frames = simData.sysParticleHistory;
+        computeStaticFrameMetrics();
+        const { minZ } = cachedHeightRange;
+        let floor = (minZ - cachedBounds.centerZ) * cachedBounds.scale - 2;
+        let offset = 10;
+        grid.position.y = floor;
+        axes.position.y = floor;
+        camera.position.y = floor + offset;
+
+        T = frames.length;
+        N = Math.max(...frames.map(f => f.length));
+
+        initPointsIfNeeded();
+        frameIndex = 0;
+        playing = true;
+        playPauseBtn.textContent = 'Pause';
+
+        console.log("Loaded simulation from S3.");
+    } catch (err) {
+        console.error("Error loading simulation from S3:", err);
+    }
 }
 
 // Initialize the simulation with a random grid state (optional for user)
@@ -65,10 +109,6 @@ window.randomInitialization = async function () {
     }
 
     // Step 4: Same as form handler logic
-    // framesX = data.sysCoordHistoryX;
-    // framesY = data.sysCoordHistoryY;
-    // framesZ = data.sysCoordHistoryZ;
-    // velocity = data.sysVelocityHistory;
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
     const { minZ } = cachedHeightRange;
@@ -78,7 +118,7 @@ window.randomInitialization = async function () {
     grid.position.y = floor;
     axes.position.y = floor;
     camera.position.y = floor + offset;
-    
+
     if (!frames | !frames.length) {
         console.error('Bad frames data', data);
         return;
@@ -463,7 +503,6 @@ form.addEventListener('submit', async (e) => {
         console.error('Error JSON:', data);
         return;
     }
-
     frames = data.sysParticleHistory;
     computeStaticFrameMetrics();
     const { minZ } = cachedHeightRange;

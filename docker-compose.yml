@@ -26,4 +26,3 @@ services:
     container_name: memcached
     ports:
       - "11211:11211"
-     
