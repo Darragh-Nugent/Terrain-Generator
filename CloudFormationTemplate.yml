@@ -40,92 +40,93 @@ Resources:
             - Key: purpose
               Value: !Ref Purpose
         UserData:
-          Fn::Base64: !Sub |
-            #!/bin/bash
-            set -xe
+           Fn::Base64: 
+            Fn::Sub: |
+              #!/bin/bash
+              set -xe
 
-            systemctl start docker
-            systemctl enable docker
-            usermod -aG docker ubuntu
+              systemctl start docker
+              systemctl enable docker
+              usermod -aG docker ubuntu
 
-            BUCKET_NAME=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/s3-bucket" \
-              --region ap-southeast-2 \
-              --query "Parameter.Value" \
-              --output text)
+              BUCKET_NAME=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/s3-bucket" \
+                --region ap-southeast-2 \
+                --query "Parameter.Value" \
+                --output text)
 
-            DYNAMO_NAME=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/dynamo-name" \
-              --region ap-southeast-2 \
-              --query "Parameter.Value" \
-              --output text)
+              DYNAMO_NAME=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/dynamo-name" \
+                --region ap-southeast-2 \
+                --query "Parameter.Value" \
+                --output text)
 
-            DB_HOST=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/db-host" \
-              --region ap-southeast-2 \
-              --with-decryption \
-              --query "Parameter.Value" \
-              --output text)
+              DB_HOST=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/db-host" \
+                --region ap-southeast-2 \
+                --with-decryption \
+                --query "Parameter.Value" \
+                --output text)
 
-            DB_NAME=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/db-name" \
-              --region ap-southeast-2 \
-              --with-decryption \
-              --query "Parameter.Value" \
-              --output text)
+              DB_NAME=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/db-name" \
+                --region ap-southeast-2 \
+                --with-decryption \
+                --query "Parameter.Value" \
+                --output text)
 
-            DB_USER=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/db-username" \
-              --region ap-southeast-2 \
-              --with-decryption \
-              --query "Parameter.Value" \
-              --output text)
+              DB_USER=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/db-username" \
+                --region ap-southeast-2 \
+                --with-decryption \
+                --query "Parameter.Value" \
+                --output text)
 
-            DB_PASSWORD=$(aws secretsmanager get-secret-value \
-              --secret-id "n11547227/terrain-app/db-password" \
-              --region ap-southeast-2 \
-              --query "SecretString" \
-              --output text | jq -r .password)
+              DB_PASSWORD=$(aws secretsmanager get-secret-value \
+                --secret-id "n11547227/terrain-app/db-password" \
+                --region ap-southeast-2 \
+                --query "SecretString" \
+                --output text | jq -r .password)
 
-            MEMCACHED_URL=$(aws ssm get-parameter \
-              --name "/n11547227/terrain-app/memcached-url" \
-              --region ap-southeast-2 \
-              --query "Parameter.Value" \
-              --output text)
+              MEMCACHED_URL=$(aws ssm get-parameter \
+                --name "/n11547227/terrain-app/memcached-url" \
+                --region ap-southeast-2 \
+                --query "Parameter.Value" \
+                --output text)
 
-            COGNITO_SECRET=$(aws secretsmanager get-secret-value \
-              --secret-id "n11547227/terrain-app/cognito-credentials" \
-              --region ap-southeast-2 \
-              --query "SecretString" \
-              --output text)
+              COGNITO_SECRET=$(aws secretsmanager get-secret-value \
+                --secret-id "n11547227/terrain-app/cognito-credentials" \
+                --region ap-southeast-2 \
+                --query "SecretString" \
+                --output text)
 
-            CLIENT_ID=$(echo $COGNITO_SECRET | jq -r .client_id)
-            CLIENT_SECRET=$(echo $COGNITO_SECRET | jq -r .client_secret)
-            USER_POOL_ID=$(echo $COGNITO_SECRET | jq -r .user_pool_id)
+              CLIENT_ID=$(echo $COGNITO_SECRET | jq -r .client_id)
+              CLIENT_SECRET=$(echo $COGNITO_SECRET | jq -r .client_secret)
+              USER_POOL_ID=$(echo $COGNITO_SECRET | jq -r .user_pool_id)
 
 
-            mkdir -p /home/ubuntu/Terrain-Generator
-            touch /home/ubuntu/Terrain-Generator/.env
+              mkdir -p /home/ubuntu/Terrain-Generator
+              touch /home/ubuntu/Terrain-Generator/.env
 
-            echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
-            echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
-            echo "DB_HOST=$DB_HOST" >> /home/ubuntu/Terrain-Generator/.env
-            echo "DB_NAME=$DB_NAME" >> /home/ubuntu/Terrain-Generator/.env
-            echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
-            echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
-            echo "MEMCACHED_URL=$MEMCACHED_URL" >> /home/ubuntu/Terrain-Generator/.env
-            echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
-            echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
-            echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
+              echo "S3_BUCKET=$BUCKET_NAME" >> /home/ubuntu/Terrain-Generator/.env
+              echo "DYNAMO_NAME=$DYNAMO_NAME" >> /home/ubuntu/Terrain-Generator/.env
+              echo "DB_HOST=$DB_HOST" >> /home/ubuntu/Terrain-Generator/.env
+              echo "DB_NAME=$DB_NAME" >> /home/ubuntu/Terrain-Generator/.env
+              echo "DB_USER=$DB_USER" >> /home/ubuntu/Terrain-Generator/.env
+              echo "DB_PASSWORD=$DB_PASSWORD" >> /home/ubuntu/Terrain-Generator/.env
+              echo "MEMCACHED_URL=$MEMCACHED_URL" >> /home/ubuntu/Terrain-Generator/.env
+              echo "CLIENT_SECRET=$CLIENT_SECRET" >> /home/ubuntu/Terrain-Generator/.env
+              echo "CLIENT_ID=$CLIENT_ID" >> /home/ubuntu/Terrain-Generator/.env
+              echo "USER_POOL_ID=$USER_POOL_ID" >> /home/ubuntu/Terrain-Generator/.env
 
-            su - ubuntu -c "bash -c '
-              aws ecr get-login-password --region ap-southeast-2 \
-                | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
+              su - ubuntu -c "bash -c '
+                aws ecr get-login-password --region ap-southeast-2 \
+                  | docker login --username AWS --password-stdin 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com
 
-              cd /home/ubuntu/Terrain-Generator
-              docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
-              docker compose up -d
-            '"
+                cd /home/ubuntu/Terrain-Generator
+                docker compose pull 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
+                docker compose up -d
+              '"
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
