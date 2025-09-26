@@ -8,7 +8,6 @@ const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const userPoolId = process.env.USER_POOL_ID;
 const client = new Cognito.CognitoIdentityProviderClient({ region: 'ap-southeast-2' });
-const customId = "unused";
 
 function secretHash(clientId, clientSecret, username) {
     const hasher = crypto.createHmac('sha256', clientSecret);
@@ -23,7 +22,7 @@ exports.AddUser = async (uName, email, pass) => {
             SecretHash: secretHash(clientId, clientSecret, uName),
             Username: uName,
             Password: pass,
-            UserAttributes: [{ Name: "email", Value: email }, { Name: "custom:id", Value: customId }],
+            UserAttributes: [{ Name: "email", Value: email }],
         });
         const res = await client.send(command);
         console.log("SignUp response: ", res);

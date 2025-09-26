@@ -1,9 +1,6 @@
-const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const awsJwt = require("aws-jwt-verify");
-const crypto = require("crypto");
 const memcache = require("../../memcachedClient");
 const clientId = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
 const userPoolId = process.env.USER_POOL_ID;
 
 // Verifiers for Cognito tokens (ID Token or Access Token)
@@ -18,14 +15,6 @@ const idVerifier = awsJwt.CognitoJwtVerifier.create({
     tokenUse: "id",  // Use 'access' or 'id' depending on the token
     clientId: clientId,
 });
-
-// Function to get the secret hash for Cognito signup 
-function secretHash(clientId, clientSecret, username) {
-    const hasher = crypto.createHmac('sha256', clientSecret);
-    hasher.update(`${username}${clientId}`);
-    return hasher.digest('base64');
-}
-
 
 const createTokenMiddleware = (tokenName, verifier) => {
     return async (req, res, next) => {
