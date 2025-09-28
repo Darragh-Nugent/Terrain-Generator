@@ -1,4 +1,6 @@
 const { Pool } = require('pg');
+require('dotenv').config();
+
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -16,6 +18,11 @@ const pool = new Pool({
   const client = await pool.connect();
   try {
     console.log('PostgreSQL connection successful.');
+
+    await client.query(`
+      DROP TABLE IF EXISTS terrains;
+      DROP TABLE IF EXISTS users;
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (

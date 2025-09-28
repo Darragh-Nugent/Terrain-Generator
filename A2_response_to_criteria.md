@@ -19,7 +19,7 @@ Overview
 - **Application name:** Winterscape
 - **Two line description:** We have created an app that allows users to both generate 3D terrain images as well as simulate snowfall.
 - **EC2 instance name or ID:**
-i-023f65507fce85ab8
+i-03564c5dbe4796c68
 ------------------------------------------------
 
 ### Core - First data persistence service
@@ -78,11 +78,12 @@ i-023f65507fce85ab8
 ### Core - Statelessness
 
 - **What data is stored within your application that is not stored in cloud data services?:** Heightmap data for terrain. Ffmpeg for 2D simualtion.
-- **Why is this data not considered persistent state?:** For heightmap data, the application is mainly designed for storing the metadata and images of the terrain and not the exact heightmap values. They can be easily regenerated it needed. For ffmpeg, users do not require an account to access this. As such there is no account to save unique data to. Because it can easily be regenrerated if deleted.
-- **How does your application ensure data consistency if the app suddenly stops?:** If the app stops, heightmap data is simply regernerated from metadata stored in PostgreSQL. Similarly, the ffpeg can be regenerated using the same inital conditions.
+- **Why is this data not considered persistent state?:** For heightmap data, the application is mainly designed for storing the metadata and images of the terrain and not the exact heightmap values. They can be easily regenerated if needed. For ffmpeg, users do not require an account to access this. As such there is no account to save unique data to. Because it can easily be regenrerated if deleted.
+- **How does your application ensure data consistency if the app suddenly stops?:** If the app stops, heightmap data is simply regernerated from metadata stored in PostgreSQL. Similarly, the ffmpeg can be regenerated using the same initial conditions.
 - **Relevant files:**
-    - src/controllers/terrainController
-    - src/models/terrainModel
+    - src/controllers/terrainController.js
+    - src/models/terrainModel.js
+    - src/models/simulationModel.js
 
 ### Graceful handling of persistent connections
 
@@ -144,7 +145,7 @@ i-023f65507fce85ab8
 ### Secrets manager
 
 - **Secrets names:** 
-    - n11547227/terrain-app/cognito-credentials2
+    - n11547227/terrain-app/cognito-credentials3
     - n11547227/terrain-app//db-password
 - **Video timestamp:**
 - **Relevant files:**
