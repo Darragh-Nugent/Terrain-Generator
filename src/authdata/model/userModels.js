@@ -1,7 +1,7 @@
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
-const pool =require('../db')
+const pool =require('../connections/db')
 // can go in secrets manager 
 // https://ap-southeast-2.console.aws.amazon.com/cognito/v2/idp/user-pools/ap-southeast-2_uLIJT0rVY/applications/app-clients/3q30pl220o1tbp1tlqp8eiovse/quick-setup-guide?region=ap-southeast-2
 const clientId = process.env.CLIENT_ID;

@@ -1,7 +1,7 @@
-const pool = require('../db');
+const pool = require('../../authdata/connections/db');
 const S3 = require("@aws-sdk/client-s3");
 const S3Presigner = require("@aws-sdk/s3-request-presigner");
-const Terrain = require("../data/Terrain");
+const Terrain = require("../src/data/Terrain");
 
 const bucketName = process.env.S3_BUCKET;
 const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });

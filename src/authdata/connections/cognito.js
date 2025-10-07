@@ -1,5 +1,5 @@
 const awsJwt = require("aws-jwt-verify");
-const memcache = require("../../memcachedClient");
+const memcache = require("../../../memcachedClient");
 const clientId = process.env.CLIENT_ID;
 const userPoolId = process.env.USER_POOL_ID;
 
