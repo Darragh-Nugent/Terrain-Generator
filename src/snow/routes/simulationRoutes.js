@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { authenticateAccessToken } = require('../middleware/cognito');
+const { authenticateAccessToken } = require('../../authentication/middleware/cognito');
 const {fallingSnow,fallingSnowVideo, showRenderPage,saveFallingSnowVideo, getSimulationPresignedUrl} = require('../authentication/controllers/simulationController');
 
 router.post('/falling-snow-calculation', fallingSnow);
