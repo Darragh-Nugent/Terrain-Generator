@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const terrainController = require("../authentication/controllers/terrainController");
-const { authenticateAccessToken } = require('../../authentication/middleware/cognito');
+const terrainController = require("../controllers/terrainController");
+const { authenticateAccessToken } = require('../middleware/cognito');
 
 router.get('/get3DTerrain', authenticateAccessToken, terrainController.get3DTerrain)
 router.get('/getHeightMap', terrainController.getHeightMap)

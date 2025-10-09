@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     libpixman-1-dev \
  && rm -rf /var/lib/apt/lists/*
-RUN npm ci --only=production
+RUN npm install
 
 COPY . .
 
 EXPOSE 3002
-CMD ["npm", "run", "start:terrain"]
+CMD ["npm", "start"]
