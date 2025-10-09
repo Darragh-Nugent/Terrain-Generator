@@ -6,11 +6,13 @@ chat.zip
 CloudFormationTemplate.yml
 dir.txt
 docker-compose.yml
+docker-compose-old.yml
 Dockerfile
 get-docker.sh*
 Group 88 A2 Code.zip
 Map Generator.zip
 memcachedClient.js
+nginx.conf/
 package.json
 package-lock.json
 redisclient.js
@@ -21,6 +23,8 @@ test.json
 videos/
 vite.config.js
 
+./nginx.conf:
+
 ./src:
 authdata/
 authentication/
@@ -30,11 +34,13 @@ terrains/
 
 ./src/authdata:
 connections/
-controller/
+controllers/
+data/
 data.Dockerfile
-model/
+dataApp.js
+middleware/
+models/
 package.json
-Person.js
 routes/
 
 ./src/authdata/connections:
@@ -42,10 +48,18 @@ db.js
 dynamo.js
 terrainBucket.js
 
-./src/authdata/controller:
+./src/authdata/controllers:
+authController.js
 userController.js
 
-./src/authdata/model:
+./src/authdata/data:
+Person.js
+
+./src/authdata/middleware:
+cognito.js
+memcachedClient.js
+
+./src/authdata/models:
 userModels.js
 
 ./src/authdata/routes:
@@ -65,8 +79,11 @@ cognito.js
 
 ./src/frontend:
 frontend.Dockerfile
+frontendApp.js
 indexRoutes.js
 js/
+nginx.conf
+package.json
 styles/
 UI/
 
@@ -89,9 +106,12 @@ render_simulation.html
 terrain.html
 
 ./src/snow:
+app.js
 controllers/
 data/
+middleware/
 models/
+package.json
 routes/
 snow.Dockerfile
 utils/
@@ -101,6 +121,10 @@ simulationController.js
 
 ./src/snow/data:
 Particle.js
+
+./src/snow/middleware:
+cognito.js
+memcachedClient.js
 
 ./src/snow/models:
 simulationModel.js
