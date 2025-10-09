@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
  && rm -rf /var/lib/apt/lists/*
 
-RUN npm ci --only=production
+RUN npm install
+
 COPY . .
 
 EXPOSE 3001
-CMD ["npm", "run", "start:snowfall"]
+CMD ["npm", "start"]

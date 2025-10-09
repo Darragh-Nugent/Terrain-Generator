@@ -1,28 +1,41 @@
-services:
-  backend:
-    build: .
-    env_file:
-      - .env
-    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11547227-a2:latest
-    container_name: terrain-generator-backend
-    ports:
-      - "3000:3000" # host:container
-    volumes:
-      - ./videos:/videos
-    depends_on:
-      - memcached
-    environment:
-      NODE_ENV: development
-      DB_HOST: ${DB_HOST}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      S3_BUCKET: ${S3_BUCKET}
-      DYNAMO_NAME: ${DYNAMO_NAME}
-      MEMCACHED_URL: ${MEMCACHED_URL}
+version: "3.8"
 
+services:
   memcached:
-    image: memcached:alpine
+    image: memcached
     container_name: memcached
     ports:
       - "11211:11211"
+
+  terrain:
+    build:
+      context: ./src/terrains
+      dockerfile: terrain.Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "3002:3002"
+    depends_on:
+      - memcached
+  
+  snow:
+    build:
+      context: ./src/snow
+      dockerfile: snow.Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      - memcached
+
+  authdata:
+    build:
+      context: ./src/authdata
+      dockerfile: data.Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "3003:3003"
+    depends_on:
+      - memcached

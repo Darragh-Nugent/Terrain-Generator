@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../authentication/controllers/userController");
+const userController = require("../controllers/userController");
 const { authenticateIdToken,authenticateAccessToken } = require('../middleware/cognito');
 
 router.get("/getAllUsers", userController.getAllUsers);
