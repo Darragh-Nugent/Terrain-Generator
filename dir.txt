@@ -12,7 +12,6 @@ get-docker.sh*
 Group 88 A2 Code.zip
 Map Generator.zip
 memcachedClient.js
-nginx.conf/
 package.json
 package-lock.json
 redisclient.js
@@ -22,8 +21,6 @@ Terrain Generator V2.zip
 test.json
 videos/
 vite.config.js
-
-./nginx.conf:
 
 ./src:
 authdata/

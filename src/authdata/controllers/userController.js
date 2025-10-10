@@ -220,25 +220,27 @@ exports.confirmPassword = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-exports.showDeletePage = async (req, res) => {
-    try {
-        res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'option.html'));
-    } catch (err) {
-        console.error("Error loading delete page:", err);
-        res.status(500).send('Server error');
-    }
-};
 
-exports.showRegisterPage = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'register.html'));
-};
+// exports.showDeletePage = async (req, res) => {
+//     try {
+//         res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'option.html'));
+//     } catch (err) {
+//         console.error("Error loading delete page:", err);
+//         res.status(500).send('Server error');
+//     }
+// };
 
-exports.showLoginPage = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'login.html'));
-};
-exports.showConfirmEmailPage = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'email_confirmation.html'));
-}
+// exports.showRegisterPage = (req, res) => {
+//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'register.html'));
+// };
+
+// exports.showLoginPage = (req, res) => {
+//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'login.html'));
+// };
+// exports.showConfirmEmailPage = (req, res) => {
+//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'email_confirmation.html'));
+// }
+
 exports.getUserCookieInfo = async (req, res) => {
     try {
         // req user set via jwt middleware
