@@ -26,26 +26,42 @@ const accessVerifier = awsJwt.CognitoJwtVerifier.create({
 
 exports.logoutUser = async (req, res) => {
     try {
-        const token = req.user.token
+        const token = req.user.token;
         if (!token) {
             return res.status(401).json({ error: "Missing authentication token" });
         }
 
-        const payload = await accessVerifier.verify(token);  // <-- verifies signature, expiration, issuer, etc.
+        let payload;
 
-        // Blacklist token or user session
-        await blacklistToken(payload.jti);  // or payload.sub if your blacklist uses sub
+        try {
+            payload = await accessVerifier.verify(token); // checks signature, exp, etc.
+        } catch (err) {
+            if (err.name === "JwtExpiredError") {
+                console.warn("Token expired, proceeding with logout...");
+                payload = jwt.decode(token); // decode without verifying
+                if (!payload) {
+                    return res.status(400).json({ error: "Could not decode expired token" });
+                }
+            } else {
+                throw err; // Any other error should fail the request
+            }
+        }
 
-        // Clear cookie - handle in frontend remove local storage -------------------
-        // res.clearCookie('userInfo');
-        // res.clearCookie('accessToken');
-        // res.clearCookie('idToken');
+        // Blacklist token by jti (JWT ID) or fallback to sub (user ID)
+        const tokenId = payload.jti || payload.sub;
+        if (!tokenId) {
+            return res.status(400).json({ error: "Token payload missing jti or sub" });
+        }
+
+        await blacklistToken(tokenId);
+
         return res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 };
+
 
 
 exports.login = async (req, res) => {
@@ -88,7 +104,7 @@ exports.respondToMfaChallenge = async (req, res) => {
             const decodedToken = jwt.decode(IdToken);
             console.log(decodedToken);
             const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
-             // handle in frontend ------------- set local storage ---------------------------
+            // handle in frontend ------------- set local storage ---------------------------
             // res.cookie('accessToken', AccessToken, {
             //     httpOnly: true,
             //     secure: false,         // Set to true in production (HTTPS)

@@ -17,6 +17,7 @@ exports.addTerrain = async (seed, size, heightScale, octaves, iterations, style,
         return new Terrain(Number(seed), size, heightScale, octaves, iterations, result.rows[0].id, userId, style);
     } catch (err) {
         console.error('Error in addTerrain:', err.message);
+        throw err;
     }
 }
 

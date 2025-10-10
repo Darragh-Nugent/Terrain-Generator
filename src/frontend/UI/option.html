@@ -106,10 +106,10 @@
         const msgDiv = document.getElementById('forgot_password_message');
         const comfirmSection = document.getElementById('confirmSection');
         msgDiv.textContent = '';
-        const pathSegments = window.location.pathname.split('/');
-        // pathSegments = ['', 'user', '1', 'update']
 
-        const id = pathSegments[2];
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        
         function go_home() {
             window.location.href = `/?id=${id}`;
         }
