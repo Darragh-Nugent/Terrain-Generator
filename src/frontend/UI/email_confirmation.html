@@ -32,7 +32,7 @@
 
     <script>
         function go_login() {
-            window.location.href = `/user/login`;
+            window.location.href = `/login.html`;
         }
 
         // Elements
@@ -88,7 +88,7 @@
                 confirmMessage.textContent = "Email confirmed successfully! Redirecting to login...";
 
                 setTimeout(() => {
-                    window.location.href = "/user/login";
+                    window.location.href = "/login.html";
                 }, 200);
             } catch (error) {
                 confirmMessage.style.color = "red";

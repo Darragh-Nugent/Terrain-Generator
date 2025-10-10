@@ -107,7 +107,7 @@
     const randomSizeInput = document.querySelector('#randomInit input[name="size"]');
     const id = new URLSearchParams(window.location.search).get('id');
     function home() {
-      window.location.href = id ? `/?id=${id}` : `/`;
+      window.location.href = id ? `/index.html?id=${id}` : `/index.html`;
     }
     const messageDiv = document.getElementById('randomInitDiv');
 

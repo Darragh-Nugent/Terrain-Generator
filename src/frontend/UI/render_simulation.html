@@ -124,7 +124,7 @@
       if (!token) {
         // No token, redirect to login
         alert(`Please log in to access this feature`);
-        window.location.href = '/user/login';
+        window.location.href = 'login.html';
         return;
       }
 
@@ -148,12 +148,12 @@
           localStorage.removeItem('idToken');
           localStorage.removeItem('userInfo');
           alert('Access denied: ' + err.error);
-          window.location.href = '/user/login';
+          window.location.href = '/login.html';
         }
       } catch (err) {
         // Network or unexpected error — redirect to login for safety
         alert(`Unexpected error: `, err);
-        window.location.href = '/user/login';
+        window.location.href = '/login.html';
       }
     }
     window.onload = checkAuth;
@@ -165,7 +165,7 @@
     const id = new URLSearchParams(window.location.search).get('id');
 
     function home() {
-      window.location.href = `/?id=${id}`;
+      window.location.href = `/index.html?id=${id}`;
     };
 
     function calculateNumberParticles(state) {

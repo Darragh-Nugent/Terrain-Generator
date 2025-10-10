@@ -34,10 +34,8 @@ const createTokenMiddleware = (tokenName, verifier) => {
             req.headers['content-type'] === 'application/json';
 
         if (!token || typeof token !== 'string' || token === 'undefined' || token === 'null') {
-            console.log('JWT missing.');
-            return expectsJson
-                ? res.status(401).json({ error: 'Please log in!' })
-                : res.redirect('/user/login?error=no_token');
+            return res.status(401).json({ error: 'Invalid token' });
+
         }
         try {
             const decoded = await verifier.verify(token);
@@ -73,11 +71,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
             next();
         } catch (err) {
             console.error("JWT verification failed:", err);
-            const errorType = err.name === 'TokenExpiredError' ? 'token_expired' : 'invalid_token';
-
-            return expectsJson
-                ? res.status(401).json({ error: errorType })
-                : res.redirect(`/user/login?error=${errorType}`);
+            return res.status(401).json({ error: 'Invalid or expired token' });
         }
     };
 };
