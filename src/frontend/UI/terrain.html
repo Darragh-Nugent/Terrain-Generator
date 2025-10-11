@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Terrain Generator</title>
-  <link rel="stylesheet" href="/styles/styles.css" />
+  <link rel="stylesheet" href="styles/styles.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -132,7 +132,7 @@
       if (!token) {
         // No token, redirect to login
         alert(`Please log in to access this feature`);
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
       }
 
       try {
@@ -155,19 +155,19 @@
           localStorage.removeItem('idToken');
           localStorage.removeItem('userInfo');
           alert('Access denied: ' + err.error);
-          window.location.href = '/login.html';
+          window.location.href = 'login.html';
         }
       } catch (err) {
         // Network or unexpected error — redirect to login for safety
         alert(`Unexpected error: `, err);
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
       }
     }
 
     const token = localStorage.getItem("accessToken");
     const id = new URLSearchParams(window.location.search).get('id');
     function home() {
-      window.location.href = id ? `/index.html?id=${id}` : `/index.html`;
+      window.location.href = id ? `index.html?id=${id}` : `index.html`;
     }
     const API_BASE = "";
 

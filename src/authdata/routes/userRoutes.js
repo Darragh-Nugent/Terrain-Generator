@@ -22,7 +22,7 @@ router.post('/forgot-password',authenticateAccessToken, userController.forgotPas
 router.delete('/:id/delete',authenticateAccessToken,userController.deleteUser); // req auth
 // router.get('/:id/delete', authenticateAccessToken,userController.showDeletePage) // req auth
 
-router.post('/logout', userController.logoutUser); // req auth
+router.post('/:id/logout', userController.logoutUser); // req auth
 
 router.get('/me', authenticateIdToken, userController.getUserCookieInfo); // req auth
 

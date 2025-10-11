@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Welcome To WinterScape</title>
-  <link rel="stylesheet" href="/styles/styles.css" />
+  <link rel="stylesheet" href="styles/styles.css" />
 </head>
 
 <body>
@@ -40,7 +40,7 @@
         user = JSON.parse(userInfo);
         if (user) {
           welcomeDiv.innerHTML = `<h1><strong>Welcome ${user.username}, To WinterScape</strong></h1>`;
-          if (user.id && !id) window.location.href = `/index.html?id=${user.id}`;
+          if (user.id && !id) window.location.href = `index.html?id=${user.id}`;
         } else {
           showGuestMessage();
         }
@@ -68,23 +68,23 @@
 
     // Navigation Functions
     function go_login() {
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
     }
 
     function go_register() {
-      window.location.href = '/register.html';
+      window.location.href = 'register.html';
     }
 
     function go_simulation() {
       window.location.href = id
-        ? `/cloud.html?id=${id}`
-        : `/cloud.html`;
+        ? `cloud.html?id=${id}`
+        : `cloud.html`;
     }
 
     async function go_3d_simulation() {
       window.location.href = id
-        ? `/render_simulation.html?id=${id}`
-        : `/render_simulation.html`;
+        ? `render_simulation.html?id=${id}`
+        : `render_simulation.html`;
     }
 
     async function go_settings() {
@@ -105,7 +105,7 @@
             : `/option.html`;
         } else {
           errorDiv.textContent = 'Unauthorized: Please log in!';
-          window.location.href = '/login.html';
+          window.location.href = 'login.html';
         }
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -127,11 +127,11 @@
 
         if (res.ok) {
           window.location.href = id
-            ? `/terrain.html?id=${id}`
-            : `/terrain.html`;
+            ? `terrain.html?id=${id}`
+            : `terrain.html`;
         } else {
           errorDiv.textContent = 'Unauthorized: Please log in!';
-          window.location.href = '/login.html';
+          window.location.href = 'login.html';
         }
       } catch (error) {
         console.error('Error checking auth:', error);

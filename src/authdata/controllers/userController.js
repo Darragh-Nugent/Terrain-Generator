@@ -26,28 +26,27 @@ const accessVerifier = awsJwt.CognitoJwtVerifier.create({
 
 exports.logoutUser = async (req, res) => {
     try {
-        const token = req.user.token;
-        if (!token) {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ error: "Missing authentication token" });
         }
+        const token = authHeader.split(' ')[1];
 
         let payload;
-
         try {
-            payload = await accessVerifier.verify(token); // checks signature, exp, etc.
+            payload = await accessVerifier.verify(token); // verify normally
         } catch (err) {
             if (err.name === "JwtExpiredError") {
                 console.warn("Token expired, proceeding with logout...");
-                payload = jwt.decode(token); // decode without verifying
+                payload = jwt.decode(token); // decode without verifying expiration
                 if (!payload) {
                     return res.status(400).json({ error: "Could not decode expired token" });
                 }
             } else {
-                throw err; // Any other error should fail the request
+                throw err;
             }
         }
 
-        // Blacklist token by jti (JWT ID) or fallback to sub (user ID)
         const tokenId = payload.jti || payload.sub;
         if (!tokenId) {
             return res.status(400).json({ error: "Token payload missing jti or sub" });
@@ -61,8 +60,6 @@ exports.logoutUser = async (req, res) => {
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 };
-
-
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;

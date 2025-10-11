@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Confirm Your Email</title>
-    <link rel="stylesheet" href="/styles/styles.css" />
+    <link rel="stylesheet" href="styles/styles.css" />
 </head>
 
 <body>
@@ -32,7 +32,7 @@
 
     <script>
         function go_login() {
-            window.location.href = `/login.html`;
+            window.location.href = `login.html`;
         }
 
         // Elements
@@ -88,7 +88,7 @@
                 confirmMessage.textContent = "Email confirmed successfully! Redirecting to login...";
 
                 setTimeout(() => {
-                    window.location.href = "/login.html";
+                    window.location.href = "login.html";
                 }, 200);
             } catch (error) {
                 confirmMessage.style.color = "red";

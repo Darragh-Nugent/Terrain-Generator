@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <title>Cloud Simulation</title>
   <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
-  <link rel="stylesheet" href="/styles/styles.css" />
+  <link rel="stylesheet" href="styles/styles.css" />
   <style>
     /* Hide the main content initially */
     #mainContent {
@@ -148,12 +148,12 @@
           localStorage.removeItem('idToken');
           localStorage.removeItem('userInfo');
           alert('Access denied: ' + err.error);
-          window.location.href = '/login.html';
+          window.location.href = 'login.html';
         }
       } catch (err) {
         // Network or unexpected error — redirect to login for safety
         alert(`Unexpected error: `, err);
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
       }
     }
     window.onload = checkAuth;
@@ -165,7 +165,7 @@
     const id = new URLSearchParams(window.location.search).get('id');
 
     function home() {
-      window.location.href = `/index.html?id=${id}`;
+      window.location.href = `index.html?id=${id}`;
     };
 
     function calculateNumberParticles(state) {

@@ -249,6 +249,83 @@ Resources:
         - Key: purpose
           Value: assessment 2
 
+  TerrainBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: n11547227-a2-terrains
+
+  S3BucketParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/s3-bucket"
+      Type: String
+      Value: "n11547227-a2-terrains"
+  
+  MemcachedCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      CacheNodeType: cache.t3.micro 
+      Engine: memcached
+      NumCacheNodes: 1
+      ClusterName: group-88-winterscape-memcache 
+      CacheSubnetGroupName: "CAB432-subnets"
+      VpcSecurityGroupIds:
+        - sg-07707a36aa1599475
+
+  DynamoNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/dynamo-name"
+      Type: String
+      Value: "n11547227-styles"
+
+  DatabaseUserParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/db-username"
+      Type: String
+      Value: "s289"
+
+  DatabaseHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/db-host"
+      Type: String
+      Value: "database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com"
+  
+  DatabaseNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/db-name"
+      Type: String
+      Value: "cohort_2025"
+
+  MemcachedURLParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/n11547227/terrain-app/memcached-url"
+      Type: String
+      Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
+
+  CognitoSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: "n11547227/terrain-app/cognito-credentials3"
+      Description: "Cognito client credentials and user pool ID"
+      SecretString: !Sub |
+        {
+          "client_id": "${CognitoUserPoolClient.ClientId}",
+          "client_secret": "${CognitoUserPoolClient.ClientSecret}",
+          "user_pool_id": "${CognitoUserPool}"
+        }
+      Tags:
+        - Key: qut-username
+          Value: !Ref QutUsername
+        - Key: qut-username2
+          Value: !Ref QutUsername2
+        - Key: purpose
+          Value: !Ref Purpose
+
 Outputs:
   CognitoUserPoolId:
     Value: !Ref CognitoUserPool
