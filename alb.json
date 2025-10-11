@@ -1,0 +1,39 @@
+{
+    "LoadBalancers": [
+        {
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:loadbalancer/app/Group-88-LB/425cd2762e8c176e",
+            "DNSName": "Group-88-LB-605531820.ap-southeast-2.elb.amazonaws.com",
+            "CanonicalHostedZoneId": "Z1GM3OXH4ZPM65",
+            "CreatedTime": "2025-10-11T05:27:01.010000+00:00",
+            "LoadBalancerName": "Group-88-LB",
+            "Scheme": "internet-facing",
+            "VpcId": "vpc-007bab53289655834",
+            "State": {
+                "Code": "active"
+            },
+            "Type": "application",
+            "AvailabilityZones": [
+                {
+                    "ZoneName": "ap-southeast-2c",
+                    "SubnetId": "subnet-04ca053dcbe5f49cc",
+                    "LoadBalancerAddresses": []
+                },
+                {
+                    "ZoneName": "ap-southeast-2a",
+                    "SubnetId": "subnet-05a3b8177138c8b14",
+                    "LoadBalancerAddresses": []
+                },
+                {
+                    "ZoneName": "ap-southeast-2b",
+                    "SubnetId": "subnet-075811427d5564cf9",
+                    "LoadBalancerAddresses": []
+                }
+            ],
+            "SecurityGroups": [
+                "sg-032bd1ff8cf77dbb9"
+            ],
+            "IpAddressType": "ipv4",
+            "EnablePrefixForIpv6SourceNat": "off"
+        }
+    ]
+}

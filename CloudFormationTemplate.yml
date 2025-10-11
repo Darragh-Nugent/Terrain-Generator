@@ -111,6 +111,129 @@ Resources:
         - Key: qut-username2
           Value: n11596708@qut.edu.au
 
+  ######################### Application Load Balancer ########################################
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: Group-88-LB
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref Subnet1
+        - !Ref Subnet2
+        - !Ref Subnet3
+      SecurityGroups:
+        - !Ref SecurityGroup
+      IpAddressType: ipv4
+      Tags:
+        - Key: purpose
+          Value: assessment-2
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
+  
+  ########################## Listeners ########################################
+  HTTPSListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: arn:aws:acm:ap-southeast-2:901444280953:certificate/d4f46aac-cee6-40e6-94fd-cb5a25485286
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-Res-2021-06
+      DefaultActions:
+        - Type: forward
+          Order: 1
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref TerrainTargetGroup
+                Weight: 1
+            TargetGroupStickinessConfig:
+              Enabled: false
+              DurationSeconds: 3600
+              
+
+  ######################## Rules ########################################
+  SnowRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /simulation
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref SnowTargetGroup
+
+  TerrainRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 2
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /terrain
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TerrainTargetGroup
+
+  StyleRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 3
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /style
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TerrainTargetGroup
+
+  AuthUserRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 4
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /user
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref AuthdataTargetGroup
+
+  AuthRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 5
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /auth
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref AuthdataTargetGroup
+
+  HealthCheckRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 6
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /healthcheck
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TerrainTargetGroup
+
   ######################### ECS Tasks ########################################  
   TerrainTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -183,8 +306,6 @@ Resources:
           Environment:
             - Name: S3_BUCKET
               Value: !Ref S3BucketParameter
-            - Name: MEMCACHED_URL
-              Value: !Ref MemcachedURLParameter
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -226,8 +347,6 @@ Resources:
               Value: !Ref DatabaseHostParameter
             - Name: DB_USER
               Value: !Ref DatabaseUserParameter
-            - Name: MEMCACHED_URL
-              Value: !Ref MemcachedURLParameter
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
@@ -245,7 +364,7 @@ Resources:
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
       ServiceName: Group-88-Winterscape-terrain-service-1
-      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-terrain:3
+      TaskDefinition: !Ref TerrainTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -258,7 +377,7 @@ Resources:
             - !Ref Subnet2
             - !Ref Subnet3
       LoadBalancers:
-        - TargetGroupArn: arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group-88-tg-terrain/42f689d024b8226d
+        - TargetGroupArn: !Ref TerrainTargetGroup
           ContainerName: terrain
           ContainerPort: 3002
       EnableECSManagedTags: true
@@ -274,7 +393,7 @@ Resources:
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
       ServiceName: Group-88-Winterscape-snow-service-1
-      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-snow:1
+      TaskDefinition: !Ref SnowTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -287,7 +406,7 @@ Resources:
             - !Ref Subnet2
             - !Ref Subnet3
       LoadBalancers:
-        - TargetGroupArn: arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group-88-tg-snow/371f272de82fd768
+        - TargetGroupArn: !Ref SnowTargetGroup
           ContainerName: snow
           ContainerPort: 3001
       EnableECSManagedTags: true
@@ -303,7 +422,7 @@ Resources:
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
       ServiceName: Group-88-Winterscape-authdata-service-1
-      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-authdata:1
+      TaskDefinition: !Ref AuthdataTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
       NetworkConfiguration:
@@ -316,7 +435,7 @@ Resources:
             - !Ref Subnet2
             - !Ref Subnet3
       LoadBalancers:
-        - TargetGroupArn: arn:aws:elasticloadbalancing:ap-southeast-2:901444280953:targetgroup/Group-88-tg-authdata/234554fe7f6f138a
+        - TargetGroupArn: !Ref AuthdataTargetGroup
           ContainerName: authdata
           ContainerPort: 3003
       EnableECSManagedTags: true

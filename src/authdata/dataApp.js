@@ -19,6 +19,10 @@ app.use("/user", userRoutes);
 app.use("/auth",authRouter);
 app.use('/healthcheck',healthCheckRouter)
 
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Data service listening on port ${port}`);
 });

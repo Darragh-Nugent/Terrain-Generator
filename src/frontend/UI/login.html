@@ -36,7 +36,7 @@
     </div>
     <script>
         function back() {
-            window.location.href = `/`;
+            window.location.href = 'index.html';
         }
         async function confirmEmail() {
             const code = confirmCodeInput.value.trim();
@@ -126,7 +126,7 @@
                     // If user's email has not be confirmed yet
                     if (errorMsg.includes("User is not confirmed")) {
                         setTimeout(() => {
-                            window.location.href = `/user/confirm-email?username=${encodeURIComponent(username)}&resend=true`;
+                            window.location.href = `email_confirmation.html?username=${encodeURIComponent(username)}&resend=true`;
                         }, 200);
                     }
 

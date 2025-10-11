@@ -15,6 +15,10 @@ app.use(cookieParser());
 // Mount only the terrain routes
 app.use('/simulation', simulationRouter);
 
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Snow service listening on port ${port}`);
 });

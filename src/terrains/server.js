@@ -17,6 +17,10 @@ app.use(cookieParser());
 app.use("/terrain", terrainRoutes);
 app.use("/style", styleRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Terrain service listening on port ${port}`);
 });
