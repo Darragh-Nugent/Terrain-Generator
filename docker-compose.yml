@@ -43,7 +43,7 @@ services:
   authdata:
     build:
       context: ./src/authdata
-      dockerfile: data.Dockerfile
+      dockerfile: authdata.Dockerfile
     env_file:
       - .env
     ports:

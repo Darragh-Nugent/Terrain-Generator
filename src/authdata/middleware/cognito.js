@@ -16,7 +16,7 @@ const idVerifier = awsJwt.CognitoJwtVerifier.create({
     clientId: clientId,
 });
 
-const createTokenMiddleware = async (tokenName, verifier) => {
+const createTokenMiddleware = (tokenName, verifier) => {
     return async (req, res, next) => {
         const authHeader = req.headers['authorization'] || req.headers['Authorization'];
         // console.log(req.headers)
