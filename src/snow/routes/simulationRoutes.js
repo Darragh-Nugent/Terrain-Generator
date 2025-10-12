@@ -4,6 +4,10 @@ const router = express.Router();
 const { authenticateAccessToken } = require('../middleware/cognito');
 const {fallingSnow,fallingSnowVideo, showRenderPage,saveFallingSnowVideo, getSimulationPresignedUrl} = require('../controllers/simulationController');
 
+router.get('/healthcheck', (req, res) => {
+  res.status(200).send('OK');
+});
+
 router.post('/falling-snow-calculation', fallingSnow);
 router.get("/simulation-snow-page", (req, res) => {
    res.sendFile(path.join(__dirname,"..", '..',"client", 'UI', "cloud.html"));

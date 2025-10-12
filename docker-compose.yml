@@ -18,6 +18,17 @@ services:
     depends_on:
       - memcached
   
+  terrainstyles:
+    build:
+      context: ./src/terrainstyles
+      dockerfile: terrainstyle.Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "3004:3004"
+    depends_on:
+      - memcached
+  
   snow:
     build:
       context: ./src/snow

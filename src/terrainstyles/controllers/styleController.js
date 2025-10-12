@@ -22,3 +22,20 @@ exports.addStyle = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+exports.getColours = async (req, res) => {
+  const { styleQuery } = req.query;
+  try {
+    const styles = await styleModel.loadStyles();
+    const result = styles.find(style => style.name === styleQuery); 
+
+    if (result) {
+    res.json({ colour: result });
+    } else {
+      res.json({ colour: "#00ff00" });
+    }
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

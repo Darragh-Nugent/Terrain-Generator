@@ -1,7 +1,7 @@
 const { createCanvas, } = require("canvas");
 const terrainModel = require("../models/terrainModel");
-const styleModel = require("../models/styleModel.js");
 const path = require('path');
+const axios = require('axios');
 
 const SCALE = 4;
 
@@ -70,20 +70,6 @@ function getColourFromHeight(style, height, minHeight, maxHeight) {
   }
 }
 
-async function getColours(styleQuery) {
-  const styles = await styleModel.loadStyles();
-
-  const result = styles.find(style => style.name === styleQuery);
-  if (!result) {
-    return "#00ff00";
-  }
-  else {
-    console.log(result);
-    return result;
-  }
-
-}
-
 // Render the wireframe mesh
 async function renderWireframe(terrain, width, height, scale, style) {
   const heightMap = await terrain.generateErodedHeightMap();
@@ -129,6 +115,18 @@ async function renderWireframe(terrain, width, height, scale, style) {
 
 }
 
+async function getColours(styleQuery)
+{
+  try {
+    const response = await axios.get(`http://terrainstyles:3004/style/colours`, {
+      params: { styleQuery }
+    });
+    return response.data.colour;
+  } catch (err) {
+    console.error('Error contacting style service:', err.message);
+    return '#00ff00';  // fallback
+  }
+}
 
 async function get3DTerrain(req, res, next) {
   try {

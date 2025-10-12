@@ -356,6 +356,12 @@ Resources:
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
+            - Name: CLIENT_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+            - Name: CLIENT_SECRET
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_secret 
+            - Name: USER_POOL_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -616,27 +622,6 @@ Resources:
       Name: "/n11547227/terrain-app/memcached-url"
       Type: String
       Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
-
-  
-  ########### Secrets Manager ###############################
-  CognitoSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: "n11547227/terrain-app/cognito-credentials3"
-      Description: "Cognito client credentials and user pool ID"
-      SecretString: !Sub |
-        {
-          "client_id": "${CognitoUserPoolClient.ClientId}",
-          "client_secret": "${CognitoUserPoolClient.ClientSecret}",
-          "user_pool_id": "${CognitoUserPool}"
-        }
-      Tags:
-        - Key: qut-username
-          Value: !Ref QutUsername
-        - Key: qut-username2
-          Value: !Ref QutUsername2
-        - Key: purpose
-          Value: !Ref Purpose
 
 Outputs:
   CognitoUserPoolId:

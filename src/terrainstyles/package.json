@@ -1,0 +1,20 @@
+{
+  "name": "terrainstyles-service",
+  "version": "1.0.0",
+  "main": "styleApp.js",
+  "scripts": {
+    "start": "node styleApp.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.895.0",
+    "@aws-sdk/lib-dynamodb": "^3.895.0",
+    "aws-jwt-verify": "^5.1.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "memjs": "^1.3.2",
+    "uuid": "^11.1.0"
+  }
+}
