@@ -22,6 +22,9 @@ Parameters:
   SecurityGroup:
     Type: String
     Default: sg-032bd1ff8cf77dbb9
+  VPCId:
+    Type: String
+    Default: vpc-007bab53289655834
 
 
 Resources:   
@@ -33,7 +36,35 @@ Resources:
     Name: Group-88-tg-terrain
     Port: 3002
     Protocol: HTTP
-    VpcId: vpc-007bab53289655834
+    VpcId: !Ref VPCId
+    HealthCheckProtocol: HTTP
+    HealthCheckPort: traffic-port
+    HealthCheckPath: /
+    HealthCheckEnabled: true
+    HealthCheckIntervalSeconds: 30
+    HealthCheckTimeoutSeconds: 5
+    HealthyThresholdCount: 5
+    UnhealthyThresholdCount: 2
+    Matcher:
+      HttpCode: 200
+    TargetType: ip
+    ProtocolVersion: HTTP1
+    IpAddressType: ipv4
+    Tags:
+      - Key: purpose
+        Value: assessment 3
+      - Key: qut-username
+        Value: n11547227@qut.edu.au
+      - Key: qut-username2
+        Value: n11596708@qut.edu.au
+
+  TerrainstylesTargetGroup:
+  Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  Properties:
+    Name: Group-88-tg-terrainstyles
+    Port: 3004
+    Protocol: HTTP
+    VpcId: !Ref VPCId
     HealthCheckProtocol: HTTP
     HealthCheckPort: traffic-port
     HealthCheckPath: /
@@ -61,7 +92,7 @@ Resources:
       Name: Group-88-tg-snow
       Port: 3001
       Protocol: HTTP
-      VpcId: vpc-007bab53289655834
+      VpcId: !Ref VPCId
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
       HealthCheckPath: /
@@ -89,7 +120,7 @@ Resources:
       Name: Group-88-tg-authdata
       Port: 3003
       Protocol: HTTP
-      VpcId: vpc-007bab53289655834
+      VpcId: !Ref VPCId
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
       HealthCheckPath: /
@@ -196,7 +227,7 @@ Resources:
             - /style/*
       Actions:
         - Type: forward
-          TargetGroupArn: !Ref TerrainTargetGroup
+          TargetGroupArn: !Ref TerrainstylesTargetGroup
 
   AuthUserRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
@@ -279,6 +310,39 @@ Resources:
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
+      Tags:
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
+        - Key: purpose
+          Value: assessment 3
+
+  TerrainstylesTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: Group-88-Winterscape-terrainstyles
+      Cpu: '512'
+      Memory: '1024'
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+      TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
+      ContainerDefinitions:
+        - Name: terrainstyles
+          Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-terrainstyles:latest
+          Essential: true
+          Cpu: 0
+          PortMappings:
+            - ContainerPort: 3004
+              HostPort: 3004
+              Protocol: tcp
+              Name: terrainstyles-3004-tcp
+              AppProtocol: http
+          Environment:
+            - Name: DYNAMO_NAME
+              Value: !Ref DynamoNameParameter
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -392,6 +456,35 @@ Resources:
         - TargetGroupArn: !Ref TerrainTargetGroup
           ContainerName: terrain
           ContainerPort: 3002
+      EnableECSManagedTags: true
+      PropagateTags: TASK_DEFINITION
+      Tags:
+        - Key: purpose
+          Value: assessment 3
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+
+  TerrainstylesService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
+      ServiceName: Group-88-Winterscape-terrainstyles-service-1
+      TaskDefinition: !Ref TerrainstylesTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref SecurityGroup
+          Subnets:
+            - !Ref Subnet1
+            - !Ref Subnet2
+            - !Ref Subnet3
+      LoadBalancers:
+        - TargetGroupArn: !Ref TerrainstylesTargetGroup
+          ContainerName: terrainstyles
+          ContainerPort: 3004
       EnableECSManagedTags: true
       PropagateTags: TASK_DEFINITION
       Tags:
