@@ -3,6 +3,14 @@ const router = express.Router();
 const terrainController = require("../controllers/terrainController");
 const { authenticateAccessToken } = require('../middleware/cognito');
 
+router.get('/', (req, res) => {
+  res.send('Terrain route is alive!');
+});
+
+router.get('/healthcheck', (req, res) => {
+  res.status(200).send('OK');
+});
+
 router.get('/get3DTerrain', authenticateAccessToken, terrainController.get3DTerrain)
 router.get('/getHeightMap', terrainController.getHeightMap)
 router.get('/getHeightMapImage', authenticateAccessToken, terrainController.getHeightMapImage)

@@ -219,9 +219,10 @@ exports.respondToMFA = async (username, mfaCode, session, challengeName) => {
     return await client.send(command);
 };
 exports.verifyUser = async (username, password) => {
+    console.log('verifyUser called for:', username);
     try {
         const command = new Cognito.InitiateAuthCommand({
-            AuthFlow: Cognito.AuthFlowType.USER_PASSWORD_AUTH, // Authentication flow type
+            AuthFlow: Cognito.AuthFlowType.USER_PASSWORD_AUTH,
             AuthParameters: {
                 USERNAME: username,
                 PASSWORD: password,
@@ -230,47 +231,36 @@ exports.verifyUser = async (username, password) => {
             ClientId: clientId,
         });
 
-        // Send the command to initiate authentication
         const result = await client.send(command);
-        // Scenario 1 - if userpool MFA is mandatory
-        if (result.ChallengeName === 'SMS_MFA' || result.ChallengeName === 'SOFTWARE_TOKEN_MFA' || result.ChallengeName === "EMAIL_OTP") {
+
+        if (result.ChallengeName) {
+            console.log('MFA challenge:', result.ChallengeName);
             return {
                 challenge: true,
                 challengeName: result.ChallengeName,
-                session: result.Session, // for the /auth/mfa endpoint
+                session: result.Session,
                 message: 'MFA required. Please provide the MFA code.',
             };
         }
 
-        // Scenario 2- if userpool MFA is optional
-        // If successful, Cognito returns authentication tokens (ID token, Access token)
         if (result.AuthenticationResult) {
-            // You can extract user info from the AuthenticationResult or decode the ID token
+            console.log('Authentication successful');
             const { IdToken, AccessToken } = result.AuthenticationResult;
-            console.log('Authentication successful:', IdToken, AccessToken);
-
-            // Decode the IdToken to get the user's attributes like sub and username
-            const decodedToken = jwt.decode(IdToken); // Decode the ID token to extract user info
-
-            // The 'sub' field contains the unique Cognito User ID
-            const { sub, 'cognito:username': cognitoUsername, email } = decodedToken; // Extract the sub and username from the decoded token
-
-            // Return both the sub (user ID) and username
-            return { id: sub, email: email, username: cognitoUsername, AccessToken: AccessToken, IdToken: IdToken }; // sub is the Cognito User ID
+            const decodedToken = jwt.decode(IdToken);
+            const { sub, 'cognito:username': cognitoUsername, email } = decodedToken;
+            return { id: sub, email, username: cognitoUsername, AccessToken, IdToken };
         } else {
             throw new Error('Invalid username or password');
         }
-
     } catch (err) {
+        console.error('verifyUser error:', err);
         if (err.name === 'NotAuthorizedException') {
             throw new Error('Invalid username or password');
         } else if (err.name === 'UserNotFoundException') {
             throw new Error('User does not exist');
-        }
-        else if (err.name === 'UserNotConfirmedException') {
+        } else if (err.name === 'UserNotConfirmedException') {
             throw new Error('User is not confirmed. Please check your email for the confirmation code.');
         }
-        console.error("Error verifying user:", err);
         throw new Error(`Error verifying user: ${err.name}: ${err.message}`);
     }
 };

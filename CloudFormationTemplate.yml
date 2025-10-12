@@ -165,6 +165,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /simulation
+            - /simulation/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref SnowTargetGroup
@@ -178,6 +179,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /terrain
+            - /terrain/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref TerrainTargetGroup
@@ -191,6 +193,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /style
+            - /style/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref TerrainTargetGroup
@@ -204,6 +207,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /user
+            - /user/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref AuthdataTargetGroup
@@ -217,6 +221,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /auth
+            - /auth/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref AuthdataTargetGroup
@@ -230,6 +235,7 @@ Resources:
         - Field: path-pattern
           Values:
             - /healthcheck
+            - /healthcheck/*
       Actions:
         - Type: forward
           TargetGroupArn: !Ref TerrainTargetGroup

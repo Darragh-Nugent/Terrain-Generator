@@ -63,29 +63,22 @@ exports.logoutUser = async (req, res) => {
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Please enter in a username and password!' });
+    console.log('Login attempt:', username); // Log username for visibility
+
+    if (!username || !password) {
+        console.log('Missing username or password');
+        return res.status(400).json({ error: 'Please enter in a username and password!' });
+    }
     try {
         const user = await User.verifyUser(username, password);
-        // handle in frontend ------------- set local storage (only if MFA ISNT required (it is)---------------------------
-        // if (user.AccessToken && user.IdToken) {
-        //     res.cookie('accessToken', user.AccessToken, {
-        //         httpOnly: true,
-        //         secure: false,         // Set to true in production (HTTPS)
-        //         sameSite: 'Strict',
-        //         maxAge: 60 * 60 * 1000 // 60minutes
-        //     });
-        //     res.cookie('idToken', user.IdToken, {
-        //         httpOnly: true,
-        //         secure: false,         // Set to true in production (HTTPS)
-        //         sameSite: 'Strict',
-        //         maxAge: 60 * 60 * 1000 // 60minutes
-        //     });
-        // }
+        console.log('User verified:', user);
         return res.status(200).json(user);
     } catch (err) {
+        console.error('Error in login:', err);
         return res.status(400).json({ error: err.message });
     }
 };
+
 exports.respondToMfaChallenge = async (req, res) => {
     const { username, mfaCode, session, challengeName } = req.body;
 
@@ -233,26 +226,6 @@ exports.confirmPassword = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
-// exports.showDeletePage = async (req, res) => {
-//     try {
-//         res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'option.html'));
-//     } catch (err) {
-//         console.error("Error loading delete page:", err);
-//         res.status(500).send('Server error');
-//     }
-// };
-
-// exports.showRegisterPage = (req, res) => {
-//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'register.html'));
-// };
-
-// exports.showLoginPage = (req, res) => {
-//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'login.html'));
-// };
-// exports.showConfirmEmailPage = (req, res) => {
-//     res.sendFile(path.join(__dirname, '..', '..', 'client', 'UI', 'email_confirmation.html'));
-// }
 
 exports.getUserCookieInfo = async (req, res) => {
     try {

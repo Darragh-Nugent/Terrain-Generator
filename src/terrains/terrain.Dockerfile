@@ -13,6 +13,14 @@ RUN apt-get update && apt-get install -y \
     libpango1.0-dev \
     libgif-dev \
     libpixman-1-dev \
+    curl \
+    iputils-ping \
+    net-tools \
+    dnsutils \
+    procps \
+    htop \
+    less \
+    vim \
  && rm -rf /var/lib/apt/lists/*
 RUN npm install
 
