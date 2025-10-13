@@ -8,6 +8,7 @@ const accessVerifier = awsJwt.CognitoJwtVerifier.create({
     userPoolId: userPoolId,
     tokenUse: "access",  // Use 'access' or 'id' depending on the token
     clientId: clientId,
+    clockSkew: 300
 });
 
 const idVerifier = awsJwt.CognitoJwtVerifier.create({

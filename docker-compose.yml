@@ -9,7 +9,7 @@ services:
 
   terrain:
     build:
-      context: ./src/terrains
+      context: ./src/terrain
       dockerfile: terrain.Dockerfile
     env_file:
       - .env
@@ -21,7 +21,7 @@ services:
   terrainstyles:
     build:
       context: ./src/terrainstyles
-      dockerfile: terrainstyle.Dockerfile
+      dockerfile: terrainstyles.Dockerfile
     env_file:
       - .env
     ports:
