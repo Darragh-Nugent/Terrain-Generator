@@ -60,8 +60,8 @@ exports.deleteTerrain = async (id) => {
 
     } catch (err) {
         console.error('Error in deleteTerrain:', err.message);
+        throw err;
     }
-
 }
 
 exports.hasTerrain = async (id, userId) => {

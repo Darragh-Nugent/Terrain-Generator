@@ -118,7 +118,7 @@ async function renderWireframe(terrain, width, height, scale, style) {
 async function getColours(styleQuery)
 {
   try {
-    const response = await axios.get(`http://terrainstyles:3004/style/colours`, {
+    const response = await axios.get(`${process.env.TERRAINSTYLES_DNS}/style/colours`, {
       params: { styleQuery }
     });
     return response.data.colour;

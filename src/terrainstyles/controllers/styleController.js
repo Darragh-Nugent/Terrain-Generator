@@ -30,7 +30,7 @@ exports.getColours = async (req, res) => {
     const result = styles.find(style => style.name === styleQuery); 
 
     if (result) {
-    res.json({ colour: result });
+    res.json({ colour: result.colour });
     } else {
       res.json({ colour: "#00ff00" });
     }
