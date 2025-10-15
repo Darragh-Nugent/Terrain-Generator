@@ -22,3 +22,6 @@ app.get('/', (req, res) => {
 app.listen(port, "0.0.0.0", () => {
   console.log(`Terrain service listening on port ${port}`);
 });
+
+console.log("CLIENT_ID:", process.env.CLIENT_ID);
+console.log("USER_POOL_ID:", process.env.USER_POOL_ID);
