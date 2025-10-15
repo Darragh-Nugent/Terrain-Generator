@@ -4,7 +4,26 @@ const S3Presigner = require("@aws-sdk/s3-request-presigner");
 const Terrain = require("../data/Terrain");
 
 const bucketName = process.env.S3_BUCKET;
-const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
+// const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
+
+const { defaultProvider } = require("@aws-sdk/credential-provider-node");
+const { fromNodeProviderChain } = require("@aws-sdk/credential-providers");
+
+
+(async () => {
+    try {
+        const creds = await defaultProvider()();
+        console.log("AWS credentials:", {
+            accessKeyId: creds.accessKeyId,
+            secretAccessKeySet: !!creds.secretAccessKey,
+            sessionTokenSet: !!creds.sessionToken,
+            expiration: creds.expiration,
+        });
+    } catch (err) {
+        console.error("Failed to load AWS credentials:", err);
+    }
+})();
+
 
 exports.addTerrain = async (seed, size, heightScale, octaves, iterations, style, userId) => {
     try {
@@ -26,6 +45,8 @@ async function deleteBucketObjects(id) {
         'SELECT s3_2d_key, s3_3d_key FROM terrains WHERE id = $1', [id]
     );
     const row = result.rows[0];
+
+    const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
     if (row?.s3_2d_key) {
         await s3Client.send(new S3.DeleteObjectCommand({ Bucket: bucketName, Key: row.s3_2d_key }));
@@ -120,20 +141,45 @@ exports.has3DMapBucket = async (id) => {
 }
 
 exports.createHeightMapBucket = async (id, imageBuffer) => {
-    try {
-        const objectKey = `terrains/heightmaps/terrain-${id}.png`;
-        await pool.query('UPDATE terrains SET s3_2d_key = $1 WHERE id = $2', [objectKey, id]);
+    const objectKey = `terrains/heightmaps/terrain-${id}.png`;
 
-        await s3Client.send(new S3.PutObjectCommand({
+    try {
+        await pool.query('UPDATE terrains SET s3_2d_key = $1 WHERE id = $2', [objectKey, id]);
+        console.log("About to connect");
+        const s3Client = new S3.S3Client({
+            region: 'ap-southeast-2',
+            credentials: fromNodeProviderChain(), // Explicitly resolves credentials
+        });
+        console.log("Connected successfully");
+
+        const creds = await s3Client.config.credentials();
+        console.log("Loaded AWS credentials:", creds);
+
+        console.log("About to put");
+        const putResult = await s3Client.send(new S3.PutObjectCommand({
             Bucket: bucketName,
             Key: objectKey,
             Body: imageBuffer,
             ContentType: "image/png",
         }));
+        console.log("Put successfully");
+
+        console.log("S3 upload success:", putResult);
 
         return objectKey;
     } catch (err) {
         console.error('Error in createHeightMapBucket:', err.message);
+        try {
+            console.error(`Failed to upload to S3.
+                Bucket: ${bucketName}
+                Key: ${objectKey}
+                Buffer size: ${imageBuffer.length}
+                User ID: ${id}
+            `);
+        } catch (logErr) {
+            console.error('Error while logging additional info:', logErr.message);
+        }
+        throw err;
     }
 }
 
@@ -141,19 +187,29 @@ exports.create3DMapBucket = async (id, imageBuffer) => {
     try {
         const objectKey = `terrains/3Dmaps/terrain-${id}.png`;
         await pool.query('UPDATE terrains SET s3_3d_key = $1 WHERE id = $2', [objectKey, id]);
+        const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
-        await s3Client.send(new S3.PutObjectCommand({
+        const putResult = await s3Client.send(new S3.PutObjectCommand({
             Bucket: bucketName,
             Key: objectKey,
             Body: imageBuffer,
             ContentType: "image/png",
         }));
 
+        console.log("S3 upload success:", putResult);
+
         return objectKey;
     } catch (err) {
-        console.error('Error in createHeightMapBucket:', err.message);
+        console.error('Error in create3DMapBucket:', err.message);
+        console.error(`Failed to upload to S3.
+            Bucket: ${bucketName}
+            Key: ${objectKey}
+            Buffer size: ${imageBuffer.length}
+            User ID: ${id}
+            `);
+        throw err;
     }
-}
+};
 
 exports.getPresignedHeightMapUrl = async (id) => {
     try {
@@ -161,9 +217,10 @@ exports.getPresignedHeightMapUrl = async (id) => {
         const objectKey = result.rows[0]?.s3_2d_key;
 
         if (!objectKey) return null;
+        const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
         const command = new S3.GetObjectCommand({ Bucket: bucketName, Key: objectKey });
-        return await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        return await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 9000 });
 
     } catch (err) {
         console.log(err);
@@ -176,6 +233,7 @@ exports.getPresigned3DMapUrl = async (id) => {
         const objectKey = result.rows[0]?.s3_3d_key;
 
         if (!objectKey) return null;
+        const s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
 
         const command = new S3.GetObjectCommand({ Bucket: bucketName, Key: objectKey });
         return await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });

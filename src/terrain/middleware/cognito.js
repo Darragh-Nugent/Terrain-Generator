@@ -8,6 +8,7 @@ const accessVerifier = awsJwt.CognitoJwtVerifier.create({
     userPoolId: userPoolId,
     tokenUse: "access",  // Use 'access' or 'id' depending on the token
     clientId: clientId,
+    clockSkew: 300
 });
 
 const idVerifier = awsJwt.CognitoJwtVerifier.create({
@@ -18,15 +19,30 @@ const idVerifier = awsJwt.CognitoJwtVerifier.create({
 
 const createTokenMiddleware = (tokenName, verifier) => {
     return async (req, res, next) => {
+        console.log(`[${tokenName}] Token middleware triggered`, {
+            path: req.path,
+            method: req.method,
+            authHeader: req.headers.authorization || req.headers.Authorization
+        });
+
         const authHeader = req.headers['authorization'] || req.headers['Authorization'];
-        // console.log(req.headers)
         let token;
+
+        const logContext = {
+            path: req.path,
+            method: req.method,
+            ip: req.ip || req.headers['x-forwarded-for'],
+            userAgent: req.headers['user-agent'],
+            time: new Date().toISOString(),
+        };
+
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1];
-        }
-        else {
+        } else {
+            console.warn(`[${tokenName}] Authorization header missing`, logContext);
             return res.status(404).json({ error: 'Authorization header missing' });
         }
+
         const expectsJson =
             req.xhr ||
             req.headers.accept?.includes('application/json') ||
@@ -34,13 +50,16 @@ const createTokenMiddleware = (tokenName, verifier) => {
             req.headers['content-type'] === 'application/json';
 
         if (!token || typeof token !== 'string' || token === 'undefined' || token === 'null') {
-            console.log('JWT missing.');
+            console.warn(`[${tokenName}] JWT missing or malformed`, { ...logContext, token });
             return expectsJson
                 ? res.status(401).json({ error: 'Please log in!' })
                 : res.redirect('/user/login?error=no_token');
         }
+
+        console.log("Verifying");
         try {
             const decoded = await verifier.verify(token);
+            console.log("Verified");
             const {
                 sub,
                 'cognito:username': cognitoUsername = decoded.username,
@@ -53,27 +72,39 @@ const createTokenMiddleware = (tokenName, verifier) => {
                 username,
                 jti,
             } = decoded;
-            console.log(decoded);
-            const finalUsername = cognitoUsername ?? username;
+
+            console.info(`[${tokenName}] Token verified`, { sub, username: cognitoUsername, jti, ...logContext });
+
             req.user = {
                 id: sub,
-                username: finalUsername,
+                username: cognitoUsername ?? username,
                 email,
                 name: `${given_name || ''} ${family_name || ''}`.trim(),
                 email_verified,
                 role,
                 tenantId,
-                token
+                token,
             };
+
+            console.log("Blacklisting");
             const blacklisted = await isTokenBlacklisted(jti);
             if (blacklisted) {
-                console.warn(`JWT for user ${sub} is blacklisted.`);
+                console.warn(`[${tokenName}] JWT is blacklisted`, { jti, sub, ...logContext });
                 return res.status(401).json({ error: 'Token has been invalidated' });
             }
+
+            console.log("Finishe blacklisting");
+
             next();
         } catch (err) {
-            console.error("JWT verification failed:", err);
             const errorType = err.name === 'TokenExpiredError' ? 'token_expired' : 'invalid_token';
+            console.error(`[${tokenName}] JWT verification failed`, {
+                error: err.message,
+                name: err.name,
+                stack: err.stack?.split('\n')[0], // avoid dumping full stack unless needed
+                tokenSnippet: token?.slice?.(0, 10),
+                ...logContext
+            });
 
             return expectsJson
                 ? res.status(401).json({ error: errorType })
@@ -81,6 +112,7 @@ const createTokenMiddleware = (tokenName, verifier) => {
         }
     };
 };
+
 
 const authenticateAccessToken = createTokenMiddleware('accessToken', accessVerifier);
 const authenticateIdToken = createTokenMiddleware('idToken', idVerifier);

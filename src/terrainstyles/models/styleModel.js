@@ -3,8 +3,6 @@ const DynamoDBLib = require("@aws-sdk/lib-dynamodb");
 const { v4: uuidv4 } = require('uuid');
 const path = require("path");
 
-const RULES_PATH = path.join(__dirname, "..", "data", "rules.json");
-
 const qutUsername = "n11547227@qut.edu.au";
 
 exports.loadStyles = async () => {

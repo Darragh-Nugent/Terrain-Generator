@@ -158,6 +158,7 @@ async function get3DTerrain(req, res, next) {
 }
 
 async function getHeightMapImage(req, res, next) {
+  console.log("entered");
   try {
     const userId = req.user.id;
     const { id } = req.query;
@@ -166,9 +167,16 @@ async function getHeightMapImage(req, res, next) {
       return res.status(401).json({ message: 'This user has no terrain with that id' });
     }
 
-    if (!await terrainModel.hasHeightMapBucket(id)) {
+    console.log("Has terrain");
+
+    const objectKey = await terrainModel.hasHeightMapBucket(id);
+    console.log("recevied key:", objectKey);
+
+    if (!objectKey) {
+      console.log("didn't skip");
       const terrain = await terrainModel.getFromUser(id, userId);
       const heightMapBuffer = terrain.toBuffer();
+      console.log("Creating image");
       await terrainModel.createHeightMapBucket(id, heightMapBuffer);
     }
 
