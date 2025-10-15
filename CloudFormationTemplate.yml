@@ -1,6 +1,7 @@
 Description: Launches an EC2 instance via AutoScalingGroup and runs the Terrain Generator container
 
 Parameters:
+####### Tags ###############################
   QutUsername:
     Type: String
     Default: n11547227@qut.edu.au
@@ -10,6 +11,8 @@ Parameters:
   Purpose:
     Type: String
     Default: assessment 2
+
+####### Networking ###############################
   Subnet1:
     Type: String
     Default: subnet-075811427d5564cf9
@@ -25,6 +28,28 @@ Parameters:
   VPCId:
     Type: String
     Default: vpc-007bab53289655834
+
+####### Application Specific ###############################
+  EcsClusterName:
+    Type: String
+    Default: n11547227-prac
+    Description: Name of the ECS Cluster
+  TerrainServiceName:
+    Type: String
+    Default: Group-88-Winterscape-terrain-service-1
+    Description: ECS service name for the Terrain service
+  TerrainStylesServiceName:
+    Type: String
+    Default: Group-88-Winterscape-terrainstyles-service-1
+    Description: ECS service name for the Terrainstyles service
+  SnowServiceName:
+    Type: String
+    Default: Group-88-Winterscape-snow-service-1
+    Description: ECS service name for the Snow service
+  AuthdataServiceName:
+    Type: String
+    Default: Group-88-Winterscape-authdata-service-1
+    Description: ECS service name for the Authdata service  
 
 
 Resources:   
@@ -310,6 +335,11 @@ Resources:
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
+            - Name: CLIENT_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+            - Name: USER_POOL_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
+              
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -343,6 +373,11 @@ Resources:
           Environment:
             - Name: DYNAMO_NAME
               Value: !Ref DynamoNameParameter
+          Secrets:
+            - Name: CLIENT_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+            - Name: USER_POOL_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -376,6 +411,11 @@ Resources:
           Environment:
             - Name: S3_BUCKET
               Value: !Ref S3BucketParameter
+          Secrets:
+            - Name: CLIENT_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+            - Name: USER_POOL_ID
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -551,86 +591,99 @@ Resources:
         - Key: qut-username
           Value: n11547227@qut.edu.au
 
-  ############ Cognito User Pool ###############################
-  CognitoUserPool:
-    Type: AWS::Cognito::UserPool
+  ################ Scalable targets ###############################
+  TerrainServiceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      UserPoolName: "Assessment 2 - Group 88 - WinterScape"
-      MfaConfiguration: "ON"
-      EnabledMfas: 
-        - EMAIL_OTP
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireUppercase: true
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireSymbols: true
-          TemporaryPasswordValidityDays: 7
-      Schema:
-        - Name: sub
-          AttributeDataType: String
-          Mutable: false
-          Required: true
-          StringAttributeConstraints:
-            MinLength: "1"
-            MaxLength: "2048"
-        - Name: email
-          AttributeDataType: String
-          Mutable: true
-          Required: true
-          StringAttributeConstraints:
-            MinLength: "0"
-            MaxLength: "2048"
-        - Name: email_verified
-          AttributeDataType: Boolean
-          Mutable: true
-          Required: false
-      AutoVerifiedAttributes:
-        - email
-      VerificationMessageTemplate:
-        DefaultEmailOption: "CONFIRM_WITH_CODE"
-      EmailConfiguration:
-        EmailSendingAccount: "DEVELOPER"
-        SourceArn: "arn:aws:ses:ap-southeast-2:901444280953:identity/cab432.com"
-        From: "CAB432 logins <logins@cab432.com>"
-      EmailVerificationMessage: "Your verification code is {####}."
-      EmailVerificationSubject: CAB432 - Please verify your email
-      UserAttributeUpdateSettings:
-        AttributesRequireVerificationBeforeUpdate: []
-      DeletionProtection: "ACTIVE"
-      UsernameConfiguration:
-        CaseSensitive: false
-      UserPoolTags:
-        qut-username: "n11596708@qut.edu.au"
-        qut-username2: "n11547227@qut.edu.au"
+      MaxCapacity: 4
+      MinCapacity: 1
+      ResourceId: !Sub service/${EcsClusterName}/${TerrainServiceName}
+      RoleARN: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
 
-  CognitoUserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
+  TerrainstylesServiceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      ClientName: "WinterScape - Group 88 - Assessment 2"
-      UserPoolId: !Ref CognitoUserPool
-      GenerateSecret: true   # client secret
-      ExplicitAuthFlows:
-        - ALLOW_REFRESH_TOKEN_AUTH
-        - ALLOW_USER_AUTH
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_USER_SRP_AUTH
-      SupportedIdentityProviders:
-        - COGNITO
-      CallbackURLs:
-        - "https://d84l1y8p4kdic.cloudfront.net"
-      AllowedOAuthFlows:
-        - code
-      AllowedOAuthScopes:
-        - email
-        - openid
-        - phone
-      AllowedOAuthFlowsUserPoolClient: true
-      PreventUserExistenceErrors: ENABLED
-      EnableTokenRevocation: true
-      EnablePropagateAdditionalUserContextData: false
-      AuthSessionValidity: 3
+      MaxCapacity: 2
+      MinCapacity: 1
+      ResourceId: !Sub service/${EcsClusterName}/${TerrainStylesServiceName}
+      RoleARN: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  SnowServiceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 4
+      MinCapacity: 1
+      ResourceId: !Sub service/${EcsClusterName}/${SnowServiceName}
+      RoleARN: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  AuthdataServiceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 2
+      MinCapacity: 1
+      ResourceId: !Sub service/${EcsClusterName}/${AuthdataStylesServiceName}
+      RoleARN: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  
+  ############# Scaling Policies ###############################
+  TerrainServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: TerrainServiceCpuScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TerrainServiceScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+
+  TerrainstylesServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: TerrainstylesServiceCpuScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TerrainstylesServiceScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60  
+
+  SnowServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: SnowServiceCpuScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref SnowServiceScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+
+  AuthdataServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: AuthdataServiceCpuScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AuthdataServiceScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60  
   
   ############ DynamoDB Table ###############################
   TerrainStylesTable:
