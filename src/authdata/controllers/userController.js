@@ -106,10 +106,11 @@ exports.respondToMfaChallenge = async (req, res) => {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'None',
-                domain: 'winterscape.cab432.com',
+                domain: '.winterscape.cab432.com',
                 path: '/',
                 maxAge: 60 * 60 * 1000
             });
+            console.log('Setting accessToken cookie for domain:', '.winterscape.cab432.com');
             // check to make sure cloudfront doesnt cache headers
             res.setHeader('Cache-Control', 'no-store');
             // res.cookie('idToken', IdToken, {
