@@ -11,7 +11,10 @@ const app = express();
 const port = process.env.PORT || 3003;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://winterscape.cab432.com',
+  credentials: true
+}));
 app.use(cookieParser());
 
 // Mount only the terrain routes
