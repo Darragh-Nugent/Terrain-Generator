@@ -53,7 +53,7 @@ exports.logoutUser = async (req, res) => {
         }
 
         await blacklistToken(tokenId);
-
+        res.clearCookie('accessToken');
         return res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.error('Logout error:', error);
@@ -95,13 +95,13 @@ exports.respondToMfaChallenge = async (req, res) => {
             console.log(decodedToken);
             const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
             // handle in frontend ------------- set local storage ---------------------------
-            // res.cookie('accessToken', AccessToken, {
-            //     httpOnly: true,
-            //     secure: false,         // Set to true in production (HTTPS)
-            //     sameSite: 'Strict',
-            //     path: '/',
-            //     maxAge: 60 * 60 * 1000 // 60minutes
-            // });
+            res.cookie('accessToken', AccessToken, {
+                httpOnly: true,
+                secure: true,         // Set to true in production (HTTPS)
+                sameSite: 'Strict',
+                path: '/',
+                maxAge: 60 * 60 * 1000 // 60minutes
+            });
             // res.cookie('idToken', IdToken, {
             //     httpOnly: true,
             //     secure: false,         // Set to true in production (HTTPS)
@@ -189,7 +189,7 @@ exports.deleteUser = async (req, res) => {
 
         // Clear cookie - handle in frontend remove local storage -------------------
         // Clear the authentication cookie
-        // res.clearCookie('accessToken');
+        res.clearCookie('accessToken');
         // res.clearCookie('idToken'); // change to true when https
         // res.clearCookie('userInfo')
         res.status(200).json({ message: "Your account has been successfully deleted" });
