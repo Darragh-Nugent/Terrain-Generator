@@ -95,13 +95,24 @@ exports.respondToMfaChallenge = async (req, res) => {
             console.log(decodedToken);
             const { sub, email, 'cognito:username': cognitoUsername } = decodedToken;
             // handle in frontend ------------- set local storage ---------------------------
+            // res.cookie('accessToken', AccessToken, {
+            //     httpOnly: true,
+            //     secure: true,         // Set to true in production (HTTPS)
+            //     sameSite: 'Strict',
+            //     path: '/',
+            //     maxAge: 60 * 60 * 1000 // 60minutes
+            // });
             res.cookie('accessToken', AccessToken, {
                 httpOnly: true,
-                secure: true,         // Set to true in production (HTTPS)
-                sameSite: 'Strict',
+                secure: true,
+                sameSite: 'None',
+                domain: '.winterscape.cab432.com',
                 path: '/',
-                maxAge: 60 * 60 * 1000 // 60minutes
+                maxAge: 60 * 60 * 1000
             });
+            console.log('Setting accessToken cookie for domain:', '.winterscape.cab432.com');
+            // check to make sure cloudfront doesnt cache headers
+            res.setHeader('Cache-Control', 'no-store');
             // res.cookie('idToken', IdToken, {
             //     httpOnly: true,
             //     secure: false,         // Set to true in production (HTTPS)
