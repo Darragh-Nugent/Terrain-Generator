@@ -10,7 +10,7 @@ Parameters:
     Default: n11596708@qut.edu.au
   Purpose:
     Type: String
-    Default: assessment 2
+    Default: assessment 3
 
 ####### Networking ###############################
   Subnet1:
@@ -35,7 +35,7 @@ Parameters:
 ####### Application Specific ###############################
   EcsClusterName:
     Type: String
-    Default: Group-88-A3-V1
+    Default: Group-88-A3
     Description: Name of the ECS Cluster
   TerrainServiceName:
     Type: String
@@ -58,61 +58,61 @@ Parameters:
 Resources:   
 
  ##################### Target Groups #####################################
- TerrainTargetGroup:
-  Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  Properties:
-    Name: Group-88-tg-terrain
-    Port: 3002
-    Protocol: HTTP
-    VpcId: !Ref VPCId
-    HealthCheckProtocol: HTTP
-    HealthCheckPort: traffic-port
-    HealthCheckPath: /
-    HealthCheckEnabled: true
-    HealthCheckIntervalSeconds: 30
-    HealthCheckTimeoutSeconds: 5
-    HealthyThresholdCount: 5
-    UnhealthyThresholdCount: 2
-    Matcher:
-      HttpCode: 200
-    TargetType: ip
-    ProtocolVersion: HTTP1
-    IpAddressType: ipv4
-    Tags:
-      - Key: purpose
-        Value: assessment 3
-      - Key: qut-username
-        Value: n11547227@qut.edu.au
-      - Key: qut-username2
-        Value: n11596708@qut.edu.au
+  TerrainTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: Group-88-tg-terrain
+      Port: 3002
+      Protocol: HTTP
+      VpcId: !Ref VPCId
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /terrain/healthcheck
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200
+      TargetType: ip
+      ProtocolVersion: HTTP1
+      IpAddressType: ipv4
+      Tags:
+        - Key: purpose
+          Value: assessment 3
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
 
   TerrainstylesTargetGroup:
-  Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  Properties:
-    Name: Group-88-tg-terrainstyles
-    Port: 3004
-    Protocol: HTTP
-    VpcId: !Ref VPCId
-    HealthCheckProtocol: HTTP
-    HealthCheckPort: traffic-port
-    HealthCheckPath: /
-    HealthCheckEnabled: true
-    HealthCheckIntervalSeconds: 30
-    HealthCheckTimeoutSeconds: 5
-    HealthyThresholdCount: 5
-    UnhealthyThresholdCount: 2
-    Matcher:
-      HttpCode: 200
-    TargetType: ip
-    ProtocolVersion: HTTP1
-    IpAddressType: ipv4
-    Tags:
-      - Key: purpose
-        Value: assessment 3
-      - Key: qut-username
-        Value: n11547227@qut.edu.au
-      - Key: qut-username2
-        Value: n11596708@qut.edu.au
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: Group-88-tg-terrainstyles
+      Port: 3004
+      Protocol: HTTP
+      VpcId: !Ref VPCId
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /style/healthcheck
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200
+      TargetType: ip
+      ProtocolVersion: HTTP1
+      IpAddressType: ipv4
+      Tags:
+        - Key: purpose
+          Value: assessment 3
+        - Key: qut-username
+          Value: n11547227@qut.edu.au
+        - Key: qut-username2
+          Value: n11596708@qut.edu.au
 
   SnowTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -123,7 +123,7 @@ Resources:
       VpcId: !Ref VPCId
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
-      HealthCheckPath: /
+      HealthCheckPath: /simulation/healthcheck
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
       HealthCheckTimeoutSeconds: 5
@@ -151,7 +151,7 @@ Resources:
       VpcId: !Ref VPCId
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
-      HealthCheckPath: /
+      HealthCheckPath: /healthcheck
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
       HealthCheckTimeoutSeconds: 5
@@ -324,19 +324,19 @@ Resources:
               AppProtocol: http
           Environment:
             - Name: S3_BUCKET
-              Value: !Ref S3BucketParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
             - Name: DB_NAME
-              Value: !Ref DatabaseNameParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
             - Name: DYNAMO_NAME
-              Value: !Ref DynamoNameParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
             - Name: DB_HOST
-              Value: !Ref DatabaseHostParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
             - Name: DB_USER
-              Value: !Ref DatabaseUserParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
             - Name: MEMCACHED_URL
-              Value: !Ref MemcachedURLParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
             - Name: TERRAINSTYLES_DNS
-              Value: !Ref TerrainstylesParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/terrainstyles-dns}}'
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
@@ -344,7 +344,6 @@ Resources:
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
             - Name: USER_POOL_ID
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
-              
       Tags:
         - Key: qut-username
           Value: n11547227@qut.edu.au
@@ -377,7 +376,9 @@ Resources:
               AppProtocol: http
           Environment:
             - Name: DYNAMO_NAME
-              Value: !Ref DynamoNameParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
+            - Name: MEMCACHED_URL
+              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
           Secrets:
             - Name: CLIENT_ID
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
@@ -390,7 +391,7 @@ Resources:
           Value: n11596708@qut.edu.au
         - Key: purpose
           Value: assessment 3
-        
+
   SnowTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -415,7 +416,9 @@ Resources:
               AppProtocol: http
           Environment:
             - Name: S3_BUCKET
-              Value: !Ref S3BucketParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
+            - Name: MEMCACHED_URL
+              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
           Secrets:
             - Name: CLIENT_ID
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
@@ -453,22 +456,24 @@ Resources:
               AppProtocol: http
           Environment:
             - Name: S3_BUCKET
-              Value: !Ref S3BucketParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
             - Name: DB_NAME
-              Value: !Ref DatabaseNameParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
             - Name: DYNAMO_NAME
-              Value: !Ref DynamoNameParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
             - Name: DB_HOST
-              Value: !Ref DatabaseHostParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
             - Name: DB_USER
-              Value: !Ref DatabaseUserParameter
+              Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
+            - Name: MEMCACHED_URL
+              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
           Secrets:
             - Name: DB_PASSWORD
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
             - Name: CLIENT_ID
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
             - Name: CLIENT_SECRET
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_secret 
+              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_secret
             - Name: USER_POOL_ID
               ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
       Tags:
@@ -478,6 +483,7 @@ Resources:
           Value: n11596708@qut.edu.au
         - Key: purpose
           Value: assessment 3
+
 
   ######################### ECS Service ########################################
   TerrainService:
@@ -729,109 +735,3 @@ Resources:
         TargetValue: 70.0
         ScaleInCooldown: 60
         ScaleOutCooldown: 60  
-  
-  ############ DynamoDB Table ###############################
-  TerrainStylesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: n11547227-styles
-      AttributeDefinitions:
-        - AttributeName: qut-username
-          AttributeType: S
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: qut-username
-          KeyType: HASH 
-        - AttributeName: id
-          KeyType: RANGE 
-      BillingMode: PAY_PER_REQUEST
-      Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: n11596708@qut.edu.au
-        - Key: purpose
-          Value: assessment 2
-
-  ############# SSM Parameters ###############################
-  S3BucketParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/s3-bucket"
-      Type: String
-      Value: "n11547227-a2-terrains"
-  
-  MemcachedCluster:
-    Type: AWS::ElastiCache::CacheCluster
-    Properties:
-      CacheNodeType: cache.t3.micro 
-      Engine: memcached
-      NumCacheNodes: 1
-      ClusterName: group-88-winterscape-memcache 
-      CacheSubnetGroupName: "CAB432-subnets"
-      VpcSecurityGroupIds:
-        - sg-07707a36aa1599475
-
-  DynamoNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/dynamo-name"
-      Type: String
-      Value: "n11547227-styles"
-
-  DatabaseUserParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/db-username"
-      Type: String
-      Value: "s289"
-
-  DatabaseHostParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/db-host"
-      Type: String
-      Value: "database-1-instance-1.ce2haupt2cta.ap-southeast-2.rds.amazonaws.com"
-  
-  DatabaseNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/db-name"
-      Type: String
-      Value: "cohort_2025"
-
-  MemcachedURLParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/memcached-url"
-      Type: String
-      Value: "group-88-winterscape-memcache.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
-
-  TerrainstylesParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/n11547227/terrain-app/terrainstyles-dns"
-      Type: String
-      Value: http://Group-88-terrainstyles-service.CAB432.com
-
-Outputs:
-  CognitoUserPoolId:
-    Value: !Ref CognitoUserPool
-    Export:
-      Name: Group88-CognitoUserPoolId
-
-  CognitoClientId:
-    Value: !Ref CognitoUserPoolClient
-    Export:
-      Name: Group88-CognitoClientId
-
-  CognitoClientSecret:
-    Value: !GetAtt CognitoUserPoolClient.ClientSecret
-    Export:
-      Name: Group88-CognitoClientSecret
-
-
-
-      
-
