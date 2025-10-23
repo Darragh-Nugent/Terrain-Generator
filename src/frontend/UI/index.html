@@ -81,32 +81,42 @@
         : `cloud.html`;
     }
 
-    function removeTokens(){
+    function removeTokens() {
       localStorage.clear();
     }
     async function go_3d_simulation() {
       try {
         const token = localStorage.getItem('accessToken');
-
-        const res = await fetch('/auth/me', {
-          method: 'GET',
+        if (!token) {
+          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = 'login.html';  // Redirect to login page
+          return;
+        }
+        // Send a HEAD request to check the status of terrain.html
+        const res = await fetch(`/render_simulation.html`, {
+          method: 'HEAD',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-          },
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (res.ok) {
-          window.location.href = id
-            ? `render_simulation.html?id=${id}`
-            : `render_simulation.html`;
-        } else {
-          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = id ? `render_simulation.html?id=${id}` : `render_simulation.html`;
+        } else if (res.status === 403 || res.status === 401) {
+          // If status is 403 Forbidden (token issues), redirect to login page
+          errorDiv.textContent = 'Forbidden: You do not have permission to access this page.';
           window.location.href = 'login.html';
-          removeTokens();
+          removeTokens();  // Clear the tokens from localStorage
+        } else if (res.status === 404) {
+          errorDiv.textContent = 'Page Not Found.';
+        } else {
+          // Handle other error codes (500, etc.)
+          errorDiv.textContent = `Error: ${res.statusText}`;
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        // If there's a network error, display the error message
+        console.error('Error during request:', error);
         errorDiv.textContent = 'Network error: ' + error.message;
       }
     }
@@ -114,26 +124,36 @@
     async function go_settings() {
       try {
         const token = localStorage.getItem('accessToken');
-
-        const res = await fetch('/auth/me', {
-          method: 'GET',
+        if (!token) {
+          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = 'login.html';  // Redirect to login page
+          return;
+        }
+        // Send a HEAD request to check the status of terrain.html
+        const res = await fetch(`/option.html`, {
+          method: 'HEAD',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-          },
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (res.ok) {
-          window.location.href = id
-            ? `/option.html?id=${id}`
-            : `/option.html`;
-        } else {
-          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = id ? `option.html?id=${id}` : `option.html`;
+        } else if (res.status === 403 || res.status === 401) {
+          // If status is 403 Forbidden (token issues), redirect to login page
+          errorDiv.textContent = 'Forbidden: You do not have permission to access this page.';
           window.location.href = 'login.html';
-          removeTokens();
+          removeTokens();  // Clear the tokens from localStorage
+        } else if (res.status === 404) {
+          errorDiv.textContent = 'Page Not Found.';
+        } else {
+          // Handle other error codes (500, etc.)
+          errorDiv.textContent = `Error: ${res.statusText}`;
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        // If there's a network error, display the error message
+        console.error('Error during request:', error);
         errorDiv.textContent = 'Network error: ' + error.message;
       }
     }
@@ -141,29 +161,41 @@
     async function go_terrain_generator() {
       try {
         const token = localStorage.getItem('accessToken');
+        if (!token) {
+          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = 'login.html';  // Redirect to login page
+          return;
+        }
 
-        const res = await fetch('/auth/me', {
-          method: 'GET',
+        // Send a HEAD request to check the status of terrain.html
+        const res = await fetch(`/terrain.html`, {
+          method: 'HEAD',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-          },
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (res.ok) {
-          window.location.href = id
-            ? `terrain.html?id=${id}`
-            : `terrain.html`;
-        } else {
-          errorDiv.textContent = 'Unauthorized: Please log in!';
+          window.location.href = id ? `terrain.html?id=${id}` : `terrain.html`;
+        } else if (res.status === 403 || res.status === 401) {
+          // If status is 403 Forbidden (token issues), redirect to login page
+          errorDiv.textContent = 'Forbidden: You do not have permission to access this page.';
           window.location.href = 'login.html';
-          removeTokens();
+          removeTokens();  // Clear the tokens from localStorage
+        } else if (res.status === 404) {
+          errorDiv.textContent = 'Page Not Found.';
+        } else {
+          // Handle other error codes (500, etc.)
+          errorDiv.textContent = `Error: ${res.statusText}`;
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        // If there's a network error, display the error message
+        console.error('Error during request:', error);
         errorDiv.textContent = 'Network error: ' + error.message;
       }
     }
+
   </script>
 </body>
 
