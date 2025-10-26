@@ -121,6 +121,8 @@ async function getColours(styleQuery)
     const response = await axios.get(`${process.env.TERRAINSTYLES_DNS}/style/colours`, {
       params: { styleQuery }
     });
+    console.log("Response from style service:", response.data);
+    console.log("Colour received:", response.data.colour);
     return response.data.colour;
   } catch (err) {
     console.error('Error contacting style service:', err.message);
