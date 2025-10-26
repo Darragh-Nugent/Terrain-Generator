@@ -26,11 +26,14 @@ exports.addStyle = async (req, res) => {
 exports.getColours = async (req, res) => {
   const { styleQuery } = req.query;
   try {
+    console.log("Style Query: ", styleQuery);
     const styles = await styleModel.loadStyles();
+    console.log("Styles: ", styles);
     const result = styles.find(style => style.name === styleQuery); 
+    console.log("Result: ", result);
 
     if (result) {
-    res.json({ colour: result.colour });
+    res.json({ colour: result });
     } else {
       res.json({ colour: "#00ff00" });
     }

@@ -186,7 +186,7 @@ Resources:
       IpAddressType: ipv4
       Tags:
         - Key: purpose
-          Value: assessment-2
+          Value: assessment 3
         - Key: qut-username
           Value: n11547227@qut.edu.au
         - Key: qut-username2
@@ -300,189 +300,189 @@ Resources:
           TargetGroupArn: !Ref TerrainTargetGroup
 
   ######################### ECS Tasks ########################################  
-  TerrainTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: Group-88-Winterscape-terrain
-      Cpu: '2048'
-      Memory: '4096'
-      RequiresCompatibilities:
-        - FARGATE
-      NetworkMode: awsvpc
-      ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
-      TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
-      ContainerDefinitions:
-        - Name: terrain
-          Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-terrain:latest
-          Essential: true
-          Cpu: 0
-          PortMappings:
-            - ContainerPort: 3002
-              HostPort: 3002
-              Protocol: tcp
-              Name: terrain-3002-tcp
-              AppProtocol: http
-          Environment:
-            - Name: S3_BUCKET
-              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
-            - Name: DB_NAME
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
-            - Name: DYNAMO_NAME
-              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
-            - Name: DB_HOST
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
-            - Name: DB_USER
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
-            - Name: MEMCACHED_URL
-              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
-            - Name: TERRAINSTYLES_DNS
-              Value: '{{resolve:ssm:/n11547227/terrain-app/terrainstyles-dns}}'
-          Secrets:
-            - Name: DB_PASSWORD
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
-            - Name: CLIENT_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
-            - Name: USER_POOL_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
-      Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: n11596708@qut.edu.au
-        - Key: purpose
-          Value: assessment 3
+  # TerrainTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: Group-88-Winterscape-terrain
+  #     Cpu: '2048'
+  #     Memory: '4096'
+  #     RequiresCompatibilities:
+  #       - FARGATE
+  #     NetworkMode: awsvpc
+  #     ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+  #     TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
+  #     ContainerDefinitions:
+  #       - Name: terrain
+  #         Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-terrain:latest
+  #         Essential: true
+  #         Cpu: 0
+  #         PortMappings:
+  #           - ContainerPort: 3002
+  #             HostPort: 3002
+  #             Protocol: tcp
+  #             Name: terrain-3002-tcp
+  #             AppProtocol: http
+  #         Environment:
+  #           - Name: S3_BUCKET
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
+  #           - Name: DB_NAME
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
+  #           - Name: DYNAMO_NAME
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
+  #           - Name: DB_HOST
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
+  #           - Name: DB_USER
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
+  #           - Name: MEMCACHED_URL
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
+  #           - Name: TERRAINSTYLES_DNS
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/terrainstyles-dns}}'
+  #         Secrets:
+  #           - Name: DB_PASSWORD
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
+  #           - Name: CLIENT_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+  #           - Name: USER_POOL_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
+  #     Tags:
+  #       - Key: qut-username
+  #         Value: n11547227@qut.edu.au
+  #       - Key: qut-username2
+  #         Value: n11596708@qut.edu.au
+  #       - Key: purpose
+  #         Value: assessment 3
 
-  TerrainstylesTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: Group-88-Winterscape-terrainstyles
-      Cpu: '512'
-      Memory: '1024'
-      RequiresCompatibilities:
-        - FARGATE
-      NetworkMode: awsvpc
-      ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
-      TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
-      ContainerDefinitions:
-        - Name: terrainstyles
-          Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-terrainstyles:latest
-          Essential: true
-          Cpu: 0
-          PortMappings:
-            - ContainerPort: 3004
-              HostPort: 3004
-              Protocol: tcp
-              Name: terrainstyles-3004-tcp
-              AppProtocol: http
-          Environment:
-            - Name: DYNAMO_NAME
-              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
-            - Name: MEMCACHED_URL
-              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
-          Secrets:
-            - Name: CLIENT_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
-            - Name: USER_POOL_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
-      Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: n11596708@qut.edu.au
-        - Key: purpose
-          Value: assessment 3
+  # TerrainstylesTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: Group-88-Winterscape-terrainstyles
+  #     Cpu: '512'
+  #     Memory: '1024'
+  #     RequiresCompatibilities:
+  #       - FARGATE
+  #     NetworkMode: awsvpc
+  #     ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+  #     TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
+  #     ContainerDefinitions:
+  #       - Name: terrainstyles
+  #         Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-terrainstyles:latest
+  #         Essential: true
+  #         Cpu: 0
+  #         PortMappings:
+  #           - ContainerPort: 3004
+  #             HostPort: 3004
+  #             Protocol: tcp
+  #             Name: terrainstyles-3004-tcp
+  #             AppProtocol: http
+  #         Environment:
+  #           - Name: DYNAMO_NAME
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
+  #           - Name: MEMCACHED_URL
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
+  #         Secrets:
+  #           - Name: CLIENT_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+  #           - Name: USER_POOL_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
+  #     Tags:
+  #       - Key: qut-username
+  #         Value: n11547227@qut.edu.au
+  #       - Key: qut-username2
+  #         Value: n11596708@qut.edu.au
+  #       - Key: purpose
+  #         Value: assessment 3
 
-  SnowTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: Group-88-Winterscape-snow
-      Cpu: '2048'
-      Memory: '4096'
-      RequiresCompatibilities:
-        - FARGATE
-      NetworkMode: awsvpc
-      ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
-      TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
-      ContainerDefinitions:
-        - Name: snow
-          Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-snow:latest
-          Essential: true
-          Cpu: 0
-          PortMappings:
-            - ContainerPort: 3001
-              HostPort: 3001
-              Protocol: tcp
-              Name: snow-3001-tcp
-              AppProtocol: http
-          Environment:
-            - Name: S3_BUCKET
-              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
-            - Name: MEMCACHED_URL
-              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
-          Secrets:
-            - Name: CLIENT_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
-            - Name: USER_POOL_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
-      Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: n11596708@qut.edu.au
-        - Key: purpose
-          Value: assessment 3
+  # SnowTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: Group-88-Winterscape-snow
+  #     Cpu: '2048'
+  #     Memory: '4096'
+  #     RequiresCompatibilities:
+  #       - FARGATE
+  #     NetworkMode: awsvpc
+  #     ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+  #     TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
+  #     ContainerDefinitions:
+  #       - Name: snow
+  #         Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-snow:latest
+  #         Essential: true
+  #         Cpu: 0
+  #         PortMappings:
+  #           - ContainerPort: 3001
+  #             HostPort: 3001
+  #             Protocol: tcp
+  #             Name: snow-3001-tcp
+  #             AppProtocol: http
+  #         Environment:
+  #           - Name: S3_BUCKET
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
+  #           - Name: MEMCACHED_URL
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
+  #         Secrets:
+  #           - Name: CLIENT_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+  #           - Name: USER_POOL_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
+  #     Tags:
+  #       - Key: qut-username
+  #         Value: n11547227@qut.edu.au
+  #       - Key: qut-username2
+  #         Value: n11596708@qut.edu.au
+  #       - Key: purpose
+  #         Value: assessment 3
 
-  AuthdataTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: Group-88-Winterscape-authdata
-      Cpu: '512'
-      Memory: '1024'
-      RequiresCompatibilities:
-        - FARGATE
-      NetworkMode: awsvpc
-      ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
-      TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
-      ContainerDefinitions:
-        - Name: authdata
-          Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-authdata:latest
-          Essential: true
-          Cpu: 0
-          PortMappings:
-            - ContainerPort: 3003
-              HostPort: 3003
-              Protocol: tcp
-              Name: authdata-3003-tcp
-              AppProtocol: http
-          Environment:
-            - Name: S3_BUCKET
-              Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
-            - Name: DB_NAME
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
-            - Name: DYNAMO_NAME
-              Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
-            - Name: DB_HOST
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
-            - Name: DB_USER
-              Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
-            - Name: MEMCACHED_URL
-              Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
-          Secrets:
-            - Name: DB_PASSWORD
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
-            - Name: CLIENT_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
-            - Name: CLIENT_SECRET
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_secret
-            - Name: USER_POOL_ID
-              ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
-      Tags:
-        - Key: qut-username
-          Value: n11547227@qut.edu.au
-        - Key: qut-username2
-          Value: n11596708@qut.edu.au
-        - Key: purpose
-          Value: assessment 3
+  # AuthdataTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: Group-88-Winterscape-authdata
+  #     Cpu: '512'
+  #     Memory: '1024'
+  #     RequiresCompatibilities:
+  #       - FARGATE
+  #     NetworkMode: awsvpc
+  #     ExecutionRoleArn: arn:aws:iam::901444280953:role/Execution-Role-CAB432-ECS
+  #     TaskRoleArn: arn:aws:iam::901444280953:role/Task-Role-CAB432-ECS
+  #     ContainerDefinitions:
+  #       - Name: authdata
+  #         Image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/group-88-authdata:latest
+  #         Essential: true
+  #         Cpu: 0
+  #         PortMappings:
+  #           - ContainerPort: 3003
+  #             HostPort: 3003
+  #             Protocol: tcp
+  #             Name: authdata-3003-tcp
+  #             AppProtocol: http
+  #         Environment:
+  #           - Name: S3_BUCKET
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/s3-bucket}}'
+  #           - Name: DB_NAME
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-name}}'
+  #           - Name: DYNAMO_NAME
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/dynamo-name}}'
+  #           - Name: DB_HOST
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-host}}'
+  #           - Name: DB_USER
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/db-username}}'
+  #           - Name: MEMCACHED_URL
+  #             Value: '{{resolve:ssm:/n11547227/terrain-app/memcached-url}}'
+  #         Secrets:
+  #           - Name: DB_PASSWORD
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/db-password
+  #           - Name: CLIENT_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_id
+  #           - Name: CLIENT_SECRET
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:client_secret
+  #           - Name: USER_POOL_ID
+  #             ValueFrom: arn:aws:secretsmanager:ap-southeast-2:901444280953:secret:n11547227/terrain-app/cognito-credentials3:user_pool_id
+  #     Tags:
+  #       - Key: qut-username
+  #         Value: n11547227@qut.edu.au
+  #       - Key: qut-username2
+  #         Value: n11596708@qut.edu.au
+  #       - Key: purpose
+  #         Value: assessment 3
 
 
   ######################### ECS Service ########################################
@@ -490,8 +490,8 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
-      ServiceName: Group-88-terrain-service
-      TaskDefinition: !Ref TerrainTaskDefinition
+      ServiceName: !Ref TerrainServiceName
+      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-terrain:14
       DesiredCount: 1
       LaunchType: FARGATE
       DeploymentConfiguration:
@@ -535,8 +535,8 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
-      ServiceName: Group-88-terrainstyles-service
-      TaskDefinition: !Ref TerrainstylesTaskDefinition
+      ServiceName: !Ref TerrainStylesServiceName
+      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-terrainstyles:5
       DesiredCount: 1
       LaunchType: FARGATE
       DeploymentConfiguration:
@@ -578,8 +578,8 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
-      ServiceName: Group-88-snow-service
-      TaskDefinition: !Ref SnowTaskDefinition
+      ServiceName: !Ref SnowServiceName
+      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-snow:6
       DesiredCount: 1
       LaunchType: FARGATE
       DeploymentConfiguration:
@@ -612,8 +612,8 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster: arn:aws:ecs:ap-southeast-2:901444280953:cluster/n11547227-prac
-      ServiceName: Group-88-authdata-service
-      TaskDefinition: !Ref AuthdataTaskDefinition
+      ServiceName: !Ref AuthdataServiceName
+      TaskDefinition: arn:aws:ecs:ap-southeast-2:901444280953:task-definition/Group-88-Winterscape-authdata:6
       DesiredCount: 1
       LaunchType: FARGATE
       DeploymentConfiguration:
@@ -645,6 +645,7 @@ Resources:
   ################ Scalable targets ###############################
   TerrainServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: TerrainService
     Properties:
       MaxCapacity: 4
       MinCapacity: 1
@@ -655,6 +656,7 @@ Resources:
 
   TerrainstylesServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: TerrainstylesService
     Properties:
       MaxCapacity: 2
       MinCapacity: 1
@@ -665,6 +667,7 @@ Resources:
 
   SnowServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: SnowService
     Properties:
       MaxCapacity: 4
       MinCapacity: 1
@@ -675,6 +678,7 @@ Resources:
 
   AuthdataServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: AuthdataService
     Properties:
       MaxCapacity: 2
       MinCapacity: 1
